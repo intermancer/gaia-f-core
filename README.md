@@ -1,28 +1,25 @@
-# Gaia F Core
+# Gaia-F-Core
 
-Gaia F Core is a Spring Boot web application designed to provide a robust framework for building web applications. This project serves as a template for developing Spring Boot applications with a focus on simplicity and ease of use.
+Gaia-F is a genetic algorith framework.  This project is the central project for the Gaia-F framework
 
 ## Features
 
-- Spring Boot framework for rapid application development
-- RESTful web services with easy endpoint management
-- Thymeleaf templating engine for dynamic HTML rendering
-- Configuration management through `application.properties`
-- Unit testing support
+- Primarily developed using large-context super-prompt generative AI coding
 
 ## Getting Started
 
 ### Prerequisites
 
-- Java 11 or higher
+- Java 21 or higher
 - Gradle 6.0 or higher
+- Spring Boot 3.4.3
 
 ### Installation
 
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/gaia-f-core.git
+   git clone https://github.com/intermancer/gaia-f-core.git
    ```
 
 2. Navigate to the project directory:
