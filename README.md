@@ -1,10 +1,15 @@
 # Gaia-F-Core
 
-Gaia-F is a genetic algorith framework.  This project is the central project for the Gaia-F framework
+GAIA-F is a Genetic Artificial Intelligence Algorithm Framework.
 
-## Features
 
-- Primarily developed using large-context super-prompt generative AI coding
+
+## Planned Features
+
+- Experiment Server
+- Genetic Repository
+- Visualization tool
+
 
 ## Getting Started
 
