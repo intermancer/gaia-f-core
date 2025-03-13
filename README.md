@@ -1,4 +1,4 @@
-# Gaia-F-Core
+# GAIA-F-Core
 
 GAIA-F is a Genetic Artificial Intelligence Algorithm Framework.
 
