@@ -29,4 +29,7 @@ __pycache__/
 # Ignore temporary files
 *.tmp
 *.swp
+.gradle/file-system.probe
+.gradle/8.8/executionHistory/executionHistory.lock
 .gradle/8.8/fileHashes/fileHashes.lock
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
