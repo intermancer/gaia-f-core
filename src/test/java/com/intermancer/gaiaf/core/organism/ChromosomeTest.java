@@ -12,7 +12,7 @@ public class ChromosomeTest {
                 genes.add(new Gene() {
                     @Override
                     public void consume(DataQuantum dataQuantum) {
-                        double value = dataQuantum.getValue(0);
+                        double value = dataQuantum.getDataPoint(0).getValue();
                         dataQuantum.addValue(value * 2);
                     }
                 });

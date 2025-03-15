@@ -1,0 +1,1 @@
+You are working in this workspace. Create interfaces, classes, and test classes for the Organism Domain Objects described in `@gen-ai-context/OrganismDoaminObjects.md`

@@ -9,15 +9,21 @@ The root project for Organism Domain Objects is com.intermancer.gaiaf.core.organ
 ## Domain Objects
 
 ### DataQuantum
-A DataQuantum has an ordered list of values.  Values are doubles.
+A DataQuantum has an ordered list of DataPoints.  
+
+**DataPoint** is a public inner class of DataQuantum. A DataPoint has the following properties:
+| proper name | type |
+|--|--|
+| sourceId | string |
+| value | double |
 
 #### Methods
 
-`void addValue(double value)` 
-Adds a value to the DataQuantum
+`void addDataPoint(DataPoint dataPoint)` 
+Adds a DataPoint to the DataQuantum.  Does not allow nulls.
 
-`double getValue(int index)` 
-Uses mod on the index so that a value is always returned
+`DataPoint getDataPoint(int index)` 
+Uses mod on the index so that the call allways returns an object.
 
 ### DataQuantumConsumer
 
