@@ -4,24 +4,45 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChromosomeTest {
+
     @Test
     public void testChromosomeConsume() {
-        // Implement a concrete Chromosome for testing
-        Chromosome chromosome = new Chromosome() {
-            {
-                genes.add(new Gene() {
-                    @Override
-                    public void consume(DataQuantum dataQuantum) {
-                        double value = dataQuantum.getDataPoint(0).getValue();
-                        dataQuantum.addValue(value * 2);
-                    }
-                });
-            }
-        };
+        // Create a Chromosome
+        Chromosome chromosome = new Chromosome();
 
+        // Add a Gene to the Chromosome
+        chromosome.genes.add(new Gene() {
+            @Override
+            public void consume(DataQuantum dataQuantum) {
+                // Retrieve the first value, triple it, and add it back
+                double value = dataQuantum.getValue(0);
+                dataQuantum.addValue(value * 3);
+            }
+
+            @Override
+            public String getId() {
+                return "Gene-1";
+            }
+        });
+
+        // Create a DataQuantum and add an initial value
         DataQuantum dataQuantum = new DataQuantum();
-        dataQuantum.addValue(1.0);
+        dataQuantum.addValue(2.0);
+
+        // Pass the DataQuantum to the Chromosome for processing
         chromosome.consume(dataQuantum);
-        assertEquals(2.0, dataQuantum.getValue(1));
+
+        // Verify that the Gene tripled the value and added it back
+        assertEquals(6.0, dataQuantum.getValue(1));
+    }
+
+    @Test
+    public void testChromosomeGetId() {
+        // Create a Chromosome
+        Chromosome chromosome = new Chromosome();
+
+        // Verify the ID is returned correctly
+        assertNotNull(chromosome.getId());
+        assertTrue(chromosome.getId().startsWith("Chromosome-"));
     }
 }
