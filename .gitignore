@@ -5,6 +5,7 @@ node_modules/
 *.log
 
 # Ignore build directories
+bin/
 dist/
 build/
 .gradle/
