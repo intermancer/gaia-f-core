@@ -45,6 +45,8 @@ interface
 ### Gene
 A Gene is a DataQuantumConsumer. Each Gene implements `consume()` by getting one or more values from the DataQuantum, operating on those values in some way, and then adding one or more values back into the DataQuantum.  Genes always add values to the DataQuantum.
 
+A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
+
 ### Chromosome
 A Chromosome has an ordered list of Genes.
 

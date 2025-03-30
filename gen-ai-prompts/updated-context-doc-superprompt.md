@@ -1,16 +1,12 @@
 # A SuperPrompt to Integrate Context Document Updates into the Codebase
 
-You are a professional back-end Java developer.  The context document `@gen-ai-context/OrganismDomainObjects.md` has changed.
+I tried to create a good prompt to update my existing code.  I'm preserving it here for posterity.  It didn't work well, and I'm moving the valuable stuff over to the gen-ai-prompts.md doc.
 
-First use Git to compare this version to the previous committed version.
+> You are a professional back-end Java developer.  The context document `@gen-ai-context/OrganismDomainObjects.md` has changed.
 
-Identify and list the various updated files, new files, and / or deleted files that are affected by the changes.  Ask me if I agree before proceeding.
+> First use Git to compare this version to the previous committed version.
 
-# A single-shot approach
-
-Keep issuing this command in a fresh context, and editing BasicArithmeticGenes.md until it is right.  Then execute on that.
-
-> @gen-ai-context/OrganismDomainObjecst.md describes the java files in the com.intermancer.gaiaf.core.organism package. @gen-ai-context/BasicArithmeticGenes.md supplements @gen-ai-context/OrganismDomainObjects.md and describes java files in the com.intermancer.gaiaf.core.organism.gene.basic package. Using the current workspace, create the java interfaces, classes, and test classes to implement the Single-DataPoint Genes described in @BasicArithmeticGenes.md.
+> Identify and list the various updated files, new files, and / or deleted files that are affected by the changes, along with the code changes that are necessary.
 
 When this prompt was run, CoPilot created:
 - com.intermancer.organism.gene.basic.BaseSingleDataPointGene

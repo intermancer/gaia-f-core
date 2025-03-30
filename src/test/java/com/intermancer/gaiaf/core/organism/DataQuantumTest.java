@@ -4,57 +4,79 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DataQuantumTest {
-    @Test
-    public void testAddAndGetValue() {
-        DataQuantum dataQuantum = new DataQuantum();
-        dataQuantum.addDataPoint(new DataQuantum.DataPoint("1.0", 1.0));
-        dataQuantum.addDataPoint(new DataQuantum.DataPoint("2.0", 2.0));
-        assertEquals(1.0, dataQuantum.getValue(0));
-        assertEquals(2.0, dataQuantum.getValue(1));
-        assertEquals(1.0, dataQuantum.getValue(2)); // Test mod behavior
-    }
-
+    
     @Test
     public void testAddDataPoint() {
-        // Create a DataQuantum
         DataQuantum dataQuantum = new DataQuantum();
-
-        // Add a DataPoint
-        DataQuantum.DataPoint dataPoint = new DataQuantum.DataPoint("source-1", 5.0);
+        DataQuantum.DataPoint dataPoint = new DataQuantum.DataPoint("source1", 10.5);
         dataQuantum.addDataPoint(dataPoint);
-
-        // Verify the DataPoint was added
-        assertEquals(5.0, dataQuantum.getDataPoint(0).getValue());
-        assertEquals("source-1", dataQuantum.getDataPoint(0).getSourceId());
+        
+        assertEquals(10.5, dataQuantum.getDataPoint(0).getValue());
+        assertEquals("source1", dataQuantum.getDataPoint(0).getSourceId());
     }
-
+    
     @Test
-    public void testAddValue() {
-        // Create a DataQuantum
+    public void testAddDataPointNull() {
         DataQuantum dataQuantum = new DataQuantum();
-
-        // Add a value
-        dataQuantum.addValue(10.0);
-
-        // Verify the value was added with a null sourceId
-        assertEquals(10.0, dataQuantum.getDataPoint(0).getValue());
-        assertNull(dataQuantum.getDataPoint(0).getSourceId());
+        assertThrows(IllegalArgumentException.class, () -> dataQuantum.addDataPoint(null));
     }
-
+    
     @Test
     public void testGetDataPointWithModulo() {
-        // Create a DataQuantum
         DataQuantum dataQuantum = new DataQuantum();
-
-        // Add multiple DataPoints
         dataQuantum.addValue(1.0);
         dataQuantum.addValue(2.0);
         dataQuantum.addValue(3.0);
-
-        // Verify modulo behavior
+        
+        // Test normal indices
         assertEquals(1.0, dataQuantum.getDataPoint(0).getValue());
         assertEquals(2.0, dataQuantum.getDataPoint(1).getValue());
         assertEquals(3.0, dataQuantum.getDataPoint(2).getValue());
-        assertEquals(1.0, dataQuantum.getDataPoint(3).getValue()); // Modulo wraps around
+        
+        // Test indices with modulo
+        assertEquals(1.0, dataQuantum.getDataPoint(3).getValue());
+        assertEquals(2.0, dataQuantum.getDataPoint(4).getValue());
+        assertEquals(3.0, dataQuantum.getDataPoint(5).getValue());
+        assertEquals(1.0, dataQuantum.getDataPoint(6).getValue());
+    }
+    
+    @Test
+    public void testGetDataPointEmptyList() {
+        DataQuantum dataQuantum = new DataQuantum();
+        assertThrows(IllegalStateException.class, () -> dataQuantum.getDataPoint(0));
+    }
+    
+    @Test
+    public void testAddValue() {
+        DataQuantum dataQuantum = new DataQuantum();
+        dataQuantum.addValue(5.5);
+        
+        assertEquals(5.5, dataQuantum.getDataPoint(0).getValue());
+        assertNull(dataQuantum.getDataPoint(0).getSourceId());
+    }
+    
+    @Test
+    public void testGetValue() {
+        DataQuantum dataQuantum = new DataQuantum();
+        dataQuantum.addValue(7.7);
+        dataQuantum.addValue(8.8);
+        
+        assertEquals(7.7, dataQuantum.getValue(0));
+        assertEquals(8.8, dataQuantum.getValue(1));
+        
+        // Test modulo behavior
+        assertEquals(7.7, dataQuantum.getValue(2));
+        assertEquals(8.8, dataQuantum.getValue(3));
+    }
+    
+    @Test
+    public void testDataPointConstructor() {
+        DataQuantum.DataPoint dataPoint1 = new DataQuantum.DataPoint("source2", 15.5);
+        assertEquals(15.5, dataPoint1.getValue());
+        assertEquals("source2", dataPoint1.getSourceId());
+        
+        DataQuantum.DataPoint dataPoint2 = new DataQuantum.DataPoint(null, 20.0);
+        assertEquals(20.0, dataPoint2.getValue());
+        assertNull(dataPoint2.getSourceId());
     }
 }
