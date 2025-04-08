@@ -1,27 +1,77 @@
 package com.intermancer.gaiaf.core.organism;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a Gene, which is a DataQuantumConsumer.
  * A Gene processes a DataQuantum by retrieving values, performing
  * operations on them, and adding new values back into the DataQuantum.
  */
 public abstract class Gene implements DataQuantumConsumer {
-
+    private String id;
+    private List<Integer> targetIndexList;
+    private List<Double> operationConstantList;
+    
+    public Gene() {
+        // Initialize targetIndexList with -1
+        targetIndexList = new ArrayList<>();
+        targetIndexList.add(-1);
+        
+        // Initialize operationConstantList as empty
+        operationConstantList = new ArrayList<>();
+    }
+    
+    public List<Integer> getTargetIndexList() {
+        return targetIndexList;
+    }
+    
+    public List<Double> getOperationConstantList() {
+        return operationConstantList;
+    }
+    
+    public void setOperationConstantList(List<Double> operationConstantList) {
+        this.operationConstantList = operationConstantList;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
+    }
+    
+    @Override
+    public String getId() {
+        return id != null ? id : getClass().getSimpleName();
+    }
+    
     /**
-     * Processes the given DataQuantum. A Gene retrieves one or more values
-     * from the DataQuantum, performs operations on them, and adds one or
-     * more values back into the DataQuantum.
+     * Processes the given DataQuantum. A Gene retrieves values from the DataQuantum
+     * based on targetIndexList, performs operations on them, and adds new values
+     * back into the DataQuantum.
      *
      * @param dataQuantum The DataQuantum to process.
      */
     @Override
-    public abstract void consume(DataQuantum dataQuantum);
-
+    public void consume(DataQuantum dataQuantum) {
+        // Extract values from dataQuantum based on targetIndexList
+        double[] values = new double[targetIndexList.size()];
+        for (int i = 0; i < targetIndexList.size(); i++) {
+            values[i] = dataQuantum.getValue(targetIndexList.get(i));
+        }
+        
+        // Perform operation on values
+        double[] results = operation(values);
+        
+        // Add results as new DataPoints to dataQuantum
+        for (double result : results) {
+            dataQuantum.addDataPoint(new DataQuantum.DataPoint(getId(), result));
+        }
+    }
+    
     /**
-     * Returns a unique identifier for the Gene.
+     * Abstract method to define the operation performed on the input values.
      *
-     * @return A unique ID as a String.
+     * @param values The values extracted from DataQuantum.
+     * @return The results of the operation.
      */
-    @Override
-    public abstract String getId();
+    protected abstract double[] operation(double[] values);
 }

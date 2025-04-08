@@ -9,27 +9,34 @@ public class DivisionGeneTest {
 
     @Test
     public void testDivisionOperation() {
+        // Create a DivisionGene
         DivisionGene gene = new DivisionGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(2.0);
 
+        // Create a DataQuantum and add a value
         DataQuantum dataQuantum = new DataQuantum();
-        dataQuantum.addValue(10.0);
+        dataQuantum.addValue(15.0);
 
+        // Consume the DataQuantum
         gene.consume(dataQuantum);
 
-        assertEquals(5.0, dataQuantum.getValue(1), 0.0001);
+        // Verify the result
+        double expected = 10.0;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The division operation result is incorrect.");
     }
 
     @Test
     public void testDivisionByZero() {
+        // Create a DivisionGene
         DivisionGene gene = new DivisionGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(0.0);
+        gene.getOperationConstantList().clear();
+        gene.getOperationConstantList().add(0.0); // Set the divisor to zero
 
+        // Create a DataQuantum and add a value
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(10.0);
 
-        assertThrows(ArithmeticException.class, () -> gene.consume(dataQuantum));
+        // Verify that consuming the DataQuantum throws an ArithmeticException
+        assertThrows(ArithmeticException.class, () -> gene.consume(dataQuantum), "Division by zero should throw an ArithmeticException.");
     }
 }

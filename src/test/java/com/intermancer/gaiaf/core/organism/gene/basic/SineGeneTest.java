@@ -9,14 +9,19 @@ public class SineGeneTest {
 
     @Test
     public void testSineOperation() {
+        // Create a SineGene
         SineGene gene = new SineGene();
-        gene.setIndex(0);
 
+        // Create a DataQuantum and add a value
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(Math.PI / 2);
 
+        // Consume the DataQuantum
         gene.consume(dataQuantum);
 
-        assertEquals(1.0, dataQuantum.getValue(1), 0.0001);
+        // Verify the result
+        double expected = 1.0;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The sine operation result is incorrect.");
     }
 }

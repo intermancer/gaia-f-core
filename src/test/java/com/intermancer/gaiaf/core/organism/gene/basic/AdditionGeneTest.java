@@ -11,8 +11,6 @@ public class AdditionGeneTest {
     public void testAdditionOperation() {
         // Create an AdditionGene
         AdditionGene gene = new AdditionGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(7.5);
 
         // Create a DataQuantum and add a DataPoint
         DataQuantum dataQuantum = new DataQuantum();
@@ -22,15 +20,17 @@ public class AdditionGeneTest {
         gene.consume(dataQuantum);
 
         // Verify the result
-        assertEquals(20.0, dataQuantum.getValue(1), 0.0001);
+        double expected = 14.0;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The addition operation result is incorrect.");
     }
 
     @Test
     public void testAdditionWithNegativeConstant() {
         // Create an AdditionGene
         AdditionGene gene = new AdditionGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(-3.0);
+        gene.getOperationConstantList().clear();
+        gene.getOperationConstantList().add(-3.0);
 
         // Create a DataQuantum and add a DataPoint
         DataQuantum dataQuantum = new DataQuantum();
@@ -40,15 +40,17 @@ public class AdditionGeneTest {
         gene.consume(dataQuantum);
 
         // Verify the result
-        assertEquals(5.0, dataQuantum.getValue(1), 0.0001);
+        double expected = 5.0;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The addition with a negative constant result is incorrect.");
     }
 
     @Test
     public void testAdditionWithZeroConstant() {
         // Create an AdditionGene
         AdditionGene gene = new AdditionGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(0.0);
+        gene.getOperationConstantList().clear();
+        gene.getOperationConstantList().add(0.0);
 
         // Create a DataQuantum and add a DataPoint
         DataQuantum dataQuantum = new DataQuantum();
@@ -58,6 +60,8 @@ public class AdditionGeneTest {
         gene.consume(dataQuantum);
 
         // Verify the result
-        assertEquals(10.0, dataQuantum.getValue(1), 0.0001);
+        double expected = 10.0;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The addition with zero constant result is incorrect.");
     }
 }

@@ -9,15 +9,19 @@ public class MultiplicationGeneTest {
 
     @Test
     public void testMultiplicationOperation() {
+        // Create a MultiplicationGene
         MultiplicationGene gene = new MultiplicationGene();
-        gene.setIndex(0);
-        gene.setAppliedConstant(2.0);
 
+        // Create a DataQuantum and add a value
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(5.0);
 
+        // Consume the DataQuantum
         gene.consume(dataQuantum);
 
-        assertEquals(10.0, dataQuantum.getValue(1), 0.0001);
+        // Verify the result
+        double expected = 7.5;
+        double actual = dataQuantum.getValue(1);
+        assertEquals(expected, actual, 0.0001, "The multiplication operation result is incorrect.");
     }
 }
