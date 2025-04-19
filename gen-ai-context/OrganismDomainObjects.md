@@ -73,3 +73,66 @@ An Organism has an ordered list of Chromosomes.
 The default implementation of Organism is BaseOrganism.
 
 An Organism is a DataQuantumConsumer. BaseOrganism implements consume() by passing dataQuantum to each of its Chromosomes, in order.
+
+## Organism Repository
+
+The organism repository is a repository for organisms.
+
+The repository package is under the organism package described above, with `repo` added.
+
+### Classes and Interfaces
+
+#### OrganismRepository
+
+interface
+
+##### Methods
+
+`Organism getOrganismById(String organismId)` Retrieves an organism by its ID.
+`void saveOrganism(Organism organism)` Saves or updates an organism.
+`void deleteOrganism(String organismId)` Deletes an organism by its ID.
+`List<Organism> getAllOrganisms()` Retrieves all organisms.
+
+#### InMemoryOrganismRepository
+
+Implements all of the OrganismRepository methods using a simple HashMap.
+
+#### OrganismNotFoundException
+
+Unchecked exception that is thrown when an Organism is not found in the repo.
+
+#### OrganismRepositoryFactory
+
+OrganismRepositoryFactory provides a method to get an instance of InMemoryOrganismRepository, but hides the implementation class.
+
+## Server Details
+
+### OrganismController
+
+The OrganismController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
+
+### Endpoints
+
+#### /organism
+
+`/organism` is the base context path for endpoints that do things with organisms.
+
+#### /organism/repo
+
+`/organism/repo` is the base context path for endpoints that interact with the organism repository is some way.
+
+#### GET /organism/repo/list
+
+returns a List of all Organisms in the repo.
+
+#### GET /organism/repo/{organismId}
+
+`/organism/repo{organismId}` returns the representation of an organism with the given ID. If the repository does not contain such an entity, then it will return a 404.
+
+#### DELETE /organism/repo/{organismId}
+
+Deletes the organism with the provided ID from the repository.  If the organism does not exist, then it will return a 404.
+
+#### POST /organism/repo
+
+Assumes that the message contains a JSON representation of an organism and adds it to the repository.
