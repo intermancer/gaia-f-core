@@ -30,17 +30,17 @@ class InMemoryOrganismRepositoryTest {
     }
 
     @Test
-    void testGetAllOrganisms() {
+    void testGetAllOrganismIds() {
         OrganismRepository repository = new InMemoryOrganismRepository();
         Organism organism1 = new Organism("1");
         Organism organism2 = new Organism("2");
         repository.saveOrganism(organism1);
         repository.saveOrganism(organism2);
 
-        List<Organism> organisms = repository.getAllOrganisms();
-        assertEquals(2, organisms.size());
-        assertTrue(organisms.contains(organism1));
-        assertTrue(organisms.contains(organism2));
+        List<String> organismIds = repository.getAllOrganismIds();
+        assertEquals(2, organismIds.size());
+        assertTrue(organismIds.contains("1"));
+        assertTrue(organismIds.contains("2"));
     }
 
     @Test

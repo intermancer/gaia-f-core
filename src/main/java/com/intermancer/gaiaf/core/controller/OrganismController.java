@@ -3,6 +3,7 @@ package com.intermancer.gaiaf.core.controller;
 import com.intermancer.gaiaf.core.organism.repo.OrganismRepository;
 import com.intermancer.gaiaf.core.organism.repo.OrganismNotFoundException;
 import com.intermancer.gaiaf.core.organism.Organism;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,13 +16,14 @@ public class OrganismController {
 
     private final OrganismRepository organismRepository;
 
+    @Autowired
     public OrganismController(OrganismRepository organismRepository) {
         this.organismRepository = organismRepository;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Organism>> getAllOrganisms() {
-        return ResponseEntity.ok(organismRepository.getAllOrganisms());
+    @GetMapping("/repo/list")
+    public ResponseEntity<List<String>> getAllOrganismIds() {
+        return ResponseEntity.ok(organismRepository.getAllOrganismIds());
     }
 
     @GetMapping("/repo/{organismId}")
@@ -35,9 +37,9 @@ public class OrganismController {
     }
 
     @PostMapping("/repo")
-    public ResponseEntity<Void> saveOrganism(@RequestBody Organism organism) {
-        organismRepository.saveOrganism(organism);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<Organism> saveOrganism(@RequestBody Organism organism) {
+        Organism savedOrganism = organismRepository.saveOrganism(organism);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedOrganism);
     }
 
     @DeleteMapping("/repo/{organismId}")

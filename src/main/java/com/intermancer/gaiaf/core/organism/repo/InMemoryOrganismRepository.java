@@ -18,8 +18,9 @@ public class InMemoryOrganismRepository implements OrganismRepository {
     }
 
     @Override
-    public void saveOrganism(Organism organism) {
+    public Organism saveOrganism(Organism organism) {
         organismMap.put(organism.getId(), organism);
+        return organism;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class InMemoryOrganismRepository implements OrganismRepository {
     }
 
     @Override
-    public List<Organism> getAllOrganisms() {
-        return organismMap.values().stream().collect(Collectors.toList());
+    public List<String> getAllOrganismIds() {
+        return organismMap.keySet().stream().collect(Collectors.toList());
     }
 }

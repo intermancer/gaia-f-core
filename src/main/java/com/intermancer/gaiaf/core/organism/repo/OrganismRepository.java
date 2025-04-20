@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface OrganismRepository {
     Organism getOrganismById(String organismId);
-    void saveOrganism(Organism organism);
+    Organism saveOrganism(Organism organism);
     void deleteOrganism(String organismId);
-    List<Organism> getAllOrganisms();
+    List<String> getAllOrganismIds();
 }
