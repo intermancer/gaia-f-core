@@ -10,6 +10,10 @@ Java 21 is the primary language for this system.
 
 Spring Boot 3.4.3 is used for general structure and configuration.
 
+## Project root package
+
+The root package for the project is `com.intermancer.gaiaf.core`.
+
 ## Web Server
 
-The base context 
+The root context path for the web server is `\gaia-f`
