@@ -6,13 +6,3 @@ server:
 spring:
   application:
     name: gaia-f-core
-  datasource:
-    url: jdbc:mysql://localhost:3306/your_database
-    username: your_username
-    password: your_password
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  thymeleaf:
-    cache: false

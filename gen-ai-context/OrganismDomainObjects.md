@@ -82,34 +82,43 @@ The repository package is under the organism package described above, with `repo
 
 ### Classes and Interfaces
 
+#### OrganismNotFoundException
+
+Unchecked exception that is thrown when an Organism is not found in the repo.
+
 #### OrganismRepository
 
-interface
+Interface
 
 ##### Methods
 
-`Organism getOrganismById(String organismId)` Retrieves an organism by its ID.
-`void saveOrganism(Organism organism)` Saves or updates an organism.
-`void deleteOrganism(String organismId)` Deletes an organism by its ID.
-`List<Organism> getAllOrganisms()` Retrieves all organisms.
+`Organism getOrganismById(String organismId)` Retrieves an organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
+
+`Organism saveOrganism(Organism organism)` Saves or updates an organism.  Returns the Organism that was saved, with the id property set to the value that was set by the Repo.
+
+`void deleteOrganism(String organismId)` Deletes an Organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
+
+`List<String> getAllOrganismIds()` Retrieves all ids of Organisms stored in the Repo.
 
 #### InMemoryOrganismRepository
 
 Implements all of the OrganismRepository methods using a simple HashMap.
 
-#### OrganismNotFoundException
-
-Unchecked exception that is thrown when an Organism is not found in the repo.
-
 #### OrganismRepositoryFactory
 
-OrganismRepositoryFactory provides a method to get an instance of InMemoryOrganismRepository, but hides the implementation class.
+Annotated with `@Configuration` to mark it as a Spring Boot configuration class.
+
+##### Methods
+
+`public OrganismRepository getInMemoryOrganismRepository()` Provides access to a Singleton instance of InMemoryOrganismRepository.  Annotated with `@Bean` to expose the Repo to the Spring ApplicationContext.
 
 ## Server Details
 
 ### OrganismController
 
 The OrganismController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
+
+Uses Spring Boot `@Autowire` to configure an OrganismRepository.
 
 ### Endpoints
 
