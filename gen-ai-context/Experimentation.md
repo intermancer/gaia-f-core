@@ -4,11 +4,11 @@ This document describes the Objects and changes to existing Objects to enable ex
 
 ## Experiment Life Cycle
 
-### Seeding
+### Seed
 
-Seeding is the first step in Experimentation.  An OrganismRepository is initialized with a set of seed Organisms.
+Seed is the first step in Experimentation.  An OrganismRepository is initialized with a set of seed Organisms.
 
-## Objects
+## Objects to support the Experiment Life Cycle
 
 The package for the experimentation objects extends from the root package of the project with /experiment
 
@@ -16,16 +16,16 @@ The package for the experimentation objects extends from the root package of the
 
 Interface
 
-Concrete implementations of the Seeder interface will have an OrganismRepository autowired in.
-
 #### Methods
 
-`seed()` 
-The seed method of a concrete Seeder will load Organisms into the injecte OrganismRepository
+`void seed(OrganismRepository repo)` 
+The seed method of a concrete Seeder will load Organisms into the provided repo.
 
 ### BasicSeeder
 
 The BasicSeeder is a very basic implementation of the Seeder interface. It simply and staticly defines 5 Organisms and loads them into the repo.
+
+BasicSeeder uses the `@Component` annotation to make itself available to other classes.
 
 #### Organisms
 
@@ -61,3 +61,35 @@ Chromosome 2: AdditionGene → SineGene
 Chromosome 3: SubtractionGene
 Simple organism with 3 chromosomes showing different gene combinations
 Useful for testing organism-level data flow
+
+### Experiment
+
+The Experiment class implements the Experiment Life Cycle phases, mostly by delegating to injected objects.
+
+#### Autowired dependencies
+
+The Experiment depends on Autowired instances of Seeder and OrganismRepository.
+
+#### Methods
+
+`void seed()`
+Calls the `seed()` method of the injected Seeder, passing in the injected OrganismRepository.
+
+## Server Details
+
+### ExperimentController
+
+The ExperimentController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
+
+The ExperimentController autowires an OrganismRepository and an E
+Uses Spring Boot `@Autowire` to configure an OrganismRepository.
+
+### Endpoints
+
+#### /experiment
+
+`/experiment` is the base context path for endpoints that manage the Experiment Life Cycle.
+
+#### GET /experiment/seed
+
+Seeds the OrganismRepository with the Organisms created by the Seeder and returns all of the Organism IDs.
