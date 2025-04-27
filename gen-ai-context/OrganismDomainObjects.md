@@ -63,7 +63,7 @@ Gene implements a template method pattern for `void consume(DataQuantum dataQuan
 A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
 
 ### Chromosome
-A Chromosome has an ordered list of Genes.
+A Chromosome has an ordered list of Genes. The genes property is exposed using standard getter and setter methods.
 
 A Chromosome is a DataQuantumConsumer. Chromosome implements `consume()` by passing the DataQuantum to each of its Genes, in order.
 
