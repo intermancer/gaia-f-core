@@ -29,7 +29,7 @@ public class ChromosomeTest {
         Chromosome chromosome = new Chromosome();
         
         // Add a gene that doubles the value
-        chromosome.genes.add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
+        chromosome.getGenes().add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
         
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(3.0);
@@ -43,10 +43,10 @@ public class ChromosomeTest {
         Chromosome chromosome = new Chromosome();
         
         // Add a gene that doubles the value
-        chromosome.genes.add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
+        chromosome.getGenes().add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
         
         // Add a gene that adds 10
-        chromosome.genes.add(new TestGenes.AdderGene(10.0, 0, "add10-gene"));
+        chromosome.getGenes().add(new TestGenes.AdderGene(10.0, 0, "add10-gene"));
         
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(5.0);
@@ -64,10 +64,10 @@ public class ChromosomeTest {
         Chromosome chromosome = new Chromosome();
         
         // First gene doubles the initial value
-        chromosome.genes.add(new TestGenes.MultiplierGene(2.0, 0, "gene1"));
+        chromosome.getGenes().add(new TestGenes.MultiplierGene(2.0, 0, "gene1"));
         
         // Second gene takes the result of the first gene and adds 1
-        chromosome.genes.add(new TestGenes.AdderGene(1.0, 1, "gene2"));
+        chromosome.getGenes().add(new TestGenes.AdderGene(1.0, 1, "gene2"));
         
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(3.0);

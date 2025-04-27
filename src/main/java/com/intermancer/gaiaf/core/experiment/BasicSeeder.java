@@ -47,12 +47,12 @@ public class BasicSeeder implements Seeder {
         // Add AdditionGene
         AdditionGene additionGene = new AdditionGene();
         additionGene.setId("addition-gene-1");
-        chromosome.genes.add(additionGene);
+        chromosome.getGenes().add(additionGene);
         
         // Add MultiplicationGene
         MultiplicationGene multiplicationGene = new MultiplicationGene();
         multiplicationGene.setId("multiplication-gene-1");
-        chromosome.genes.add(multiplicationGene);
+        chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
         organismRepository.saveOrganism(organism);
@@ -71,12 +71,12 @@ public class BasicSeeder implements Seeder {
         // Add SineGene
         SineGene sineGene = new SineGene();
         sineGene.setId("sine-gene-1");
-        chromosome.genes.add(sineGene);
+        chromosome.getGenes().add(sineGene);
         
         // Add MultiplicationGene
         MultiplicationGene multiplicationGene = new MultiplicationGene();
         multiplicationGene.setId("multiplication-gene-2");
-        chromosome.genes.add(multiplicationGene);
+        chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
         organismRepository.saveOrganism(organism);
@@ -96,21 +96,21 @@ public class BasicSeeder implements Seeder {
         Chromosome chromosome1 = new Chromosome();
         AdditionGene additionGene = new AdditionGene();
         additionGene.setId("addition-gene-2");
-        chromosome1.genes.add(additionGene);
+        chromosome1.getGenes().add(additionGene);
         
         SubtractionGene subtractionGene = new SubtractionGene();
         subtractionGene.setId("subtraction-gene-1");
-        chromosome1.genes.add(subtractionGene);
+        chromosome1.getGenes().add(subtractionGene);
         
         // Second chromosome (multiplicative operations)
         Chromosome chromosome2 = new Chromosome();
         MultiplicationGene multiplicationGene = new MultiplicationGene();
         multiplicationGene.setId("multiplication-gene-3");
-        chromosome2.genes.add(multiplicationGene);
+        chromosome2.getGenes().add(multiplicationGene);
         
         DivisionGene divisionGene = new DivisionGene();
         divisionGene.setId("division-gene-1");
-        chromosome2.genes.add(divisionGene);
+        chromosome2.getGenes().add(divisionGene);
         
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);
@@ -130,17 +130,17 @@ public class BasicSeeder implements Seeder {
         // Add DivisionGene
         DivisionGene divisionGene = new DivisionGene();
         divisionGene.setId("division-gene-2");
-        chromosome.genes.add(divisionGene);
+        chromosome.getGenes().add(divisionGene);
         
         // Add SubtractionGene
         SubtractionGene subtractionGene = new SubtractionGene();
         subtractionGene.setId("subtraction-gene-2");
-        chromosome.genes.add(subtractionGene);
+        chromosome.getGenes().add(subtractionGene);
         
         // Add SineGene
         SineGene sineGene = new SineGene();
         sineGene.setId("sine-gene-2");
-        chromosome.genes.add(sineGene);
+        chromosome.getGenes().add(sineGene);
         
         organism.addChromosome(chromosome);
         organismRepository.saveOrganism(organism);
@@ -161,23 +161,23 @@ public class BasicSeeder implements Seeder {
         Chromosome chromosome1 = new Chromosome();
         MultiplicationGene multiplicationGene = new MultiplicationGene();
         multiplicationGene.setId("multiplication-gene-4");
-        chromosome1.genes.add(multiplicationGene);
+        chromosome1.getGenes().add(multiplicationGene);
         
         // Second chromosome (addition followed by sine)
         Chromosome chromosome2 = new Chromosome();
         AdditionGene additionGene = new AdditionGene();
         additionGene.setId("addition-gene-3");
-        chromosome2.genes.add(additionGene);
+        chromosome2.getGenes().add(additionGene);
         
         SineGene sineGene = new SineGene();
         sineGene.setId("sine-gene-3");
-        chromosome2.genes.add(sineGene);
+        chromosome2.getGenes().add(sineGene);
         
         // Third chromosome (single subtraction gene)
         Chromosome chromosome3 = new Chromosome();
         SubtractionGene subtractionGene = new SubtractionGene();
         subtractionGene.setId("subtraction-gene-3");
-        chromosome3.genes.add(subtractionGene);
+        chromosome3.getGenes().add(subtractionGene);
         
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);

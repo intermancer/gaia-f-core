@@ -39,7 +39,7 @@ public class OrganismTest {
         Chromosome chromosome = new Chromosome();
         
         // Add a gene to the chromosome that triples the value
-        chromosome.genes.add(new TestGenes.MultiplierGene(3.0, 0, "triple-gene"));
+        chromosome.getGenes().add(new TestGenes.MultiplierGene(3.0, 0, "triple-gene"));
         
         organism.addChromosome(chromosome);
         
@@ -56,11 +56,11 @@ public class OrganismTest {
         
         // First chromosome with a gene that doubles the value
         Chromosome chromosome1 = new Chromosome();
-        chromosome1.genes.add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
+        chromosome1.getGenes().add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
         
         // Second chromosome with a gene that adds 5
         Chromosome chromosome2 = new Chromosome();
-        chromosome2.genes.add(new TestGenes.AdderGene(5.0, 0, "add5-gene"));
+        chromosome2.getGenes().add(new TestGenes.AdderGene(5.0, 0, "add5-gene"));
         
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);
@@ -84,13 +84,13 @@ public class OrganismTest {
         // First chromosome: double and then add 1
         Chromosome chromosome1 = new Chromosome();
         
-        chromosome1.genes.add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
-        chromosome1.genes.add(new TestGenes.AdderGene(1.0, 1, "add1-gene"));
+        chromosome1.getGenes().add(new TestGenes.MultiplierGene(2.0, 0, "double-gene"));
+        chromosome1.getGenes().add(new TestGenes.AdderGene(1.0, 1, "add1-gene"));
         
         // Second chromosome: square the original value
         Chromosome chromosome2 = new Chromosome();
         
-        chromosome2.genes.add(new TestGenes.SquareGene(0, "square-gene"));
+        chromosome2.getGenes().add(new TestGenes.SquareGene(0, "square-gene"));
         
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);
