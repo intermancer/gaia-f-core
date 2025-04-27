@@ -57,6 +57,14 @@ To run the tests, use the following command:
 ./gradlew test
 ```
 
+## Roadmap
+
+The next few things we are going to work on:
+1. Create some seed organisms for use in visual representation and early experimentation.
+2. Make sure all of the input and output for the endpoints is in JSON.
+3. Get a rudimentary experiment running.
+4. Start building a pretty UI.
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
