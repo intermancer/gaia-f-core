@@ -132,7 +132,7 @@ Uses Spring Boot `@Autowire` to configure an OrganismRepository.
 
 #### GET /organism/repo/list
 
-returns a List of all Organisms in the repo.
+returns a List of all Organism IDs in the repository.
 
 #### GET /organism/repo/{organismId}
 
