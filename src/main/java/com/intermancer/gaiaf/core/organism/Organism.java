@@ -22,7 +22,7 @@ public class Organism implements DataQuantumConsumer {
     }
 
     /**
-     * Adds a Chromosome to the Organism.
+     * Adds a Chromosome to the end of the list of chromosomes.
      *
      * @param chromosome The Chromosome to add.
      */
@@ -31,6 +31,15 @@ public class Organism implements DataQuantumConsumer {
             throw new IllegalArgumentException("Chromosome cannot be null");
         }
         chromosomes.add(chromosome);
+    }
+
+    /**
+     * Returns the list of chromosomes.
+     *
+     * @return The list of Chromosomes.
+     */
+    public List<Chromosome> getChromosomes() {
+        return chromosomes;
     }
 
     /**
