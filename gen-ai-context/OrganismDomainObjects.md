@@ -70,9 +70,15 @@ A Chromosome is a DataQuantumConsumer. Chromosome implements `consume()` by pass
 ### Organism
 An Organism has an ordered list of Chromosomes.  
 
-The default implementation of Organism is BaseOrganism.
-
 An Organism is a DataQuantumConsumer. BaseOrganism implements consume() by passing dataQuantum to each of its Chromosomes, in order.
+
+#### Methods
+
+`void addChromosome(Chromosome chromosome)`
+Adds chromosome to the end of the list of chromosomes.
+
+`List<Chromosome> getChromosomes()`
+Returns the list of chromosomes.
 
 ## Organism Repository
 
