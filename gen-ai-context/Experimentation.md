@@ -1,6 +1,6 @@
 # Experimentation
 
-This document describes the Objects and changes to existing Objects to enable experimentation.
+This document describes the Classes and changes to existing Classes to enable experimentation.
 
 ## Experiment Life Cycle
 
@@ -8,9 +8,9 @@ This document describes the Objects and changes to existing Objects to enable ex
 
 Seed is the first step in Experimentation.  An OrganismRepository is initialized with a set of seed Organisms.
 
-## Objects to support the Experiment Life Cycle
+## Classes to support the Experiment Life Cycle
 
-The package for the experimentation objects extends from the root package of the project with /experiment
+The package for the experimentation classes extends from the root package of the project with /experiment
 
 ### Seeder
 

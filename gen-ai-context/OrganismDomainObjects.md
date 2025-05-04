@@ -1,12 +1,12 @@
-# Organism Domain Objects
+# Organism Domain Classes
 
-The domain objects described in this document are those that are necessary to fully define an Organism.
+The domain classes described in this document are those that are necessary to fully define an Organism.
 
 ## Project details
 
-The root project for Organism Domain Objects is com.intermancer.gaiaf.core.organism
+The root project for Organism Domain Classes is com.intermancer.gaiaf.core.organism
 
-## Domain Objects
+## Domain Classes
 
 ### DataQuantum
 A DataQuantum has an ordered list of DataPoints.  
@@ -98,13 +98,17 @@ Interface
 
 ##### Methods
 
-`Organism getOrganismById(String organismId)` Retrieves an organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
+`Organism getOrganismById(String organismId)` 
+Retrieves an organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
 
-`Organism saveOrganism(Organism organism)` Saves or updates an organism.  Returns the Organism that was saved, with the id property set to the value that was set by the Repo.
+`Organism saveOrganism(Organism organism)` 
+Saves or updates an organism.  Returns the Organism that was saved, with the id property set to the value that was set by the Repo.
 
-`void deleteOrganism(String organismId)` Deletes an Organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
+`void deleteOrganism(String organismId)` 
+Deletes an Organism by its ID.  Throws OrganismNotFoundException if there is no organism with the given organismId in the Repo.
 
-`List<String> getAllOrganismIds()` Retrieves all ids of Organisms stored in the Repo.
+`List<String> getAllOrganismIds()` 
+Retrieves all ids of Organisms stored in the Repo.
 
 #### InMemoryOrganismRepository
 
@@ -116,7 +120,8 @@ Annotated with `@Configuration` to mark it as a Spring Boot configuration class.
 
 ##### Methods
 
-`public OrganismRepository getInMemoryOrganismRepository()` Provides access to a Singleton instance of InMemoryOrganismRepository.  Annotated with `@Bean` to expose the Repo to the Spring ApplicationContext.
+`public OrganismRepository getInMemoryOrganismRepository()` 
+Provides access to a Singleton instance of InMemoryOrganismRepository.  Annotated with `@Bean` to expose the Repo to the Spring ApplicationContext.
 
 ## Server Details
 
@@ -142,7 +147,7 @@ returns a List of all Organism IDs in the repository.
 
 #### GET /organism/repo/{organismId}
 
-`/organism/repo{organismId}` returns the representation of an organism with the given ID. If the repository does not contain such an entity, then it will return a 404.
+`/organism/repo/{organismId}` returns the representation of an organism with the given ID. If the repository does not contain such an entity, then it will return a 404.
 
 #### DELETE /organism/repo/{organismId}
 
