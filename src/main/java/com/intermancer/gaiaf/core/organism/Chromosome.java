@@ -2,6 +2,7 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * Represents a Chromosome, which is an ordered list of Genes.
@@ -9,9 +10,15 @@ import java.util.List;
  * by passing it to each of its Genes in order.
  */
 public class Chromosome implements DataQuantumConsumer {
-    // An ordered list of Genes
-    private List<Gene> genes = new ArrayList<>();
+    private List<Gene> genes;
     private String id;
+
+    /**
+     * Default constructor for Jackson deserialization.
+     */
+    public Chromosome() {
+        this.genes = new ArrayList<>();
+    }
 
     /**
      * Gets the list of Genes in this Chromosome.
@@ -31,16 +38,13 @@ public class Chromosome implements DataQuantumConsumer {
         this.genes = genes;
     }
 
-    @Override
-    public void consume(DataQuantum dataQuantum) {
-        for (Gene gene : genes) {
-            gene.consume(dataQuantum);
-        }
-    }
-
+    /**
+     * Gets the ID of this Chromosome.
+     *
+     * @return The ID as a String
+     */
     @Override
     public String getId() {
-        // If id is not set, provide a meaningful implementation
         return id != null ? id : "Chromosome-" + hashCode();
     }
 
@@ -51,5 +55,18 @@ public class Chromosome implements DataQuantumConsumer {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Processes the given DataQuantum by passing it to each Gene
+     * in the list, in order.
+     *
+     * @param dataQuantum The DataQuantum to process.
+     */
+    @Override
+    public void consume(DataQuantum dataQuantum) {
+        for (Gene gene : genes) {
+            gene.consume(dataQuantum);
+        }
     }
 }

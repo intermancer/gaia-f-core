@@ -2,6 +2,8 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents an Organism, which is a DataQuantumConsumer.
@@ -9,15 +11,24 @@ import java.util.List;
  * a DataQuantum by passing it to each Chromosome in order.
  */
 public class Organism implements DataQuantumConsumer {
-    private final List<Chromosome> chromosomes = new ArrayList<>();
-    private final String id;
+    private List<Chromosome> chromosomes;
+    private String id;
+
+    /**
+     * Default constructor for Jackson deserialization.
+     */
+    public Organism() {
+        this.chromosomes = new ArrayList<>();
+    }
 
     /**
      * Constructs an Organism with a unique identifier.
      *
      * @param id The unique identifier for this Organism.
      */
-    public Organism(String id) {
+    @JsonCreator
+    public Organism(@JsonProperty("id") String id) {
+        this();  // Call the no-argument constructor
         this.id = id;
     }
 
@@ -25,6 +36,7 @@ public class Organism implements DataQuantumConsumer {
      * Adds a Chromosome to the end of the list of chromosomes.
      *
      * @param chromosome The Chromosome to add.
+     * @throws IllegalArgumentException if the chromosome is null.
      */
     public void addChromosome(Chromosome chromosome) {
         if (chromosome == null) {
@@ -40,6 +52,27 @@ public class Organism implements DataQuantumConsumer {
      */
     public List<Chromosome> getChromosomes() {
         return chromosomes;
+    }
+
+    /**
+     * Sets the list of chromosomes.
+     *
+     * @param chromosomes The list of chromosomes to set
+     */
+    public void setChromosomes(List<Chromosome> chromosomes) {
+        this.chromosomes.clear();
+        if (chromosomes != null) {
+            this.chromosomes.addAll(chromosomes);
+        }
+    }
+
+    /**
+     * Sets the ID for this Organism.
+     *
+     * @param id The ID to set
+     */
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**

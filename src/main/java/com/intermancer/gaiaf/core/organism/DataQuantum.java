@@ -2,6 +2,7 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * Represents a DataQuantum, which contains an ordered list of DataPoints.
@@ -9,44 +10,31 @@ import java.util.List;
  * compliance with the specification in OrganismDomainObjects.md.
  */
 public class DataQuantum {
-    private final List<DataPoint> dataPoints = new ArrayList<>();
+    private List<DataPoint> dataPoints;
 
     /**
-     * Represents a single DataPoint within a DataQuantum.
-     * Each DataPoint has a sourceId and a value.
+     * Default constructor for Jackson deserialization.
      */
-    public static class DataPoint {
-        private final String sourceId;
-        private final double value;
+    public DataQuantum() {
+        this.dataPoints = new ArrayList<>();
+    }
 
-        /**
-         * Constructs a DataPoint with the specified sourceId and value.
-         *
-         * @param sourceId The source ID of the DataPoint (can be null).
-         * @param value    The value of the DataPoint.
-         */
-        public DataPoint(String sourceId, double value) {
-            this.sourceId = sourceId;
-            this.value = value;
-        }
+    /**
+     * Gets the list of DataPoints in this DataQuantum.
+     *
+     * @return The list of DataPoints
+     */
+    public List<DataPoint> getDataPoints() {
+        return dataPoints;
+    }
 
-        /**
-         * Retrieves the source ID of the DataPoint.
-         *
-         * @return The source ID (can be null).
-         */
-        public String getSourceId() {
-            return sourceId;
-        }
-
-        /**
-         * Retrieves the value of the DataPoint.
-         *
-         * @return The value of the DataPoint.
-         */
-        public double getValue() {
-            return value;
-        }
+    /**
+     * Sets the list of DataPoints for this DataQuantum.
+     *
+     * @param dataPoints The list of DataPoints to set
+     */
+    public void setDataPoints(List<DataPoint> dataPoints) {
+        this.dataPoints = dataPoints;
     }
 
     /**
@@ -95,5 +83,68 @@ public class DataQuantum {
      */
     public double getValue(int index) {
         return getDataPoint(index).getValue();
+    }
+
+    /**
+     * Represents a single DataPoint within a DataQuantum.
+     * Each DataPoint has a sourceId and a value.
+     */
+    public static class DataPoint {
+        private String sourceId;
+        private double value;
+
+        /**
+         * Default constructor for Jackson deserialization.
+         */
+        public DataPoint() {
+        }
+
+        /**
+         * Constructs a DataPoint with the specified sourceId and value.
+         *
+         * @param sourceId The source ID of the DataPoint (can be null).
+         * @param value    The value of the DataPoint.
+         */
+        @JsonCreator
+        public DataPoint(String sourceId, double value) {
+            this.sourceId = sourceId;
+            this.value = value;
+        }
+
+        /**
+         * Retrieves the source ID of the DataPoint.
+         *
+         * @return The source ID (can be null).
+         */
+        public String getSourceId() {
+            return sourceId;
+        }
+
+        /**
+         * Sets the source ID of the DataPoint.
+         *
+         * @param sourceId The source ID to set (can be null).
+         */
+        public void setSourceId(String sourceId) {
+            this.sourceId = sourceId;
+        }
+
+        /**
+         * Retrieves the value of the DataPoint.
+         *
+         * @return The value of the DataPoint.
+         */
+        public double getValue() {
+            return value;
+        }
+
+        /**
+         * Sets the value of the DataPoint.
+         *
+         * @param value The value to set.
+         */
+        public void setValue(double value) {
+            this.value = value;
+        }
     }
 }
