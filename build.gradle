@@ -15,7 +15,6 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

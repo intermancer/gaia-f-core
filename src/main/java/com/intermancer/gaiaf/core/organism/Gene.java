@@ -3,11 +3,18 @@ package com.intermancer.gaiaf.core.organism;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * Represents a Gene, which is a DataQuantumConsumer.
  * A Gene processes a DataQuantum by retrieving values, performing
  * operations on them, and adding new values back into the DataQuantum.
  */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, // Use the name of the type
+    include = JsonTypeInfo.As.PROPERTY, // Include type info as a property
+    property = "type" // The property name in JSON
+)
 public abstract class Gene implements DataQuantumConsumer {
     private String id;
     private List<Integer> targetIndexList;
