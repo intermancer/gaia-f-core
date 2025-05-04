@@ -6,6 +6,3 @@ server:
 spring:
   application:
     name: gaia-f-core
-  jackson:
-    serialization:
-      indent-output: true

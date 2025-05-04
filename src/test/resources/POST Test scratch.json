@@ -1,0 +1,28 @@
+{
+    "chromosomes" : [
+        {
+            "genes" : [
+                {
+                    "id" : "addition-gene-1",
+                    "targetIndexList" : [
+                        -1
+                    ],
+                    "operationConstantList" : [
+                        1.5
+                    ]
+                },
+                {
+                    "id" : "multiplication-gene-1",
+                    "targetIndexList" : [
+                        -1
+                    ],
+                    "operationConstantList" : [
+                        1.5
+                    ]
+                }
+            ],
+            "id" : "Chromosome-99786786"
+        }
+    ],
+    "id" : "simple-arithmetic-organism"
+}

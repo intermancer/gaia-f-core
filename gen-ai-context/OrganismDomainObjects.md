@@ -8,6 +8,8 @@ The root project for Organism Domain Classes is com.intermancer.gaiaf.core.organ
 
 ## Domain Classes
 
+All of the concrete classes will need to be able to use Jackson for serialization and deserialization.  As a result, all concrete classes will need a no-argument constructor, and standard getters and setters for all properties.
+
 ### DataQuantum
 A DataQuantum has an ordered list of DataPoints.  
 

@@ -9,6 +9,7 @@ Java 21 is the primary language for this system.
 ## Frameworks
 
 Spring Boot 3.4.3 is used for general structure and configuration.
+Jackson 2.19.0 is used for serialization and deserialization.
 
 ## Project root package
 
