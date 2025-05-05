@@ -64,7 +64,7 @@ Gene implements a template method pattern for `void consume(DataQuantum dataQuan
 
 A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
 
-Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo annotation from the Jackson library that forces serialization and deserialization to use a fully-qualified class name for the type.
+Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo annotation from the Jackson library that forces serialization and deserialization to use a fully-qualified class name for the type. Specifically, it should use @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type") to ensure proper polymorphic type handling.
 
 ### Chromosome
 A Chromosome has an ordered list of Genes. The genes property is exposed using standard getter and setter methods.
