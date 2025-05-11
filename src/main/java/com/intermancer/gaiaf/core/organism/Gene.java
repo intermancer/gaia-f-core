@@ -3,13 +3,7 @@ package com.intermancer.gaiaf.core.organism;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.intermancer.gaiaf.core.organism.gene.basic.AdditionGene;
-import com.intermancer.gaiaf.core.organism.gene.basic.DivisionGene;
-import com.intermancer.gaiaf.core.organism.gene.basic.MultiplicationGene;
-import com.intermancer.gaiaf.core.organism.gene.basic.SineGene;
-import com.intermancer.gaiaf.core.organism.gene.basic.SubtractionGene;
 
 /**
  * Represents a Gene, which is a DataQuantumConsumer.

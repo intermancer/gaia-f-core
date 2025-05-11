@@ -118,9 +118,7 @@ Retrieves all ids of Organisms stored in the Repo.
 
 Implements all of the OrganismRepository methods using a simple HashMap.
 
-#### OrganismRepositoryFactory
-
-Annotated with `@Configuration` to mark it as a Spring Boot configuration class.
+Annotated with `@Component` so that it is automatically instantiated and wired in when the server starts.
 
 ##### Methods
 
