@@ -84,6 +84,27 @@ Adds chromosome to the end of the list of chromosomes.
 `List<Chromosome> getChromosomes()`
 Returns the list of chromosomes.
 
+### OrganismBreeder
+
+Interface for classes that breed two or more Organisms in order to generate descendents that are some sort of combination of the genetic material of their ancestors.
+
+#### Methods
+
+`List<Organism> breed(List<Organism> parents)`
+Returns a list of Organisms that have been generated based on some sort of combination of the parental organism that are provided as arguments.
+
+### BasicBreeder
+
+The BasicBreeder will return the same number of children organisms as there are parents.  It uses a shift strategy.  
+
+The first chromosome of the first child is a clone of the first chromosome of the first parent.  The second chromosome of the first child is a clone of the second chromosome of the second parent.  And so on.
+
+The first chromosome of the second child is a clone of the first chromosome of the second parent.  The second chromosome of the second child is a clone of the second chromosome of the third parent.  And so on.
+
+Parents are referenced using a mod of the chromosome count, based on the number of parents, so, if there are only two parents, "the third parent" refers to the first parent.
+
+This combination strategy continues and includes all of the genetic matreial of all of the parents, even if they have unequal numbers of chromosomes.
+
 ## Organism Repository
 
 The organism repository is a repository for organisms.
