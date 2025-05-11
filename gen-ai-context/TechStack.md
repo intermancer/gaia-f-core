@@ -25,4 +25,4 @@ The com.intermancer.gaiaf.core.GaiaFCoreApplication class is the Spring Applicat
 
 ### JSON Output
 
-All output is pretty JSON.  Even simple collections, such as List<String>, should be output with indentations and on multiple lines.  The configuration should be included in the GaiaFCoreApplication class.
+All output is pretty JSON.  Even simple collections, such as List<String>, should be output with indentations and on multiple lines.  The configuration should be included in the GaiaFCoreApplication class, since this is a global configuration.
