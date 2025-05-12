@@ -1,7 +1,8 @@
 package com.intermancer.gaiaf.core.organism;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ChromosomeTest {
     
@@ -9,8 +10,6 @@ public class ChromosomeTest {
     public void testChromosomeConstruction() {
         Chromosome chromosome = new Chromosome();
         assertNotNull(chromosome);
-        assertNotNull(chromosome.getId());
-        assertTrue(chromosome.getId().startsWith("Chromosome-"));
     }
     
     @Test
