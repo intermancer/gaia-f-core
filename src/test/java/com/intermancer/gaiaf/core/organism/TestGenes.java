@@ -28,6 +28,13 @@ public class TestGenes {
             double constant = getOperationConstantList().get(0);
             return new double[] { values[0] + constant };
         }
+        
+        @Override
+        public AdderGene copyOf() {
+            AdderGene copy = new AdderGene(0.0, 0, null); // Create with dummy values
+            cloneProperties(copy); // Copy over the real values
+            return copy;
+        }
     }
     
     /**
@@ -53,6 +60,13 @@ public class TestGenes {
             double constant = getOperationConstantList().get(0);
             return new double[] { values[0] * constant };
         }
+        
+        @Override
+        public MultiplierGene copyOf() {
+            MultiplierGene copy = new MultiplierGene(0.0, 0, null); // Create with dummy values
+            cloneProperties(copy); // Copy over the real values
+            return copy;
+        }
     }
     
     /**
@@ -74,6 +88,13 @@ public class TestGenes {
         protected double[] operation(double[] values) {
             return new double[] { values[0] * values[0] };
         }
+        
+        @Override
+        public SquareGene copyOf() {
+            SquareGene copy = new SquareGene(0, null); // Create with dummy values
+            cloneProperties(copy); // Copy over the real values
+            return copy;
+        }
     }
     
     /**
@@ -94,6 +115,13 @@ public class TestGenes {
         @Override
         protected double[] operation(double[] values) {
             return new double[] { Math.sqrt(values[0]) };
+        }
+        
+        @Override
+        public SquareRootGene copyOf() {
+            SquareRootGene copy = new SquareRootGene(0, null); // Create with dummy values
+            cloneProperties(copy); // Copy over the real values
+            return copy;
         }
     }
     
@@ -119,6 +147,13 @@ public class TestGenes {
         protected double[] operation(double[] values) {
             double factor = getOperationConstantList().get(0);
             return new double[] { values[0] * factor };
+        }
+        
+        @Override
+        public SourceIdGene copyOf() {
+            SourceIdGene copy = new SourceIdGene(0, 0.0, null); // Create with dummy values
+            cloneProperties(copy); // Copy over the real values
+            return copy;
         }
     }
 }

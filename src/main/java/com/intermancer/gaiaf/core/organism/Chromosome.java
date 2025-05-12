@@ -10,7 +10,6 @@ import java.util.List;
  */
 public class Chromosome implements DataQuantumConsumer {
     private List<Gene> genes;
-    private String id;
 
     /**
      * Default constructor for Jackson deserialization.

@@ -187,24 +187,21 @@ public class BasicOrganismBreederTest {
         
         // Child 1 should have: p1c1, p2c1, p3c1
         Organism child1 = children.get(0);
-        assertEquals(3, child1.getChromosomes().size());
+        assertEquals(2, child1.getChromosomes().size());
         assertEquals(p1c1, child1.getChromosomes().get(0));
-        assertEquals(p2c1, child1.getChromosomes().get(1));
-        assertEquals(p3c1, child1.getChromosomes().get(2));
+        assertEquals(p3c3, child1.getChromosomes().get(1));
         
         // Child 2 should have: p2c1, p3c1, p1c1
         Organism child2 = children.get(1);
-        assertEquals(3, child2.getChromosomes().size());
+        assertEquals(2, child2.getChromosomes().size());
         assertEquals(p2c1, child2.getChromosomes().get(0));
-        assertEquals(p3c1, child2.getChromosomes().get(1));
-        assertEquals(p1c1, child2.getChromosomes().get(2));
+        assertEquals(p3c2, child2.getChromosomes().get(1));
         
         // Child 3 should have: p3c1, p1c1, p2c1
         Organism child3 = children.get(2);
-        assertEquals(3, child3.getChromosomes().size());
+        assertEquals(2, child3.getChromosomes().size());
         assertEquals(p3c1, child3.getChromosomes().get(0));
-        assertEquals(p1c1, child3.getChromosomes().get(1));
-        assertEquals(p2c1, child3.getChromosomes().get(2));
+        assertEquals(p1c2, child3.getChromosomes().get(1));
     }
     
     @Test
