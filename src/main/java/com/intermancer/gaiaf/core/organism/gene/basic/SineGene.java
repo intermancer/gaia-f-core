@@ -12,4 +12,11 @@ public class SineGene extends Gene {
         // Apply sine function to the input value
         return new double[] { Math.sin(values[0]) };
     }
+
+    @Override
+    public SineGene copyOf() {
+        SineGene copy = new SineGene();
+        cloneProperties(copy);
+        return copy;
+    }
 }

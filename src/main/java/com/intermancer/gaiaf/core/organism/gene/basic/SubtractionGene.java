@@ -21,4 +21,11 @@ public class SubtractionGene extends Gene {
         // Subtract the constant from the input value
         return new double[] { values[0] - constant };
     }
+
+    @Override
+    public SubtractionGene copyOf() {
+        SubtractionGene copy = new SubtractionGene();
+        cloneProperties(copy);
+        return copy;
+    }
 }

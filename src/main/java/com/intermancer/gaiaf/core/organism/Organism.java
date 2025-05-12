@@ -2,6 +2,7 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -93,8 +94,32 @@ public class Organism implements DataQuantumConsumer {
      *
      * @return The unique ID as a String.
      */
-    @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        
+        Organism other = (Organism) obj;
+        
+        // Compare chromosomes list
+        if (chromosomes == null) {
+            if (other.chromosomes != null) return false;
+        } else if (!chromosomes.equals(other.chromosomes)) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((chromosomes == null) ? 0 : chromosomes.hashCode());
+        return result;
     }
 }

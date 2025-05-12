@@ -26,4 +26,11 @@ public class DivisionGene extends Gene {
         // Divide the input value by the constant
         return new double[] { values[0] / constant };
     }
+
+    @Override
+    public DivisionGene copyOf() {
+        DivisionGene copy = new DivisionGene();
+        cloneProperties(copy);
+        return copy;
+    }
 }

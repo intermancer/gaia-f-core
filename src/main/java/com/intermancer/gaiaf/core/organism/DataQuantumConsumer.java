@@ -12,11 +12,4 @@ public interface DataQuantumConsumer {
      * @param dataQuantum The DataQuantum to consume.
      */
     void consume(DataQuantum dataQuantum);
-
-    /**
-     * Returns a unique identifier for the DataQuantumConsumer.
-     *
-     * @return A unique ID as a String.
-     */
-    String getId();
 }

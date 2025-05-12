@@ -21,4 +21,11 @@ public class MultiplicationGene extends Gene {
         // Multiply the input value by the constant
         return new double[] { values[0] * constant };
     }
+
+    @Override
+    public MultiplicationGene copyOf() {
+        MultiplicationGene copy = new MultiplicationGene();
+        cloneProperties(copy);
+        return copy;
+    }
 }

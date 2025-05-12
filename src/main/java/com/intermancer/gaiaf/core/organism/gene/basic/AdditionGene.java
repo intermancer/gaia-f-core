@@ -21,4 +21,11 @@ public class AdditionGene extends Gene {
         // Add the constant to the input value
         return new double[] { values[0] + constant };
     }
+
+    @Override
+    public AdditionGene copyOf() {
+        AdditionGene copy = new AdditionGene();
+        cloneProperties(copy);
+        return copy;
+    }
 }
