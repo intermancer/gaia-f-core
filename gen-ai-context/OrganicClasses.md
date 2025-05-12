@@ -85,9 +85,11 @@ Creates a clone of targetIndexList by creating a new List<Double> and adding new
 
 Creates a clone of operationConstantList by creating a new List<Double> and adding new instances of every element in operationConstantList. Calls clone.setOperationConstantList() with the clone.
 
-`abstract Gene clone()`
+`abstract Gene copyOf()`
+Every concrete Gene will need to implement the copyOf() method by first instantiating a new instance of the same type, and then calling `cloneProperties()` and passing in the new instance.
 
-Every concrete Gene will need to implement the clone() method by first instantiating a new instance of the same type, and then calling `cloneProperties()` and passing in the new instance.
+`boolean equals(Object obj)`
+Gene overrides the java.lang.Object.equals() method.  Two Genes are equal if and only if their targetIndexList and operationalConstantList properties are also equal.  Concrete genes might further override the `equals()` method, but the id property should never be considered when determining if two Genes are equal.
 
 ### Chromosome
 Chromosome is a set of Genes.  Chromosomes can be cloned.
@@ -100,8 +102,11 @@ The genes property is exposed using standard getter and setter methods.
 `void consume(DataQuantum dataQuantum)` 
 Chromosome implements `consume()` by passing the DataQuantum to each of its Genes, in order.
 
-`Chromosome clone()`
+`Chromosome copyOf()`
 Returns a new instance of Chromosome. The genes property of the new Chromosome is created by calling clone() on each of the Genes in the original Chromosome.
+
+`boolean equals(Object obj)`
+Chromosome overrides the java.lang.Object.equals() method. Two Chromosomes are equal if and only if their genes properties are equal.
 
 ### Organism
 An Organism has an ordered list of Chromosomes.  
@@ -118,6 +123,9 @@ The `chromosomes` property is accessible through a standard getter and setter.
 
 `void addChromosome(Chromosome chromosome)`
 Adds chromosome to the end of the list of chromosomes.
+
+`boolean equals(Object obj)`
+Organism overrides the java.lang.Object.equals() method. Two Organisms are equal if and only if their chromosomes properties are equal. The id property is not part of equals comparison.
 
 ### OrganismBreeder
 
