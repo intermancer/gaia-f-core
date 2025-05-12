@@ -95,15 +95,9 @@ Returns a list of Organisms that have been generated based on some sort of combi
 
 ### BasicBreeder
 
-The BasicBreeder will return the same number of children organisms as there are parents.  It uses a shift strategy.  
+BasicBreeder functions like a genetic carousel, creating children by rotating parental chromosomes. Imagine parents standing in a circle, each holding their chromosomes in order. 
 
-The first chromosome of the first child is a clone of the first chromosome of the first parent.  The second chromosome of the first child is a clone of the second chromosome of the second parent.  And so on.
-
-The first chromosome of the second child is a clone of the first chromosome of the second parent.  The second chromosome of the second child is a clone of the second chromosome of the third parent.  And so on.
-
-Parents are referenced using a mod of the chromosome count, based on the number of parents, so, if there are only two parents, "the third parent" refers to the first parent.
-
-This combination strategy continues and includes all of the genetic matreial of all of the parents, even if they have unequal numbers of chromosomes.
+To create Child 1, take the first chromosome from Parent 1, the second from Parent 2, and so on—cycling back to Parent 1 when you run out of parents. For Child 2, shift one position: take the first chromosome from Parent 2, the second from Parent 3, etc. This pattern continues until you've created as many children as there were parents. 
 
 ## Organism Repository
 
