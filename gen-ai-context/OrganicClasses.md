@@ -88,16 +88,20 @@ Returns the list of chromosomes.
 
 Interface for classes that breed two or more Organisms in order to generate descendents that are some sort of combination of the genetic material of their ancestors.
 
+OrganismBreeder and its default concrete implementations are in the `breeding` package, which extends from the `organism` package.
+
 #### Methods
 
 `List<Organism> breed(List<Organism> parents)`
 Returns a list of Organisms that have been generated based on some sort of combination of the parental organism that are provided as arguments.
 
-### BasicBreeder
+### BasicOrganismBreeder
 
 BasicBreeder functions like a genetic carousel, creating children by rotating parental chromosomes. Imagine parents standing in a circle, each holding their chromosomes in order. 
 
 To create Child 1, take the first chromosome from Parent 1, the second from Parent 2, and so on—cycling back to Parent 1 when you run out of parents. For Child 2, shift one position: take the first chromosome from Parent 2, the second from Parent 3, etc. This pattern continues until you've created as many children as there were parents. 
+
+Children are given a random ID with no set prefix or suffix.
 
 ## Organism Repository
 
