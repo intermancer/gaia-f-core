@@ -42,18 +42,33 @@ interface
 #### Methods
 
 `void consume(DataQuantum dataQuantum)` 
-`String getId()`
 
 ### Gene
 Gene is a DataQuantumConsumer.
 
+A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
+
+Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo annotation from the Jackson library that forces serialization and deserialization to use a fully-qualified class name for the type. Specifically, it should use @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type") to ensure proper polymorphic type handling.
+
+#### Methods and properties
+
+`String id`
+
+The `id` property is accessible through a standard getter and setter.
+
+`List<Double> targetIndexList`
+
 Gene has a targetIndexList property with a public getter that is a List of Integer initialized with a single value of -1.
+
+`List<Double> operationConstantList`
 
 Gene has an operationConstantList property, with a public getter and setter, that is a List of Double.  It is initialized to an empty List.
 
-Gene has a public setter for the id property, in addition to the getter that was declared in DataQuantumConsumer.
+`abstract double[] operation(double[] values)`
 
-Gene declares an abstract method `double[] operation(double[] values)`. Subclasses implement the `operation()` method to operate on the values from the DataQuantum.
+Subclasses implement the `operation()` method to operate on the values from the DataQuantum.
+
+`void consume(DataQuantum dataQuantum)` 
 
 Gene implements a template method pattern for `void consume(DataQuantum dataQuantum)` that
   - uses the targetIndexList property to extract the values of the DataPoints in dataQuantum and create an array of primitive double.
@@ -62,27 +77,47 @@ Gene implements a template method pattern for `void consume(DataQuantum dataQuan
     - creates a new DataPoint using `new DataPoint(this.getId(), operation(dataPoint.getValue()))`
     - adds the new DataPoint to dataQuantum.
 
-A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
+`void cloneProperties(Gene clone)`
 
-Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo annotation from the Jackson library that forces serialization and deserialization to use a fully-qualified class name for the type. Specifically, it should use @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type") to ensure proper polymorphic type handling.
+Creates a new UUID for the clone Gene.
+
+Creates a clone of targetIndexList by creating a new List<Double> and adding new instances of every element in targetIndexList. Calls clone.setTargetIndexList() with the clone.
+
+Creates a clone of operationConstantList by creating a new List<Double> and adding new instances of every element in operationConstantList. Calls clone.setOperationConstantList() with the clone.
+
+`abstract Gene clone()`
+
+Every concrete Gene will need to implement the clone() method by first instantiating a new instance of the same type, and then calling `cloneProperties()` and passing in the new instance.
 
 ### Chromosome
-A Chromosome has an ordered list of Genes. The genes property is exposed using standard getter and setter methods.
+Chromosome is a set of Genes.  Chromosomes can be cloned.
 
-A Chromosome is a DataQuantumConsumer. Chromosome implements `consume()` by passing the DataQuantum to each of its Genes, in order.
+#### Methods and properties
+
+`List<Gene> genes`
+The genes property is exposed using standard getter and setter methods.
+
+`void consume(DataQuantum dataQuantum)` 
+Chromosome implements `consume()` by passing the DataQuantum to each of its Genes, in order.
+
+`Chromosome clone()`
+Returns a new instance of Chromosome. The genes property of the new Chromosome is created by calling clone() on each of the Genes in the original Chromosome.
 
 ### Organism
 An Organism has an ordered list of Chromosomes.  
 
 An Organism is a DataQuantumConsumer. BaseOrganism implements consume() by passing dataQuantum to each of its Chromosomes, in order.
 
-#### Methods
+#### Methods and properties
+
+`String id`
+The `id` property is accessible through a standard getter and setter.
+
+`List<Chromosome> chromosomes`
+The `chromosomes` property is accessible through a standard getter and setter.
 
 `void addChromosome(Chromosome chromosome)`
 Adds chromosome to the end of the list of chromosomes.
-
-`List<Chromosome> getChromosomes()`
-Returns the list of chromosomes.
 
 ### OrganismBreeder
 
