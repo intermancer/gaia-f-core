@@ -53,23 +53,18 @@ Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo 
 #### Methods and properties
 
 `String id`
-
 The `id` property is accessible through a standard getter and setter.
 
 `List<Double> targetIndexList`
-
 Gene has a targetIndexList property with a public getter that is a List of Integer initialized with a single value of -1.
 
 `List<Double> operationConstantList`
-
 Gene has an operationConstantList property, with a public getter and setter, that is a List of Double.  It is initialized to an empty List.
 
 `abstract double[] operation(double[] values)`
-
 Subclasses implement the `operation()` method to operate on the values from the DataQuantum.
 
 `void consume(DataQuantum dataQuantum)` 
-
 Gene implements a template method pattern for `void consume(DataQuantum dataQuantum)` that
   - uses the targetIndexList property to extract the values of the DataPoints in dataQuantum and create an array of primitive double.
   - passes the array of primitive double to the `operation()` method
@@ -78,7 +73,6 @@ Gene implements a template method pattern for `void consume(DataQuantum dataQuan
     - adds the new DataPoint to dataQuantum.
 
 `void cloneProperties(Gene clone)`
-
 Creates a new UUID for the clone Gene.
 
 Creates a clone of targetIndexList by creating a new List<Double> and adding new instances of every element in targetIndexList. Calls clone.setTargetIndexList() with the clone.
