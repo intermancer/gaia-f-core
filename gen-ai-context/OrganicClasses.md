@@ -44,7 +44,7 @@ interface
 `void consume(DataQuantum dataQuantum)` 
 
 ### Gene
-Gene is a DataQuantumConsumer.
+Gene is a DataQuantumConsumer and implements the Mutational interface.
 
 A TestGene, which concretely extends the Gene, is needed in the test code so that it can be referred to by GeneTest, ChromosomeTest, and OrganismTest.
 
@@ -55,7 +55,7 @@ Since Gene can have many different sub-classes, it needs to have a JsonTypeInfo 
 `String id`
 The `id` property is accessible through a standard getter and setter.
 
-`List<Double> targetIndexList`
+`List<Integer> targetIndexList`
 Gene has a targetIndexList property with a public getter that is a List of Integer initialized with a single value of -1.
 
 `List<Double> operationConstantList`
@@ -85,8 +85,13 @@ Every concrete Gene will need to implement the copyOf() method by first instanti
 `boolean equals(Object obj)`
 Gene overrides the java.lang.Object.equals() method.  Two Genes are equal if and only if their targetIndexList and operationalConstantList properties are also equal.  Concrete genes might further override the `equals()` method, but the id property should never be considered when determining if two Genes are equal.
 
+`List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. The following MutationCommands are created and returned:
+- Adjust an element of targetIndexList up or down by a random value between 1 and 5.
+- Adjust an element of operationConstantList up or down by a random percentage between 1 and 20.
+
 ### Chromosome
-Chromosome is a set of Genes.  Chromosomes can be cloned.
+Chromosome is a set of Genes and implements the Mutational interface. Chromosomes can be cloned.
 
 #### Methods and properties
 
@@ -102,8 +107,14 @@ Returns a new instance of Chromosome. The genes property of the new Chromosome i
 `boolean equals(Object obj)`
 Chromosome overrides the java.lang.Object.equals() method. Two Chromosomes are equal if and only if their genes properties are equal.
 
+`List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes.  The MutationCommands on the Chromosome are:
+- Move a random Gene to a different place in the List.
+- Delete a random Gene.
+- Call the GeneGenerator described in Experimentation.md and the Gene to a random point in the List of Genes.
+
 ### Organism
-An Organism has an ordered list of Chromosomes.  
+An Organism has an ordered list of Chromosomes and implements the Mutational interface.
 
 An Organism is a DataQuantumConsumer. BaseOrganism implements consume() by passing dataQuantum to each of its Chromosomes, in order.
 
@@ -120,6 +131,12 @@ Adds chromosome to the end of the list of chromosomes.
 
 `boolean equals(Object obj)`
 Organism overrides the java.lang.Object.equals() method. Two Organisms are equal if and only if their chromosomes properties are equal. The id property is not part of equals comparison.
+
+`List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes.
+- If the Organism has more than one Chromosome, reorder a single Chromosome. (If there is only one Chromosome, no such MutationCommand will be returned.)
+- If the Organism has more than one Chromosome, delete a Chromosome.
+- Add a random Chromosome using the ChromosomeGenerator described in Experimentation.md.
 
 ### OrganismBreeder
 
