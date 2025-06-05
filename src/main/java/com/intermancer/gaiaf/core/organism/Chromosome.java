@@ -2,13 +2,18 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import com.intermancer.gaiaf.core.experiment.GeneGenerator;
+import com.intermancer.gaiaf.core.experiment.MutationCommand;
+import com.intermancer.gaiaf.core.experiment.Mutational;
 
 /**
  * Represents a Chromosome, which is an ordered list of Genes.
  * A Chromosome is a DataQuantumConsumer that processes a DataQuantum
  * by passing it to each of its Genes in order.
  */
-public class Chromosome implements DataQuantumConsumer {
+public class Chromosome implements DataQuantumConsumer, Mutational {
     private List<Gene> genes;
 
     /**
@@ -89,5 +94,91 @@ public class Chromosome implements DataQuantumConsumer {
         int result = 1;
         result = prime * result + ((genes == null) ? 0 : genes.hashCode());
         return result;
+    }
+
+/**
+     * Implements the Mutational interface. Returns a list of possible mutations 
+     * that can be applied to this Chromosome. This includes mutations for the 
+     * chromosome itself, as well as the MutationCommands for each of its Genes.
+     * 
+     * @return List of MutationCommand objects
+     */
+    @Override
+    public List<MutationCommand> getMutationCommandList() {
+        List<MutationCommand> mutations = new ArrayList<>();
+        Random random = new Random();
+        
+        // Add mutations for the chromosome itself
+        
+        // Move a random Gene to a different place in the List
+        if (genes.size() > 1) {
+            mutations.add(getExchangeGeneMutationCommand(random));
+        }
+        
+        // Delete a random Gene
+        if (!genes.isEmpty()) {
+            mutations.add(getRemoveRandomGeneMutationCommand(random));
+        }
+        
+        // Add a random Gene
+        mutations.add(getAddRandomGeneMutationCommand(random));
+        
+        // Add mutations from each gene
+        for (Gene gene : genes) {
+            mutations.addAll(gene.getMutationCommandList());
+        }
+        
+        return mutations;
+    }
+
+    private MutationCommand getExchangeGeneMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                int fromIndex = random.nextInt(genes.size());
+                int toIndex = random.nextInt(genes.size());
+                while (toIndex == fromIndex) {
+                    toIndex = random.nextInt(genes.size());
+                }
+                Gene gene = genes.remove(fromIndex);
+                genes.add(toIndex, gene);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Move a random gene to a different position";
+            }
+        };
+    }
+
+    private MutationCommand getRemoveRandomGeneMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                int indexToRemove = random.nextInt(genes.size());
+                genes.remove(indexToRemove);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Delete a random gene";
+            }
+        };
+    }
+
+    private MutationCommand getAddRandomGeneMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                Gene newGene = GeneGenerator.getRandomGene();
+                int insertIndex = genes.isEmpty() ? 0 : random.nextInt(genes.size() + 1);
+                genes.add(insertIndex, newGene);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Add a random gene at a random position";
+            }
+        };
     }
 }

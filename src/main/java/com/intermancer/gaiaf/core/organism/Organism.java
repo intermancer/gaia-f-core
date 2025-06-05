@@ -2,16 +2,20 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.intermancer.gaiaf.core.experiment.ChromosomeGenerator;
+import com.intermancer.gaiaf.core.experiment.MutationCommand;
+import com.intermancer.gaiaf.core.experiment.Mutational;
 
 /**
  * Represents an Organism, which is a DataQuantumConsumer.
  * An Organism contains an ordered list of Chromosomes and processes
  * a DataQuantum by passing it to each Chromosome in order.
  */
-public class Organism implements DataQuantumConsumer {
+public class Organism implements DataQuantumConsumer, Mutational {
     private List<Chromosome> chromosomes;
     private String id;
 
@@ -121,5 +125,87 @@ public class Organism implements DataQuantumConsumer {
         int result = 1;
         result = prime * result + ((chromosomes == null) ? 0 : chromosomes.hashCode());
         return result;
+    }
+
+/**
+     * Implements the Mutational interface. Returns a list of possible mutations 
+     * that can be applied to this Organism. This includes mutations for the 
+     * organism itself as well as all of the MutationCommands of its Chromosomes.
+     * 
+     * @return List of MutationCommand objects
+     */
+    @Override
+    public List<MutationCommand> getMutationCommandList() {
+        List<MutationCommand> mutations = new ArrayList<>();
+        Random random = new Random();
+        
+        // Reorder a single Chromosome (only if more than one chromosome)
+        if (chromosomes.size() > 1) {
+            mutations.add(getExchangeChromosomeMutationCommand(random));
+            
+            // Delete a Chromosome (only if more than one chromosome)
+            mutations.add(getDeleteRandomChromosomeMutationCommand(random));
+        }
+        
+        // Add a random Chromosome
+        mutations.add(getAddRandomChromosomeMutationCommand(random));
+        
+        // Add mutations from each chromosome
+        for (Chromosome chromosome : chromosomes) {
+            mutations.addAll(chromosome.getMutationCommandList());
+        }
+        
+        return mutations;
+    }
+
+    private MutationCommand getExchangeChromosomeMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                int fromIndex = random.nextInt(chromosomes.size());
+                int toIndex = random.nextInt(chromosomes.size());
+                while (toIndex == fromIndex) {
+                    toIndex = random.nextInt(chromosomes.size());
+                }
+                Chromosome chromosome = chromosomes.remove(fromIndex);
+                chromosomes.add(toIndex, chromosome);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Reorder a single chromosome";
+            }
+        };
+    }
+
+    private MutationCommand getDeleteRandomChromosomeMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                int indexToRemove = random.nextInt(chromosomes.size());
+                chromosomes.remove(indexToRemove);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Delete a random chromosome";
+            }
+        };
+    }
+
+    private MutationCommand getAddRandomChromosomeMutationCommand(Random random) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                Chromosome newChromosome = ChromosomeGenerator.getRandomChromosome();
+                int insertIndex = chromosomes.isEmpty() ? 0 : random.nextInt(chromosomes.size() + 1);
+                chromosomes.add(insertIndex, newChromosome);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Add a random chromosome";
+            }
+        };
     }
 }

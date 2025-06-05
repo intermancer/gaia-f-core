@@ -2,9 +2,12 @@ package com.intermancer.gaiaf.core.organism;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.intermancer.gaiaf.core.experiment.MutationCommand;
+import com.intermancer.gaiaf.core.experiment.Mutational;
 
 /**
  * Represents a Gene, which is a DataQuantumConsumer.
@@ -16,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     include = JsonTypeInfo.As.PROPERTY, // Include type info as a property
     property = "type" // The property name in JSON
 )
-public abstract class Gene implements DataQuantumConsumer {
+public abstract class Gene implements DataQuantumConsumer, Mutational {
     private String id;
     private List<Integer> targetIndexList;
     private List<Double> operationConstantList;
@@ -151,5 +154,107 @@ public abstract class Gene implements DataQuantumConsumer {
         result = prime * result + ((targetIndexList == null) ? 0 : targetIndexList.hashCode());
         result = prime * result + ((operationConstantList == null) ? 0 : operationConstantList.hashCode());
         return result;
+    }
+
+ /**
+     * Implements the Mutational interface. Returns a list of possible mutations 
+     * that can be applied to this Gene.
+     * 
+     * @return List of MutationCommand objects
+     */
+    @Override
+    public List<MutationCommand> getMutationCommandList() {
+        List<MutationCommand> mutations = new ArrayList<>();
+        Random random = new Random();
+        
+        // Mutations for targetIndexList
+        for (int i = 0; i < targetIndexList.size(); i++) {
+            final int index = i;
+            
+            // Adjust targetIndex up
+            mutations.add(getTargetIndexUpMutationCommand(random, index));
+            
+            // Adjust targetIndex down
+            mutations.add(getTargetIndexDownMutationCommand(random, index));
+        }
+        
+        // Mutations for operationConstantList
+        for (int i = 0; i < operationConstantList.size(); i++) {
+            final int index = i;
+            
+            // Adjust constant up by percentage
+            mutations.add(getOperationalConstantUpMutationCommand(random, index));
+            
+            // Adjust constant down by percentage
+            mutations.add(getOperationalConstantDownMutationCommand(random, index));
+        }
+        
+        return mutations;
+    }
+
+ private MutationCommand getTargetIndexDownMutationCommand(Random random, final int index) {
+    return new MutationCommand() {
+        @Override
+        public void execute() {
+            int adjustment = random.nextInt(5) + 1; // 1 to 5
+            int newValue = targetIndexList.get(index) - adjustment;
+            targetIndexList.set(index, newValue);
+        }
+        
+        @Override
+        public String getDescription() {
+            return "Decrease targetIndex[" + index + "] by 1-5";
+        }
+    };
+ }
+
+ private MutationCommand getTargetIndexUpMutationCommand(Random random, final int index) {
+    return new MutationCommand() {
+        @Override
+        public void execute() {
+            int adjustment = random.nextInt(5) + 1; // 1 to 5
+            int newValue = targetIndexList.get(index) + adjustment;
+            targetIndexList.set(index, newValue);
+        }
+        
+        @Override
+        public String getDescription() {
+            return "Increase targetIndex[" + index + "] by 1-5";
+        }
+    };
+ }
+
+    private MutationCommand getOperationalConstantUpMutationCommand(Random random, final int index) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                double percentage = (random.nextInt(20) + 1) / 100.0; // 1% to 20%
+                double currentValue = operationConstantList.get(index);
+                double newValue = currentValue * (1 + percentage);
+                operationConstantList.set(index, newValue);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Increase operationConstant[" + index + "] by 1-20%";
+            }
+        };
+    }
+
+    private MutationCommand getOperationalConstantDownMutationCommand(Random random, final int index) {
+        return new MutationCommand() {
+            @Override
+            public void execute() {
+                double percentage = (random.nextInt(20) + 1) / 100.0; // 1% to 20%
+                double currentValue = operationConstantList.get(index);
+                double newValue = currentValue * (1 - percentage);
+                operationConstantList.set(index, newValue);
+            }
+            
+            @Override
+            public String getDescription() {
+                return "Decrease operationConstant[" + index + "] by 1-20%";
+            }
+        };
     }
 }
