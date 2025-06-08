@@ -29,27 +29,16 @@ public class GeneGenerator {
     public static Gene getRandomGene() {
         // Choose a random gene type
         int geneType = random.nextInt(5);
-        Gene gene;
         
-        switch (geneType) {
-            case 0:
-                gene = new AdditionGene();
-                break;
-            case 1:
-                gene = new SubtractionGene();
-                break;
-            case 2:
-                gene = new MultiplicationGene();
-                break;
-            case 3:
-                gene = new DivisionGene();
-                break;
-            case 4:
-                gene = new SineGene();
-                break;
-            default:
-                gene = new AdditionGene();
-        }
+        // Use switch expression instead of switch block
+        Gene gene = switch (geneType) {
+            case 0 -> new AdditionGene();
+            case 1 -> new SubtractionGene();
+            case 2 -> new MultiplicationGene();
+            case 3 -> new DivisionGene();
+            case 4 -> new SineGene();
+            default -> new AdditionGene(); // This should never be reached with nextInt(5)
+        };
         
         // Set a random ID
         gene.setId(gene.getClass().getSimpleName() + "-" + UUID.randomUUID().toString().substring(0, 8));
