@@ -86,9 +86,23 @@ Every concrete Gene will need to implement the copyOf() method by first instanti
 Gene overrides the java.lang.Object.equals() method.  Two Genes are equal if and only if their targetIndexList and operationalConstantList properties are also equal.  Concrete genes might further override the `equals()` method, but the id property should never be considered when determining if two Genes are equal.
 
 `List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. The following MutationCommands are created and returned:
-- Adjust an element of targetIndexList up or down by a random value between 1 and 5.
-- Adjust an element of operationConstantList up or down by a random percentage between 1 and 20.
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. The method uses helper methods to generate specific types of mutations:
+- For each element in targetIndexList: calls `getTargetIndexUpMutationCommand()` and `getTargetIndexDownMutationCommand()` to create mutations that adjust target indices up or down by a random value between 1 and 5.
+- For each element in operationConstantList: calls `getOperationalConstantUpMutationCommand()` and `getOperationalConstantDownMutationCommand()` to create mutations that adjust operational constants up or down by a random percentage between 1 and 20.
+
+#### Helper Methods for Mutation Generation
+
+`private MutationCommand getTargetIndexUpMutationCommand(Random random, int index)`
+Creates a MutationCommand that increases the target index at the specified position by 1-5.
+
+`private MutationCommand getTargetIndexDownMutationCommand(Random random, int index)`
+Creates a MutationCommand that decreases the target index at the specified position by 1-5.
+
+`private MutationCommand getOperationalConstantUpMutationCommand(Random random, int index)`
+Creates a MutationCommand that increases the operational constant at the specified position by 1-20%.
+
+`private MutationCommand getOperationalConstantDownMutationCommand(Random random, int index)`
+Creates a MutationCommand that decreases the operational constant at the specified position by 1-20%.
 
 ### Chromosome
 Chromosome is a set of Genes and implements the Mutational interface. Chromosomes can be cloned.
@@ -108,10 +122,22 @@ Returns a new instance of Chromosome. The genes property of the new Chromosome i
 Chromosome overrides the java.lang.Object.equals() method. Two Chromosomes are equal if and only if their genes properties are equal.
 
 `List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes.  The MutationCommands on the Chromosome are:
-- Move a random Gene to a different place in the List.
-- Delete a random Gene.
-- Call the GeneGenerator described in Experimentation.md and the Gene to a random point in the List of Genes.
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes. The method uses helper methods to generate specific types of mutations:
+- If genes list has more than one element: calls `getExchangeGeneMutationCommand()` to move a random Gene to a different place in the List.
+- If genes list is not empty: calls `getRemoveRandomGeneMutationCommand()` to delete a random Gene.
+- Always calls `getAddRandomGeneMutationCommand()` to add a random Gene using the GeneGenerator.
+- Collects and includes all MutationCommands from each Gene in the chromosome.
+
+#### Helper Methods for Mutation Generation
+
+`private MutationCommand getExchangeGeneMutationCommand(Random random)`
+Creates a MutationCommand that moves a random gene to a different position in the genes list.
+
+`private MutationCommand getRemoveRandomGeneMutationCommand(Random random)`
+Creates a MutationCommand that removes a randomly selected gene from the genes list.
+
+`private MutationCommand getAddRandomGeneMutationCommand(Random random)`
+Creates a MutationCommand that adds a randomly generated gene (using GeneGenerator) at a random position in the genes list.
 
 ### Organism
 An Organism has an ordered list of Chromosomes and implements the Mutational interface.
@@ -133,10 +159,21 @@ Adds chromosome to the end of the list of chromosomes.
 Organism overrides the java.lang.Object.equals() method. Two Organisms are equal if and only if their chromosomes properties are equal. The id property is not part of equals comparison.
 
 `List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes.
-- If the Organism has more than one Chromosome, reorder a single Chromosome. (If there is only one Chromosome, no such MutationCommand will be returned.)
-- If the Organism has more than one Chromosome, delete a Chromosome.
-- Add a random Chromosome using the ChromosomeGenerator described in Experimentation.md.
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes. The method uses helper methods to generate specific types of mutations:
+- If chromosomes list has more than one element: calls `getExchangeChromosomeMutationCommand()` to reorder a single Chromosome and `getDeleteRandomChromosomeMutationCommand()` to delete a Chromosome.
+- Always calls `getAddRandomChromosomeMutationCommand()` to add a random Chromosome using the ChromosomeGenerator.
+- Collects and includes all MutationCommands from each Chromosome in the organism.
+
+#### Helper Methods for Mutation Generation
+
+`private MutationCommand getExchangeChromosomeMutationCommand(Random random)`
+Creates a MutationCommand that moves a random chromosome to a different position in the chromosomes list.
+
+`private MutationCommand getDeleteRandomChromosomeMutationCommand(Random random)`
+Creates a MutationCommand that removes a randomly selected chromosome from the chromosomes list.
+
+`private MutationCommand getAddRandomChromosomeMutationCommand(Random random)`
+Creates a MutationCommand that adds a randomly generated chromosome (using ChromosomeGenerator) at a random position in the chromosomes list.
 
 ### OrganismBreeder
 
