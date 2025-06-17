@@ -27,13 +27,13 @@ sourceId can be null.
 Adds a DataPoint to the DataQuantum.  Does not allow nulls.
 
 `DataPoint getDataPoint(int index)` 
-Uses mod on the index so that the call allways returns an object.
+`getDataPoint()` always returns a DataPoint if the DataQuantum has at least one DataPoint.  Calling it with -1 returns the last DataPoint in the List.  -2 returns the second to the last DataPoint in the list. Calling `getDataPoint()` with the size of the list will return the first DataPoint, which has an index of 0.
 
 `void addValue(double value)`
 Creates a new DataPoint with the provided value and a null sourceId, then adds it to the List.
 
 `double getValue(int index)`
-A convenience method for getDataPoint(index).getValue
+A convenience method for getDataPoint(index).getValue()
 
 ### DataQuantumConsumer
 
