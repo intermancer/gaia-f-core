@@ -1,7 +1,9 @@
 package com.intermancer.gaiaf.core.organism;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class DataQuantumTest {
     
@@ -18,7 +20,9 @@ public class DataQuantumTest {
     @Test
     public void testAddDataPointNull() {
         DataQuantum dataQuantum = new DataQuantum();
-        assertThrows(IllegalArgumentException.class, () -> dataQuantum.addDataPoint(null));
+        IllegalArgumentException excpetion = assertThrows(IllegalArgumentException.class, 
+                () -> dataQuantum.addDataPoint(null));
+        assertEquals("DataPoint cannot be null", excpetion.getMessage());
     }
     
     @Test
@@ -38,12 +42,20 @@ public class DataQuantumTest {
         assertEquals(2.0, dataQuantum.getDataPoint(4).getValue());
         assertEquals(3.0, dataQuantum.getDataPoint(5).getValue());
         assertEquals(1.0, dataQuantum.getDataPoint(6).getValue());
+
+        // Test negative indices
+        assertEquals(3.0, dataQuantum.getDataPoint(-1).getValue());
+        assertEquals(2.0, dataQuantum.getDataPoint(-2).getValue());
+        assertEquals(1.0, dataQuantum.getDataPoint(-3).getValue());
     }
     
     @Test
     public void testGetDataPointEmptyList() {
         DataQuantum dataQuantum = new DataQuantum();
-        assertThrows(IllegalStateException.class, () -> dataQuantum.getDataPoint(0));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, 
+                () -> dataQuantum.getDataPoint(0));
+
+        assertEquals("No DataPoints available", exception.getMessage());
     }
     
     @Test

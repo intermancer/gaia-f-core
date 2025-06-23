@@ -113,10 +113,6 @@ public class Chromosome implements DataQuantumConsumer, Mutational {
         // Move a random Gene to a different place in the List
         if (genes.size() > 1) {
             mutations.add(getExchangeGeneMutationCommand(random));
-        }
-        
-        // Delete a random Gene
-        if (!genes.isEmpty()) {
             mutations.add(getRemoveRandomGeneMutationCommand(random));
         }
         

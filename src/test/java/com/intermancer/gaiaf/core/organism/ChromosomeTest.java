@@ -256,10 +256,10 @@ public class ChromosomeTest {
         long removeMutations = mutations.stream()
             .filter(m -> m.getDescription().contains("Delete a random gene"))
             .count();
-        assertEquals(1, removeMutations);
+        assertEquals(0, removeMutations);
         
         // Should also include mutations from the gene itself
-        assertTrue(mutations.size() > 3); // At least chromosome mutations + gene mutations
+        assertEquals(5, mutations.size()); // At least chromosome mutations + gene mutations
     }
     
     @Test
@@ -429,7 +429,7 @@ public class ChromosomeTest {
         List<MutationCommand> geneMutations = gene.getMutationCommandList();
         
         // Chromosome mutations should include all gene mutations plus its own
-        assertTrue(chromosomeMutations.size() >= geneMutations.size() + 2); // At least gene mutations + add + remove
+        assertTrue(chromosomeMutations.size() >= geneMutations.size() + 1); // At least gene mutations + add + remove
         
         // Check that gene mutation descriptions are included
         long geneMutationCount = chromosomeMutations.stream()

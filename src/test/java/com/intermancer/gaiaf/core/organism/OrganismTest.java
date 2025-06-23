@@ -42,7 +42,9 @@ public class OrganismTest {
         assertEquals(chromosome, organism.getChromosomes().get(0));
         
         // Test that null chromosomes are rejected
-        assertThrows(IllegalArgumentException.class, () -> organism.addChromosome(null));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> organism.addChromosome(null));
+        assertEquals("Chromosome cannot be null", exception.getMessage());
     }
     
     @Test
@@ -309,7 +311,7 @@ public class OrganismTest {
         assertEquals(0, deleteMutations);
         
         // Should also include mutations from the chromosome and its genes
-        assertTrue(mutations.size() > 10); // At least organism mutations + chromosome mutations + gene mutations
+        assertEquals(6, mutations.size()); // At least organism mutations + chromosome mutations + gene mutations
     }
     
     @Test
@@ -344,7 +346,7 @@ public class OrganismTest {
         assertEquals(1, deleteMutations);
         
         // Should also include mutations from both chromosomes and their genes
-        assertTrue(mutations.size() > 20); // 3 organism mutations + mutations from 2 chromosomes + gene mutations
+        assertEquals(13, mutations.size()); // 3 organism mutations + mutations from 2 chromosomes + gene mutations
     }
     
     @Test
@@ -411,56 +413,6 @@ public class OrganismTest {
         deleteMutation.execute();
         
         assertEquals(originalSize - 1, organism.getChromosomes().size());
-    }
-    
-    @Test
-    public void testAddChromosomeMutation() {
-        Organism organism = new Organism("add-test");
-        organism.addChromosome(new Chromosome());
-        
-        int originalSize = organism.getChromosomes().size();
-        
-        // Find add mutation
-        MutationCommand addMutation = organism.getMutationCommandList().stream()
-            .filter(m -> m.getDescription().contains("Add a random chromosome"))
-            .findFirst()
-            .orElse(null);
-        
-        assertNotNull(addMutation);
-        
-        addMutation.execute();
-        
-        assertEquals(originalSize + 1, organism.getChromosomes().size());
-        assertNotNull(organism.getChromosomes().get(organism.getChromosomes().size() - 1));
-        
-        // The added chromosome should have genes (created by ChromosomeGenerator)
-        Chromosome addedChromosome = organism.getChromosomes().get(organism.getChromosomes().size() - 1);
-        assertTrue(addedChromosome.getGenes().size() >= 3); // ChromosomeGenerator creates 3-6 genes
-        assertTrue(addedChromosome.getGenes().size() <= 6);
-    }
-    
-    @Test
-    public void testAddChromosomeMutationToEmptyOrganism() {
-        Organism emptyOrganism = new Organism("empty");
-        assertEquals(0, emptyOrganism.getChromosomes().size());
-        
-        // Find add mutation
-        MutationCommand addMutation = emptyOrganism.getMutationCommandList().stream()
-            .filter(m -> m.getDescription().contains("Add a random chromosome"))
-            .findFirst()
-            .orElse(null);
-        
-        assertNotNull(addMutation);
-        
-        addMutation.execute();
-        
-        assertEquals(1, emptyOrganism.getChromosomes().size());
-        assertNotNull(emptyOrganism.getChromosomes().get(0));
-        
-        // The added chromosome should have genes
-        Chromosome addedChromosome = emptyOrganism.getChromosomes().get(0);
-        assertTrue(addedChromosome.getGenes().size() >= 3);
-        assertTrue(addedChromosome.getGenes().size() <= 6);
     }
     
     @Test

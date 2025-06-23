@@ -27,7 +27,21 @@ sourceId can be null.
 Adds a DataPoint to the DataQuantum.  Does not allow nulls.
 
 `DataPoint getDataPoint(int index)` 
-`getDataPoint()` always returns a DataPoint if the DataQuantum has at least one DataPoint.  Calling it with -1 returns the last DataPoint in the List.  -2 returns the second to the last DataPoint in the list. Calling `getDataPoint()` with the size of the list will return the first DataPoint, which has an index of 0.
+Retrieves a DataPoint at the specified index using modulo arithmetic to ensure safe array access. This method guarantees that a valid DataPoint is always returned as long as the DataQuantum contains at least one DataPoint.
+
+**Index Behavior:**
+- **Positive indices**: Standard array indexing (0, 1, 2, etc.)
+- **Negative indices**: Reverse indexing where -1 returns the last DataPoint, -2 returns the second-to-last, etc.
+- **Out-of-bounds indices**: Automatically wrapped using modulo operation to stay within valid range
+
+**Examples:**
+- For a DataQuantum with 3 DataPoints (indices 0, 1, 2):
+  - `getDataPoint(0)` returns the first DataPoint
+  - `getDataPoint(3)` returns the first DataPoint (3 % 3 = 0)
+  - `getDataPoint(-1)` returns the last DataPoint
+  - `getDataPoint(5)` returns the third DataPoint (5 % 3 = 2)
+
+**Exception:** Throws `IllegalStateException` if the DataQuantum contains no DataPoints.
 
 `void addValue(double value)`
 Creates a new DataPoint with the provided value and a null sourceId, then adds it to the List.
