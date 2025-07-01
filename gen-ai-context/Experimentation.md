@@ -68,6 +68,8 @@ Interface
 
 Evaluators are classes that grade organisms, giving them a numerical score.  By convention, a score closer to 0 is better, as 0 can be interpreted as "no deviations between predicted and actual values".
 
+Evaluator is in the com.intermancer.gaiaf.core.evaluate package.
+
 #### Methods
 
 `double evaluate(Organism organism)`
@@ -75,18 +77,40 @@ Evaluate the given Organism.
 
 ### BasicEvaluator
 
-The BasicEvaluator gets configured with a targetIndex and a leadConsumptionCount.  When an Organism is evaluated using the `evaluate()` method, DataQuanta are fed into the Organism.  After the DataQuantum has been consumed by the Organism, the BasicEvaluator saves the last DataPoint from the DataQuantum.  After leadConsumptionCount number of DataQuanta have been consumed by the Organism, the BasicEvaluator compares the saved DataPoint value to the value of the DataPoint at the targetIndex.  The score for a consumption cycle is the absolute difference between the target DataPoint value and the saved DataPoint value from leadConsumptionCount.  This score accumulates for all of the remaining test data.
+The BasicEvaluator is a concrete implementation of the Evaluator interface that provides fitness scoring for organisms using a prediction-based evaluation methodology. It operates by feeding historical time-series data to an organism and measuring how accurately the organism can predict future values.
 
-For example, we have 10 years of data for the Dow Jones Industrial Index, with Date, Open, High, Low, Close.  If the BasicEvaluator is configured with a targetIndex of 1 and a leadConsumptionCount of 3, it will:
-- Feed an Organism with the first DataQuantum
-- Save the value of the final DataPoint
-- Feed the Organism two more DataQuanta, saving the final DataPoints along the way
-- Feed the Organism a fourth DataQuantum, and compare the Open value with the value saved from the first DataQuantum.
-- Calculate the absolute difference between those values as the score at that point in the stream.
-- Continue in a like manner through all of the test data, accumulating a score as it goes.
-- When there is no more test data, the BasicEvaluator will return the score of the Organism.
+#### Configuration
 
-For now, the BasicEvaluator will use the file at src/main/resources/training-data/HistoricalPrices.csv.  Using streams, it will convert each line into a DataQuantum, and feed that into the Organism.  The first line of HistoricalPrices.csv is just labels, and should be skipped.  The first value in each data row is the epoch date, assuming the year starts with "20", so 01/10/20 is January 10, 2020.
+The BasicEvaluator requires two key configuration parameters:
+
+- **targetIndex**: Specifies which data column (by index) contains the target values to predict
+- **leadConsumptionCount**: Defines the number of data points the organism processes before making a prediction
+
+#### Evaluation Process
+When evaluating an organism through the evaluate() method, the BasicEvaluator follows this process:
+
+1. **Data Preparation**: Loads historical data from src/main/resources/training-data/HistoricalPrices.csv, skipping the header row and converting each data row into a DataQuantum
+2. **Lead-in Processing**: Feeds the organism with leadConsumptionCount number of DataQuanta, capturing the final DataPoint value from each consumption
+3. **Prediction Cycle**: For each subsequent DataQuantum:
+   - Feeds the DataQuantum to the organism
+Captures the organism's output (the final DataPoint value)
+   - Compares this predicted value against the actual target value at the specified targetIndex
+   - Calculates the absolute difference as the prediction error
+   - Accumulates this error to the total score
+
+4. **Score Calculation**: Returns the cumulative error score, where lower scores indicate better performance (with 0 representing perfect prediction accuracy)
+
+#### Example Scenario
+Consider evaluating an organism with historical Dow Jones data containing columns: Date, Open, High, Low, Close. With a targetIndex of 1 (Open) and leadConsumptionCount of 3:
+
+1. Feed the organism three DataQuanta (days 1-3), saving each output value
+2. Feed the fourth DataQuantum and compare the organism's output against the actual Open value from day 4
+3. Calculate the absolute difference between predicted and actual values
+Continue this process through all remaining test data
+4. Return the accumulated prediction error as the organism's fitness score
+
+#### Data Format
+The evaluation uses CSV data where the first column contains epoch dates (assuming years starting with "20"), and subsequent columns contain numerical values for analysis. Each row represents a single time point in the historical dataset.
 
 ### MutationCommand
 
