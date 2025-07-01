@@ -29,6 +29,7 @@ public class BasicEvaluator implements Evaluator {
     
     private static final String HISTORICAL_DATA_PATH = "/training-data/HistoricalPrices.csv";
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
+    List<DataQuantum> historicalData;
 
     
     /**
@@ -69,17 +70,10 @@ public class BasicEvaluator implements Evaluator {
      */
     @Override
     public double evaluate(Organism organism) {
-        List<DataQuantum> historicalData = loadHistoricalData();
-        
-        if (historicalData.size() <= leadConsumptionCount) {
-            throw new IllegalStateException("Insufficient historical data for evaluation. Need at least " 
-                + (leadConsumptionCount + 1) + " data points, but only have " + historicalData.size());
+        if (historicalData == null) {
+            // Load historical data only once
+            historicalData = loadHistoricalData();
         }
-        
-        // Lead-in phase: feed initial data points without scoring
-        historicalData.stream()
-            .limit(leadConsumptionCount)
-            .forEach(organism::consume);
         
         // Prediction phase: feed data and compare predictions against actual values
         return historicalData.stream()
@@ -148,7 +142,6 @@ public class BasicEvaluator implements Evaluator {
                     // If date parsing fails, skip this row
                     return null;
                 }
-                continue;
             } else {            
                 // Parse numerical values
                 try {
