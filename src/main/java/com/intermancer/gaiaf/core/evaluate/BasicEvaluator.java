@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,7 +29,9 @@ import com.intermancer.gaiaf.core.organism.Organism;
 @Component
 public class BasicEvaluator implements Evaluator {
     
-    private static final String HISTORICAL_DATA_PATH = "/training-data/HistoricalPrices.csv";
+    private static final String DEFAULT_HISTORICAL_DATA_PATH = "/training-data/HistoricalPrices-reversed.csv";
+    private String trainingDataPath = DEFAULT_HISTORICAL_DATA_PATH;
+    private static final int DEFAULT_LEAD_CONSUMPTION_COUNT = 3;
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
     List<DataQuantum> historicalData;
 
@@ -35,12 +39,12 @@ public class BasicEvaluator implements Evaluator {
     /**
      * Specifies which data column (by index) contains the target values to predict
      */
-    private final int targetIndex;
+    private int targetIndex = 1;
     
     /**
      * Defines the number of data points the organism processes before making a prediction
      */
-    private final int leadConsumptionCount;
+    private int leadConsumptionCount = DEFAULT_LEAD_CONSUMPTION_COUNT;
     
     /**
      * Default constructor using sensible defaults.
@@ -62,6 +66,27 @@ public class BasicEvaluator implements Evaluator {
         this.leadConsumptionCount = leadConsumptionCount;
     }
     
+    private class EvaluationState {
+        private final Queue<Double> leadData = new LinkedList<>();
+        private boolean leadCountMet = false;
+        private int leadCount = 0;
+
+        boolean offerPrediction(double prediction) {
+            leadData.offer(prediction);
+            if (!leadCountMet) {
+                leadCount++;
+                if (leadCount >= getLeadConsumptionCount()) {
+                    leadCountMet = true;
+                }
+            }
+            return leadCountMet;
+        }
+
+        double getPrediction() {
+            return leadData.poll();
+        }
+    }
+    
     /**
      * Evaluates an organism by feeding it historical data and measuring prediction accuracy.
      * 
@@ -74,24 +99,37 @@ public class BasicEvaluator implements Evaluator {
             // Load historical data only once
             historicalData = loadHistoricalData();
         }
-        
+
+        EvaluationState state = new EvaluationState();
+
         // Prediction phase: feed data and compare predictions against actual values
         return historicalData.stream()
-            .skip(leadConsumptionCount)
             .mapToDouble(dataQuantum -> {
                 // Feed the organism the current data
                 organism.consume(dataQuantum);
                 
                 // Get the organism's prediction (final DataPoint value)
-                double prediction = dataQuantum.getValue(dataQuantum.getDataPoints().size() - 1);
+                double futurePrediction = dataQuantum.getValue(dataQuantum.getDataPoints().size() - 1);
+                double currentPrediction = 0.0;
+
+                if (state.offerPrediction(futurePrediction)) {
+                    currentPrediction = state.getPrediction();
+                }
                 
                 // Get the actual target value
                 double actualValue = dataQuantum.getValue(targetIndex);
                 
                 // Calculate prediction error
-                return Math.abs(prediction - actualValue);
+                return Math.abs(currentPrediction - actualValue);
             })
             .sum();
+    }
+
+    /**
+     * Sets the historical data used for evaluation. Useful for testing.
+     */
+    public void setHistoricalData(List<DataQuantum> historicalData) {
+        this.historicalData = historicalData;
     }
     
     /**
@@ -101,7 +139,7 @@ public class BasicEvaluator implements Evaluator {
      */
     private List<DataQuantum> loadHistoricalData() {
         try {
-            Path dataPath = Paths.get(getClass().getResource(HISTORICAL_DATA_PATH).toURI());
+            Path dataPath = Paths.get(getClass().getResource(getTrainingDataPath()).toURI());
             
             try (Stream<String> lines = Files.lines(dataPath)) {
                 return lines
@@ -111,7 +149,7 @@ public class BasicEvaluator implements Evaluator {
                     .collect(Collectors.toList());
             }
         } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException("Failed to load historical data from " + HISTORICAL_DATA_PATH, e);
+            throw new RuntimeException("Failed to load historical data from " + DEFAULT_HISTORICAL_DATA_PATH, e);
         }
     }
     
@@ -185,4 +223,25 @@ public class BasicEvaluator implements Evaluator {
     public int getLeadConsumptionCount() {
         return leadConsumptionCount;
     }
+
+    public void setLeadConsumptionCount(int leadConsumptionCount) {
+        if (leadConsumptionCount < 1) {
+            throw new IllegalArgumentException("Lead consumption count must be at least 1");
+        }
+        this.leadConsumptionCount = leadConsumptionCount;
+    }
+
+    public String getTrainingDataPath() {
+        return trainingDataPath;
+    }
+
+    public void setTrainingDataPath(String trainingDataPath) {
+        this.trainingDataPath = trainingDataPath;
+        this.historicalData = null; // Reset historical data to reload with new path
+    }
+
+    public void setTargetIndex(int targetIndex) {
+        this.targetIndex = targetIndex;
+    }
+
 }

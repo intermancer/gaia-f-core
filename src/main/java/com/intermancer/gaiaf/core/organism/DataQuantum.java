@@ -44,11 +44,12 @@ public class DataQuantum {
      * @param dataPoint The DataPoint to add.
      * @throws IllegalArgumentException if the DataPoint is null.
      */
-    public void addDataPoint(DataPoint dataPoint) {
+    public DataQuantum addDataPoint(DataPoint dataPoint) {
         if (dataPoint == null) {
             throw new IllegalArgumentException("DataPoint cannot be null");
         }
         dataPoints.add(dataPoint);
+        return this;
     }
 
     /**
@@ -125,6 +126,15 @@ public class DataQuantum {
          * Default constructor for Jackson deserialization.
          */
         public DataPoint() {
+        }
+
+        /**
+         * Constructs a DataPoint with the specified value and a null sourceId.
+         *
+         * @param value The value of the DataPoint.
+         */
+        public DataPoint(double value) {
+            this(null, value);
         }
 
         /**
