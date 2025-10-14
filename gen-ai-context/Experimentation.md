@@ -62,43 +62,62 @@ Chromosome 3: SubtractionGene
 Simple organism with 3 chromosomes showing different gene combinations
 Useful for testing organism-level data flow
 
-### Evaluator
+## BasicEvaluator
 
-Interface
+A concrete implementation of the Evaluator interface that provides fitness scoring for organisms using prediction-based evaluation methodology. It evaluates organisms by feeding them historical time-series data and measuring their prediction accuracy.
 
-Evaluators are classes that grade organisms, giving them a numerical score.  By convention, a score closer to 0 is better, as 0 can be interpreted as "no deviations between predicted and actual values".
+BasicEvaluator uses the `@Component` annotation to make itself available for dependency injection.
 
-Evaluator is in the com.intermancer.gaiaf.core.evaluate package.
+### Methods and properties
 
-#### Methods
+`String trainingDataPath`
+The path to the CSV file containing historical training data. Defaults to "/training-data/HistoricalPrices-reversed.csv". Accessible through getter and setter methods.
+
+`int targetIndex`
+Specifies which data column (by index) contains the target values to predict. Defaults to 1. Accessible through getter and setter methods.
+
+`int leadConsumptionCount`
+Defines the number of data points the organism processes before making predictions. Defaults to 3. Accessible through getter and setter methods with validation to ensure the value is at least 1.
+
+`List<DataQuantum> historicalData`
+Cached historical data loaded from the CSV file. Uses lazy loading - data is loaded only when first needed during evaluation.
+
+`BasicEvaluator()`
+Default constructor using sensible defaults. Sets targetIndex to 1 (typically the "Open" column in stock data) and leadConsumptionCount to 3.
+
+`BasicEvaluator(int targetIndex, int leadConsumptionCount)`
+Constructor with custom configuration parameters.
 
 `double evaluate(Organism organism)`
-Evaluate the given Organism.
+Implements the Evaluator interface. Evaluates an organism by feeding it historical data and measuring prediction accuracy. Returns the cumulative prediction error score where lower values indicate better performance (0 represents perfect accuracy).
 
-### BasicEvaluator
+**Evaluation Process:**
+- Loads historical data from CSV file if not already cached
+- Uses an internal EvaluationState to manage prediction timing through a queue-based buffering system
+- Feeds each DataQuantum to the organism in sequence
+- Captures organism predictions (final DataPoint value from each consumption)
+- Maintains a lead-in period defined by leadConsumptionCount before comparing predictions to actual values
+- Calculates absolute difference between predicted and actual target values
+- Returns accumulated error as the fitness score
 
-The BasicEvaluator is a concrete implementation of the Evaluator interface that provides fitness scoring for organisms using a prediction-based evaluation methodology. It operates by feeding historical time-series data to an organism and measuring how accurately the organism can predict future values.
+`void setHistoricalData(List<DataQuantum> historicalData)`
+Sets the historical data used for evaluation. Useful for testing scenarios.
 
-#### Configuration
+#### Private Helper Methods
 
-The BasicEvaluator requires two key configuration parameters:
+`List<DataQuantum> loadHistoricalData()`
+Loads and parses historical data from the CSV file using Java streams. Converts each data row into a DataQuantum with epoch timestamp and numerical values.
 
-- **targetIndex**: Specifies which data column (by index) contains the target values to predict
-- **leadConsumptionCount**: Defines the number of data points the organism processes before making a prediction
+`DataQuantum parseDataQuantumFromLine(String line)`
+Parses a single CSV line into a DataQuantum. The first column is expected to contain date information, with subsequent columns containing numerical data values.
 
-#### Evaluation Process
-When evaluating an organism through the evaluate() method, the BasicEvaluator follows this process:
+`long parseDateToEpoch(String dateStr)`
+Parses date strings in MM/dd/yy format to epoch milliseconds. Assumes years starting with "20" and converts dates to midnight UTC.
 
-1. **Data Preparation**: Loads historical data from src/main/resources/training-data/HistoricalPrices.csv, skipping the header row and converting each data row into a DataQuantum
-2. **Lead-in Processing**: Feeds the organism with leadConsumptionCount number of DataQuanta, capturing the final DataPoint value from each consumption
-3. **Prediction Cycle**: For each subsequent DataQuantum:
-   - Feeds the DataQuantum to the organism
-Captures the organism's output (the final DataPoint value)
-   - Compares this predicted value against the actual target value at the specified targetIndex
-   - Calculates the absolute difference as the prediction error
-   - Accumulates this error to the total score
+#### Inner Classes
 
-4. **Score Calculation**: Returns the cumulative error score, where lower scores indicate better performance (with 0 representing perfect prediction accuracy)
+`EvaluationState`
+Private inner class that manages the prediction timing mechanism using a queue-based approach. Tracks whether the lead consumption count has been met and provides buffered access to predictions for comparison against actual values.
 
 #### Example Scenario
 Consider evaluating an organism with historical Dow Jones data containing columns: Date, Open, High, Low, Close. With a targetIndex of 1 (Open) and leadConsumptionCount of 3:
