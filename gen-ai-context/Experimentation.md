@@ -6,7 +6,37 @@ This document describes the Classes and changes to existing Classes to enable ex
 
 ### Seed
 
-Seed is the first step in Experimentation.  An OrganismRepository is initialized with a set of seed Organisms.
+Seed is the first step in Experimentation.  An OrganismRepository is initialized with a set of evaluated Organisms.
+
+### Experiment Cycle
+
+The Experiment Cycle is the fundamental unit of experimentation.  Two organisms are chosen from the OrganismRepository.  They are bred to generate one or more child orgnisms.  The chldren are mutated to introduce new behavior.  The children are evaluated.  If the children perform better than either of the parents, they are put back inot the OrganismRepository, replacing the parents they have out-performed.
+
+#### Parent Selection
+
+The default algorithm is to choose one parent from the top 10% of organisms, and the other parent from the botom 90%, based on evaluation score.
+
+#### Breeding
+
+The default algorithm is to use the BasicOrganismBreeder to breed two parents, which will generate two children.
+
+#### Mutation
+
+The child organisms are mutated one or more times, as set by the ExperimentProperties.
+
+#### Child Evaluation
+
+The child organisms are evaluated.  The default algorithm is to use the BasicEvaluator to score the children.
+
+#### OrganismRepository Maintenance
+
+If the OrganismRepository has not reached its maximum capacity, then the children are simply added. Otherwise, one or both of the children might replace one or both of their parents, as described below.
+
+When the children organisms are scored, they are compared to the other memebers of their "family" and either discarded, or added to the OrganismRepository.  
+
+The child with the lower score is compared to both parents.  If it has a higher score than either parent, then the low-score parent is removed from the repository and the low-score child is added.
+
+The high-score child is then compared to the remaining family members, either both parents, or the high-score parent and the low-score child.  If it has a higher score than either, the lower-scoring family member is removed from the repository and the high-score child is added.
 
 ## Classes to support the Experiment Life Cycle
 
@@ -62,13 +92,65 @@ Chromosome 3: SubtractionGene
 Simple organism with 3 chromosomes showing different gene combinations
 Useful for testing organism-level data flow
 
-## BasicEvaluator
+### ScoredOrganism
+
+A ScoredOrganism is a record of an organism and its score.  Implements the Comparable<ScoredOrganism> interface to support binary searches in the ScoredOrganismRepository.  Two ScoredOrganisms are compared using the score property.
+
+#### Properties
+
+`String id`
+A synthetic key used to identify a ScoredOrganism record.  A string representation of a UUID is default.
+
+`Double score`
+The score that resulted from evaluating the Organism.
+
+`String organismId`
+The id for the scored organism.  Used to look up the Organism from the OrganismRepository.
+
+`Organism organism`
+The Organism is not stored in the ScoredOrganismRepository.
+
+`int compareTo(ScoredOrganism other)`
+This method implements Comparable<ScoredOrganism>.compareTo() by comparing this organisms score with the other.getScore().
+
+### ScoredOrganismReposity
+
+Interface
+
+#### Mothods
+
+`ScoredOrganism getById(String id)`
+Returns a ScoredOrganism record, as identified.
+
+`ScoredOrganism save(ScoredOrganism scoredOrganism)`
+The scoredOrganism that is passed into the `save()` method does not have an ID.  The ScoredOrganism that is returned has all of the same values, except the id had been populated.
+
+`void delete(String id)`
+Deletes a ScoredOrganism as identified by the id.
+
+`ScoredOrganism getRandomFromTopPercent(float percent)`
+Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent.
+
+`ScoredOrganism getRandomFromBottomPercent(float percent)`
+Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent.
+
+### InMemoryScoredOrganismReposity
+
+An in-memory implementation of the ScoredOrganismRepository interface.
+
+Keeps records sorted by score.
+
+#### Method implementations
+
+
+
+### BasicEvaluator
 
 A concrete implementation of the Evaluator interface that provides fitness scoring for organisms using prediction-based evaluation methodology. It evaluates organisms by feeding them historical time-series data and measuring their prediction accuracy.
 
 BasicEvaluator uses the `@Component` annotation to make itself available for dependency injection.
 
-### Methods and properties
+#### Methods and properties
 
 `String trainingDataPath`
 The path to the CSV file containing historical training data. Defaults to "/training-data/HistoricalPrices-reversed.csv". Accessible through getter and setter methods.
@@ -103,7 +185,7 @@ Implements the Evaluator interface. Evaluates an organism by feeding it historic
 `void setHistoricalData(List<DataQuantum> historicalData)`
 Sets the historical data used for evaluation. Useful for testing scenarios.
 
-#### Private Helper Methods
+##### Private Helper Methods
 
 `List<DataQuantum> loadHistoricalData()`
 Loads and parses historical data from the CSV file using Java streams. Converts each data row into a DataQuantum with epoch timestamp and numerical values.
@@ -114,12 +196,12 @@ Parses a single CSV line into a DataQuantum. The first column is expected to con
 `long parseDateToEpoch(String dateStr)`
 Parses date strings in MM/dd/yy format to epoch milliseconds. Assumes years starting with "20" and converts dates to midnight UTC.
 
-#### Inner Classes
+##### Inner Classes
 
 `EvaluationState`
 Private inner class that manages the prediction timing mechanism using a queue-based approach. Tracks whether the lead consumption count has been met and provides buffered access to predictions for comparison against actual values.
 
-#### Example Scenario
+##### Example Scenario
 Consider evaluating an organism with historical Dow Jones data containing columns: Date, Open, High, Low, Close. With a targetIndex of 1 (Open) and leadConsumptionCount of 3:
 
 1. Feed the organism three DataQuanta (days 1-3), saving each output value
@@ -128,7 +210,7 @@ Consider evaluating an organism with historical Dow Jones data containing column
 Continue this process through all remaining test data
 4. Return the accumulated prediction error as the organism's fitness score
 
-#### Data Format
+##### Data Format
 The evaluation uses CSV data where the first column contains epoch dates (assuming years starting with "20"), and subsequent columns contain numerical values for analysis. Each row represents a single time point in the historical dataset.
 
 ### MutationCommand
@@ -152,16 +234,47 @@ Interface
 
 ### Experiment
 
-The Experiment class implements the Experiment Life Cycle phases, mostly by delegating to injected objects.
+Interface
+
+An Experiment class implements the Experiment Life Cycle phases, mostly by delegating to injected objects.
+
+#### Methods
+
+`void seed()`
+`void mutationCycle()`
+
+### ExperimentImpl
+
+The default implementation of the Experiment interface
 
 #### Autowired dependencies
 
 The Experiment depends on Autowired instances of Seeder and OrganismRepository.
 
-#### Methods
+#### Method implementations
 
-`void seed()`
+##### seed()
+
 Calls the `seed()` method of the injected Seeder, passing in the injected OrganismRepository.
+
+##### mutationCycle()
+
+The phases of a mutationCycle are each defined by their own method.
+
+`List<ScoredOrganism> selectParents()`
+`selectParents()` chooses one parent from the top 10% of the ScoredOrganismRepository, and one parent from the bottom 90%.
+
+`List<Organism> breedParents(List<Organsim> parents)`
+`breedParents()` uses the injected OrganismBreeder to gnerate a list of child Organisms.
+
+`void mutateChildren(List<Organism> children)`
+`mutateChildren()` mutates each of the children a random number (between 1 and 5) of times.
+
+`List<ScoredOrganism> evaluateChildren(List<Organism> children)`
+`evaluateChildren()` uses the injected Evaluator to evaluate the child organisms.
+
+`void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children)`
+`maintainRepository()` will update the ScoredOrganismRepository and the OrganismRepository as described above.
 
 ## Server Details
 
