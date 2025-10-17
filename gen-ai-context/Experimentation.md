@@ -142,7 +142,22 @@ Keeps records sorted by score.
 
 #### Method implementations
 
+The in-memory implementation will need to maintian a ranked List of ScoredOrganisms, so that we can efficiently search by score, as well as a Map of ScoredOrganisms so that they can be looked up by ID.
 
+`ScoredOrganism getById(String id)`
+Uses the Map of ScoredOrganisms for lookup.
+
+`ScoredOrganism save(ScoredOrganism scoredOrganism)`
+Adds scoredOrganism to the Map and the List.  Uses Collections.binarySearch() to find the insertion point in the List of ranked ScoredOrganisms.
+
+`void delete(String id)`
+First looks up the ScoredOrgansim from the Map using the id.  Using the score property, looks up the ScoredOrganism from the List.  Then deletes the ScoredOrganism from both the Map and the ranked List.
+
+`ScoredOrganism getRandomFromTopPercent(float percent)`
+First determine the subset of the List to choose from.  Since the List is sorted, simply use the size of the List to determine the cutoff of the top scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
+
+`ScoredOrganism getRandomFromBottomPercent(float percent)`
+First determine the subset of the List to choose from.  Since the List is sorted, simply use the size of the List to determine the cutoff of the bottom scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
 
 ### BasicEvaluator
 
@@ -242,6 +257,11 @@ An Experiment class implements the Experiment Life Cycle phases, mostly by deleg
 
 `void seed()`
 `void mutationCycle()`
+`List<ScoredOrganism> selectParents()`
+`List<Organism> breedParents(List<Organsim> parents)`
+`void mutateChildren(List<Organism> children)`
+`List<ScoredOrganism> evaluateChildren(List<Organism> children)`
+`void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children)`
 
 ### ExperimentImpl
 
