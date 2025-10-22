@@ -36,26 +36,30 @@ public interface ScoredOrganismRepository {
 
     /**
      * Returns a random ScoredOrganism from the top percentage of scores.
-     * For example, if percent is 0.1 (10%), a random organism from the
-     * top 10% of scores will be returned.
+     * Since lower scores indicate better performance (closer to 0), the top
+     * percentage refers to organisms with the lowest scores.
+     * For example, if the percent is 0.1 (10%), a random organism from the
+     * best-performing 10% (lowest scores) will be returned.
      *
      * @param percent The percentage threshold (0.0 to 1.0) for selecting
      *                from the top-scoring organisms
      * @return A randomly selected ScoredOrganism from the top percentage
-     * @throws IllegalArgumentException if the repository is empty or if
+     * @throws IllegalArgumentException if the repository is empty, or if
      *                                  percent is not between 0.0 and 1.0
      */
     ScoredOrganism getRandomFromTopPercent(float percent);
 
     /**
      * Returns a random ScoredOrganism from the bottom percentage of scores.
-     * For example, if percent is 0.9 (90%), a random organism from the
-     * bottom 90% of scores will be returned.
+     * Since lower scores indicate better performance (closer to 0), the bottom
+     * percentage refers to organisms with the highest scores.
+     * For example, if the percent is 0.9 (90%), a random organism from the
+     * worst-performing 90% (highest scores) will be returned.
      *
      * @param percent The percentage threshold (0.0 to 1.0) for selecting
      *                from the bottom-scoring organisms
      * @return A randomly selected ScoredOrganism from the bottom percentage
-     * @throws IllegalArgumentException if the repository is empty or if
+     * @throws IllegalArgumentException if the repository is empty, or if
      *                                  percent is not between 0.0 and 1.0
      */
     ScoredOrganism getRandomFromBottomPercent(float percent);

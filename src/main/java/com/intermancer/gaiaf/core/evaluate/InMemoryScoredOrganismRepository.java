@@ -107,16 +107,20 @@ public class InMemoryScoredOrganismRepository implements ScoredOrganismRepositor
             }
 
             // Calculate the cutoff index for the top percent
-            // Since the list is sorted in ascending order, top scores are at the end
+            // Since the list is sorted in ascending order and lower scores are better,
+            // top scores (best performers) are at the beginning
             int size = rankedList.size();
-            int cutoffIndex = (int) Math.ceil(size * (1.0 - percent));
-            if (cutoffIndex >= size) {
-                cutoffIndex = size - 1;
+            int cutoffIndex = (int) Math.ceil(size * percent);
+            if (cutoffIndex > size) {
+                cutoffIndex = size;
+            }
+            if (cutoffIndex == 0) {
+                cutoffIndex = 1;
             }
 
             // Select a random organism from the top percentage
             Random random = new Random();
-            int randomIndex = cutoffIndex + random.nextInt(size - cutoffIndex);
+            int randomIndex = random.nextInt(cutoffIndex);
             return rankedList.get(randomIndex);
         }
     }
@@ -133,19 +137,17 @@ public class InMemoryScoredOrganismRepository implements ScoredOrganismRepositor
             }
 
             // Calculate the cutoff index for the bottom percent
-            // Since the list is sorted in ascending order, bottom scores are at the beginning
+            // Since the list is sorted in ascending order and lower scores are better,
+            // bottom scores (worst performers) are at the end
             int size = rankedList.size();
-            int cutoffIndex = (int) Math.ceil(size * percent);
-            if (cutoffIndex > size) {
-                cutoffIndex = size;
-            }
-            if (cutoffIndex == 0) {
-                cutoffIndex = 1;
+            int cutoffIndex = (int) Math.ceil(size * (1.0 - percent));
+            if (cutoffIndex >= size) {
+                cutoffIndex = size - 1;
             }
 
             // Select a random organism from the bottom percentage
             Random random = new Random();
-            int randomIndex = random.nextInt(cutoffIndex);
+            int randomIndex = cutoffIndex + random.nextInt(size - cutoffIndex);
             return rankedList.get(randomIndex);
         }
     }

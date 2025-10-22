@@ -108,7 +108,6 @@ The score that resulted from evaluating the Organism.
 The id for the scored organism.  Used to look up the Organism from the OrganismRepository.
 
 `Organism organism`
-The Organism is not stored in the ScoredOrganismRepository.
 
 `int compareTo(ScoredOrganism other)`
 This method implements Comparable<ScoredOrganism>.compareTo() by comparing this organisms score with the other.getScore().
@@ -129,10 +128,10 @@ The scoredOrganism that is passed into the `save()` method does not have an ID. 
 Deletes a ScoredOrganism as identified by the id.
 
 `ScoredOrganism getRandomFromTopPercent(float percent)`
-Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent.
+Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent.  Since this is a predictive system, scores closer to 0.0 are better.  The "top" percentage, therefore, is determined by the lowest scores.
 
 `ScoredOrganism getRandomFromBottomPercent(float percent)`
-Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent.
+Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent.  Since this is a predictive system, scores closer to 0.0 are better.  The "bottom" percentage, therefore, is determined by the highest scores.
 
 ### InMemoryScoredOrganismReposity
 

@@ -64,12 +64,12 @@ class InMemoryScoredOrganismRepositoryTest {
         repository.save(high);
         repository.save(medium);
 
-        // Verify by checking that getRandomFromBottomPercent returns lower scores
-        // and getRandomFromTopPercent returns higher scores
-        ScoredOrganism fromBottom = repository.getRandomFromBottomPercent(0.4f);
+        // Verify by checking that getRandomFromTopPercent returns lower scores (better)
+        // and getRandomFromBottomPercent returns higher scores (worse)
         ScoredOrganism fromTop = repository.getRandomFromTopPercent(0.4f);
+        ScoredOrganism fromBottom = repository.getRandomFromBottomPercent(0.4f);
 
-        assertTrue(fromBottom.score() <= fromTop.score());
+        assertTrue(fromTop.score() <= fromBottom.score());
     }
 
     @Test
@@ -138,10 +138,10 @@ class InMemoryScoredOrganismRepositoryTest {
             repository.save(new ScoredOrganism((double) i, new Organism("organism-" + i)));
         }
 
-        // Get from top 20% (should be scores 9.0 and 10.0)
+        // Get from top 20% (best performers - should be scores 1.0 and 2.0)
         ScoredOrganism topOrganism = repository.getRandomFromTopPercent(0.2f);
 
-        assertTrue(topOrganism.score() >= 9.0);
+        assertTrue(topOrganism.score() <= 2.0);
     }
 
     @Test
@@ -172,10 +172,10 @@ class InMemoryScoredOrganismRepositoryTest {
             repository.save(new ScoredOrganism((double) i, new Organism("organism-" + i)));
         }
 
-        // Get from bottom 20% (should be scores 1.0 and 2.0)
+        // Get from bottom 20% (worst performers - should be scores 9.0 and 10.0)
         ScoredOrganism bottomOrganism = repository.getRandomFromBottomPercent(0.2f);
 
-        assertTrue(bottomOrganism.score() <= 2.0);
+        assertTrue(bottomOrganism.score() >= 9.0);
     }
 
     @Test
@@ -206,23 +206,23 @@ class InMemoryScoredOrganismRepositoryTest {
             repository.save(new ScoredOrganism((double) i, new Organism("organism-" + i)));
         }
 
-        // Test top 10%
+        // Test top 10% (best performers - lowest scores)
         Set<Double> topScores = new HashSet<>();
         for (int i = 0; i < 50; i++) {
             ScoredOrganism top = repository.getRandomFromTopPercent(0.1f);
             topScores.add(top.score());
         }
-        // All scores should be >= 91.0 (top 10%)
-        assertTrue(topScores.stream().allMatch(score -> score >= 91.0));
+        // All scores should be <= 10.0 (top 10% - best performers)
+        assertTrue(topScores.stream().allMatch(score -> score <= 10.0));
 
-        // Test bottom 10%
+        // Test bottom 10% (worst performers - highest scores)
         Set<Double> bottomScores = new HashSet<>();
         for (int i = 0; i < 50; i++) {
             ScoredOrganism bottom = repository.getRandomFromBottomPercent(0.1f);
             bottomScores.add(bottom.score());
         }
-        // All scores should be <= 10.0 (bottom 10%)
-        assertTrue(bottomScores.stream().allMatch(score -> score <= 10.0));
+        // All scores should be >= 91.0 (bottom 10% - worst performers)
+        assertTrue(bottomScores.stream().allMatch(score -> score >= 91.0));
     }
 
     @Test
