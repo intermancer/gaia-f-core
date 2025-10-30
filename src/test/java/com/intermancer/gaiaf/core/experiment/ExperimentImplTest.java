@@ -18,7 +18,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.*;
 
 /**
@@ -120,8 +119,8 @@ class ExperimentImplTest {
         MutationCommand mutation2 = mock(MutationCommand.class);
         List<MutationCommand> mutations = List.of(mutation1, mutation2);
 
-        when(((Mutational) child1).getMutationCommandList()).thenReturn(mutations);
-        when(((Mutational) child2).getMutationCommandList()).thenReturn(mutations);
+        when((child1).getMutationCommandList()).thenReturn(mutations);
+        when((child2).getMutationCommandList()).thenReturn(mutations);
 
         // When
         experiment.mutateChildren(children);
@@ -189,7 +188,7 @@ class ExperimentImplTest {
 
     @Test
     void testMaintainRepositoryWhenBothParentsAreTopTwo() {
-        // Given - parents have best scores
+        // Given - parents have the best scores
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
         Organism child1Org = new Organism("child1");
@@ -215,7 +214,7 @@ class ExperimentImplTest {
 
     @Test
     void testMaintainRepositoryWhenOneChildIsInTopTwo() {
-        // Given - one parent and one child in top two
+        // Given - one parent and one child in the top two
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
         Organism child1Org = new Organism("child1");
@@ -340,8 +339,8 @@ class ExperimentImplTest {
         when(evaluator.evaluate(child2Org)).thenReturn(6.0);
 
         MutationCommand mutation = mock(MutationCommand.class);
-        when(((Mutational) child1Org).getMutationCommandList()).thenReturn(List.of(mutation));
-        when(((Mutational) child2Org).getMutationCommandList()).thenReturn(List.of(mutation));
+        when((child1Org).getMutationCommandList()).thenReturn(List.of(mutation));
+        when((child2Org).getMutationCommandList()).thenReturn(List.of(mutation));
 
         // Mock organismRepository.saveOrganism to return the organism passed to it
         when(organismRepository.saveOrganism(any())).thenAnswer(invocation -> invocation.getArgument(0));
