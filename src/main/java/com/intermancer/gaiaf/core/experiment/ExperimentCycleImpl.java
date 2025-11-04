@@ -18,36 +18,28 @@ import java.util.Random;
  * Implements the Experiment Life Cycle phases by delegating to injected objects.
  */
 @Component
-public class ExperimentImpl implements Experiment {
+public class ExperimentCycleImpl implements ExperimentCycle {
     
-    private final Seeder seeder;
     private final OrganismRepository organismRepository;
     private final ScoredOrganismRepository scoredOrganismRepository;
     private final OrganismBreeder organismBreeder;
     private final Evaluator evaluator;
+    private final ExperimentConfiguration experimentConfiguration;
     private final Random random;
     
     @Autowired
-    public ExperimentImpl(
-            Seeder seeder,
+    public ExperimentCycleImpl(
             OrganismRepository organismRepository,
             ScoredOrganismRepository scoredOrganismRepository,
             OrganismBreeder organismBreeder,
-            Evaluator evaluator) {
-        this.seeder = seeder;
+            Evaluator evaluator,
+            ExperimentConfiguration experimentConfiguration) {
         this.organismRepository = organismRepository;
         this.scoredOrganismRepository = scoredOrganismRepository;
         this.organismBreeder = organismBreeder;
         this.evaluator = evaluator;
+        this.experimentConfiguration = experimentConfiguration;
         this.random = new Random();
-    }
-    
-    /**
-     * Calls the seed() method of the injected Seeder, passing in the injected OrganismRepository.
-     */
-    @Override
-    public void seed() {
-        seeder.seed(organismRepository);
     }
     
     /**
@@ -131,16 +123,16 @@ public class ExperimentImpl implements Experiment {
         }
         return scoredChildren;
     }
-    
-    /**
+
     /**
      * Maintains the repository by potentially replacing parents with better-performing children.
-     * 
-     * Combines all family members (parents and children) into a single list and sorts by score.
+     * If the repository is not at capacity, simply adds the children to the repository.
+     * If the repository is at capacity, combines all family members (parents and children) 
+     * into a single list and sorts by score.
      * If the top two organisms are the parents, no changes are made (preserves best parent).
      * If one of the top two is a child, the worst parent is replaced.
      * If both top two are children, both parents are replaced.
-     * 
+     *
      * @param parents the parent organisms with their scores
      * @param children the child organisms with their scores
      */
@@ -149,36 +141,51 @@ public class ExperimentImpl implements Experiment {
         if (parents.size() != 2 || children.isEmpty()) {
             return;
         }
-        
+
+        // Check if repository is at capacity
+        int currentSize = scoredOrganismRepository.size();
+        int capacity = experimentConfiguration.getRepoCapacity();
+
+        // If not at capacity, simply add all children
+        if (currentSize < capacity) {
+            for (ScoredOrganism child : children) {
+                Organism savedOrganism = organismRepository.saveOrganism(child.organism());
+                ScoredOrganism savedScoredChild = new ScoredOrganism(
+                        null, child.score(), savedOrganism.getId(), savedOrganism);
+                scoredOrganismRepository.save(savedScoredChild);
+            }
+            return;
+        }
+
+        // Repository is at capacity - use comparison algorithm
+
         // 1. Add parents and children to a single list and sort
         List<ScoredOrganism> family = new ArrayList<>();
         family.addAll(parents);
         family.addAll(children);
         family.sort(ScoredOrganism::compareTo);
-        
+
         ScoredOrganism topFirst = family.get(0);
         ScoredOrganism topSecond = family.get(1);
-        
+
         // 2. If the top two organisms are the parents, return
         if (parents.contains(topFirst) && parents.contains(topSecond)) {
             return;
         }
-        
+
         // Identify which parent is worst (will be removed if either child makes top 2)
-        ScoredOrganism bestParent = parents.get(0).compareTo(parents.get(1)) < 0 
-                ? parents.get(0) : parents.get(1);
-        ScoredOrganism worstParent = parents.get(0).compareTo(parents.get(1)) < 0 
+        ScoredOrganism worstParent = parents.get(0).compareTo(parents.get(1)) < 0
                 ? parents.get(1) : parents.get(0);
-        
+
         // 3. If one of the top two organisms is a child, delete the worst parent and add the child
         if ((parents.contains(topFirst) && children.contains(topSecond)) ||
-            (children.contains(topFirst) && parents.contains(topSecond))) {
-            
+                (children.contains(topFirst) && parents.contains(topSecond))) {
+
             ScoredOrganism childToAdd = children.contains(topFirst) ? topFirst : topSecond;
-            
+
             scoredOrganismRepository.delete(worstParent.id());
             organismRepository.deleteOrganism(worstParent.organismId());
-            
+
             Organism savedOrganism = organismRepository.saveOrganism(childToAdd.organism());
             ScoredOrganism savedScoredChild = new ScoredOrganism(
                     null, childToAdd.score(), savedOrganism.getId(), savedOrganism);
@@ -191,7 +198,7 @@ public class ExperimentImpl implements Experiment {
                 scoredOrganismRepository.delete(parent.id());
                 organismRepository.deleteOrganism(parent.organismId());
             }
-            
+
             // Add both children
             for (ScoredOrganism child : List.of(topFirst, topSecond)) {
                 Organism savedOrganism = organismRepository.saveOrganism(child.organism());

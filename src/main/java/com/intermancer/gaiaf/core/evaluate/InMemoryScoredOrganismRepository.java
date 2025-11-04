@@ -151,4 +151,9 @@ public class InMemoryScoredOrganismRepository implements ScoredOrganismRepositor
             return rankedList.get(randomIndex);
         }
     }
+
+    @Override
+    public int size() {
+        return organismMap.size();
+    }
 }

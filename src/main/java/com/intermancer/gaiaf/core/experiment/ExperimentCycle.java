@@ -10,12 +10,7 @@ import java.util.List;
  * The Experiment interface defines the Experiment Life Cycle phases.
  * Implementations delegate to injected objects to perform the actual work.
  */
-public interface Experiment {
-
-    /**
-     * Seeds the repository with initial organisms.
-     */
-    void seed();
+public interface ExperimentCycle {
 
     /**
      * Executes a complete mutation cycle including parent selection, breeding,

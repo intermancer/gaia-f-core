@@ -1,6 +1,6 @@
 package com.intermancer.gaiaf.core.controller;
 
-import com.intermancer.gaiaf.core.experiment.Experiment;
+import com.intermancer.gaiaf.core.experiment.Seeder;
 import com.intermancer.gaiaf.core.organism.repo.OrganismRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +13,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/experiment")
 public class ExperimentController {
-    
-    private final Experiment experiment;
+
+    private final Seeder seeder;
     private final OrganismRepository organismRepository;
     
     @Autowired
-    public ExperimentController(Experiment experiment, OrganismRepository organismRepository) {
-        this.experiment = experiment;
+    public ExperimentController(OrganismRepository organismRepository,
+                                Seeder seeder) {
         this.organismRepository = organismRepository;
+        this.seeder = seeder;
     }
     
     /**
@@ -28,7 +29,7 @@ public class ExperimentController {
      */
     @GetMapping("/seed")
     public ResponseEntity<List<String>> seed() {
-        experiment.seed();
+        seeder.seed();
         return ResponseEntity.ok(organismRepository.getAllOrganismIds());
     }
 }

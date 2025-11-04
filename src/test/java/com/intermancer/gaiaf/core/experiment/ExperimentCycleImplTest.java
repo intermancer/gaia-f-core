@@ -1,3 +1,4 @@
+
 package com.intermancer.gaiaf.core.experiment;
 
 import com.intermancer.gaiaf.core.evaluate.Evaluator;
@@ -17,17 +18,14 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Test class for ExperimentImpl.
+ * Test class for ExperimentCycleImpl.
  */
 @ExtendWith(MockitoExtension.class)
-class ExperimentImplTest {
-
-    @Mock
-    private Seeder seeder;
+class ExperimentCycleImplTest {
 
     @Mock
     private OrganismRepository organismRepository;
@@ -41,26 +39,20 @@ class ExperimentImplTest {
     @Mock
     private Evaluator evaluator;
 
-    private ExperimentImpl experiment;
+    @Mock
+    private ExperimentConfiguration experimentConfiguration;
+
+    private ExperimentCycleImpl experimentCycle;
 
     @BeforeEach
     void setUp() {
-        experiment = new ExperimentImpl(
-                seeder,
+        experimentCycle = new ExperimentCycleImpl(
                 organismRepository,
                 scoredOrganismRepository,
                 organismBreeder,
-                evaluator
+                evaluator,
+                experimentConfiguration
         );
-    }
-
-    @Test
-    void testSeed() {
-        // When
-        experiment.seed();
-
-        // Then
-        verify(seeder, times(1)).seed(organismRepository);
     }
 
     @Test
@@ -75,7 +67,7 @@ class ExperimentImplTest {
         when(scoredOrganismRepository.getRandomFromBottomPercent(0.9f)).thenReturn(scoredParent2);
 
         // When
-        List<ScoredOrganism> parents = experiment.selectParents();
+        List<ScoredOrganism> parents = experimentCycle.selectParents();
 
         // Then
         assertNotNull(parents);
@@ -99,7 +91,7 @@ class ExperimentImplTest {
         when(organismBreeder.breed(parents)).thenReturn(children);
 
         // When
-        List<Organism> result = experiment.breedParents(parents);
+        List<Organism> result = experimentCycle.breedParents(parents);
 
         // Then
         assertNotNull(result);
@@ -119,11 +111,11 @@ class ExperimentImplTest {
         MutationCommand mutation2 = mock(MutationCommand.class);
         List<MutationCommand> mutations = List.of(mutation1, mutation2);
 
-        when((child1).getMutationCommandList()).thenReturn(mutations);
-        when((child2).getMutationCommandList()).thenReturn(mutations);
+        when(child1.getMutationCommandList()).thenReturn(mutations);
+        when(child2.getMutationCommandList()).thenReturn(mutations);
 
         // When
-        experiment.mutateChildren(children);
+        experimentCycle.mutateChildren(children);
 
         // Then
         verify((Mutational) child1, atLeastOnce()).getMutationCommandList();
@@ -139,7 +131,20 @@ class ExperimentImplTest {
         List<Organism> children = List.of(child1);
 
         // When/Then - should not throw exception
-        assertDoesNotThrow(() -> experiment.mutateChildren(children));
+        assertDoesNotThrow(() -> experimentCycle.mutateChildren(children));
+    }
+
+    @Test
+    void testMutateChildrenWithEmptyMutationList() {
+        // Given
+        Organism child1 = mock(Organism.class, withSettings().extraInterfaces(Mutational.class));
+        List<Organism> children = List.of(child1);
+
+        when(child1.getMutationCommandList()).thenReturn(new ArrayList<>());
+
+        // When/Then - should not throw exception
+        assertDoesNotThrow(() -> experimentCycle.mutateChildren(children));
+        verify(child1, atLeastOnce()).getMutationCommandList();
     }
 
     @Test
@@ -149,39 +154,40 @@ class ExperimentImplTest {
         Organism child2 = new Organism("child2");
         List<Organism> children = List.of(child1, child2);
 
-        // Use ArgumentMatchers to match by organism ID with null check
         when(evaluator.evaluate(argThat(o -> o != null && o.getId().equals("child1")))).thenReturn(2.5);
         when(evaluator.evaluate(argThat(o -> o != null && o.getId().equals("child2")))).thenReturn(3.7);
 
         // When
-        List<ScoredOrganism> result = experiment.evaluateChildren(children);
+        List<ScoredOrganism> result = experimentCycle.evaluateChildren(children);
 
         // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        
+
         // Extract the scores from the result list
         Set<Double> scores = result.stream()
                 .map(ScoredOrganism::score)
                 .collect(java.util.stream.Collectors.toSet());
-        
+
         // Verify that both expected scores are present
         assertTrue(scores.contains(2.5), "Result should contain a score of 2.5");
         assertTrue(scores.contains(3.7), "Result should contain a score of 3.7");
-        
+
         // Verify that each child organism is in the result with the correct score
         for (ScoredOrganism scoredOrganism : result) {
             if (scoredOrganism.organismId().equals(child1.getId())) {
                 assertEquals(2.5, scoredOrganism.score());
                 assertEquals(child1, scoredOrganism.organism());
+                assertNull(scoredOrganism.id(), "New ScoredOrganism should have null id before saving");
             } else if (scoredOrganism.organismId().equals(child2.getId())) {
                 assertEquals(3.7, scoredOrganism.score());
                 assertEquals(child2, scoredOrganism.organism());
+                assertNull(scoredOrganism.id(), "New ScoredOrganism should have null id before saving");
             } else {
                 fail("Unexpected organism in result: " + scoredOrganism.organismId());
             }
         }
-        
+
         verify(evaluator, times(1)).evaluate(argThat(o -> o != null && o.getId().equals("child1")));
         verify(evaluator, times(1)).evaluate(argThat(o -> o != null && o.getId().equals("child2")));
     }
@@ -203,7 +209,7 @@ class ExperimentImplTest {
         List<ScoredOrganism> children = List.of(child1, child2);
 
         // When
-        experiment.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
@@ -236,7 +242,7 @@ class ExperimentImplTest {
                 });
 
         // When
-        experiment.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
 
         // Then - worst parent should be replaced
         verify(scoredOrganismRepository, times(1)).delete(parent2.id());
@@ -269,7 +275,7 @@ class ExperimentImplTest {
                 });
 
         // When
-        experiment.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
 
         // Then - both parents should be replaced
         verify(scoredOrganismRepository, times(1)).delete(parent1.id());
@@ -292,7 +298,7 @@ class ExperimentImplTest {
         List<ScoredOrganism> children = new ArrayList<>();
 
         // When
-        experiment.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
@@ -311,7 +317,7 @@ class ExperimentImplTest {
         List<ScoredOrganism> children = List.of(child1);
 
         // When
-        experiment.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
@@ -339,13 +345,10 @@ class ExperimentImplTest {
         when(evaluator.evaluate(child2Org)).thenReturn(6.0);
 
         MutationCommand mutation = mock(MutationCommand.class);
-        when((child1Org).getMutationCommandList()).thenReturn(List.of(mutation));
-        when((child2Org).getMutationCommandList()).thenReturn(List.of(mutation));
+        when(child1Org.getMutationCommandList()).thenReturn(List.of(mutation));
+        when(child2Org.getMutationCommandList()).thenReturn(List.of(mutation));
 
-        // Mock organismRepository.saveOrganism to return the organism passed to it
         when(organismRepository.saveOrganism(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        
-        // Mock scoredOrganismRepository.save to return a saved version with an ID
         when(scoredOrganismRepository.save(any(ScoredOrganism.class)))
                 .thenAnswer(invocation -> {
                     ScoredOrganism arg = invocation.getArgument(0);
@@ -353,7 +356,7 @@ class ExperimentImplTest {
                 });
 
         // When
-        experiment.mutationCycle();
+        experimentCycle.mutationCycle();
 
         // Then
         verify(scoredOrganismRepository).getRandomFromTopPercent(0.1f);
@@ -362,5 +365,48 @@ class ExperimentImplTest {
         verify(evaluator).evaluate(child1Org);
         verify(evaluator).evaluate(child2Org);
         verify(mutation, atLeastOnce()).execute();
+    }
+
+    @Test
+    void testMutationCycleWithRepositoryMaintenance() {
+        // Given - scenario where one child replaces worst parent
+        Organism parent1Org = new Organism("parent1");
+        Organism parent2Org = new Organism("parent2");
+        Organism child1Org = mock(Organism.class, withSettings().extraInterfaces(Mutational.class));
+        Organism child2Org = mock(Organism.class, withSettings().extraInterfaces(Mutational.class));
+
+        ScoredOrganism parent1 = new ScoredOrganism("sp1", 1.0, "parent1", parent1Org);
+        ScoredOrganism parent2 = new ScoredOrganism("sp2", 5.0, "parent2", parent2Org);
+
+        when(child1Org.getId()).thenReturn("child1");
+        when(child2Org.getId()).thenReturn("child2");
+
+        when(scoredOrganismRepository.getRandomFromTopPercent(0.1f)).thenReturn(parent1);
+        when(scoredOrganismRepository.getRandomFromBottomPercent(0.9f)).thenReturn(parent2);
+        when(organismBreeder.breed(any())).thenReturn(List.of(child1Org, child2Org));
+
+        // Child1 performs better than parent2
+        when(evaluator.evaluate(child1Org)).thenReturn(2.0);
+        when(evaluator.evaluate(child2Org)).thenReturn(6.0);
+
+        MutationCommand mutation = mock(MutationCommand.class);
+        when(child1Org.getMutationCommandList()).thenReturn(List.of(mutation));
+        when(child2Org.getMutationCommandList()).thenReturn(List.of(mutation));
+
+        when(organismRepository.saveOrganism(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scoredOrganismRepository.save(any(ScoredOrganism.class)))
+                .thenAnswer(invocation -> {
+                    ScoredOrganism arg = invocation.getArgument(0);
+                    return new ScoredOrganism("new-id", arg.score(), arg.organismId(), arg.organism());
+                });
+
+        // When
+        experimentCycle.mutationCycle();
+
+        // Then - verify repository maintenance occurred
+        verify(scoredOrganismRepository, times(1)).delete(parent2.id());
+        verify(organismRepository, times(1)).deleteOrganism(parent2.organismId());
+        verify(organismRepository, times(1)).saveOrganism(child1Org);
+        verify(scoredOrganismRepository, times(1)).save(any(ScoredOrganism.class));
     }
 }

@@ -63,4 +63,11 @@ public interface ScoredOrganismRepository {
      *                                  percent is not between 0.0 and 1.0
      */
     ScoredOrganism getRandomFromBottomPercent(float percent);
+
+    /**
+     * Returns the current number of ScoredOrganisms in the repository.
+     *
+     * @return The current size of the repository
+     */
+    int size();
 }

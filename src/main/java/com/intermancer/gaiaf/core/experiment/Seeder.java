@@ -1,14 +1,14 @@
 package com.intermancer.gaiaf.core.experiment;
 
-import com.intermancer.gaiaf.core.organism.repo.OrganismRepository;
-
 /**
- * Interface for seeders that initialize an OrganismRepository with a set of seed Organisms.
+ * Interface for seeders that initialize repositories with evaluated seed Organisms.
+ * Implementations should use injected dependencies (repositories and evaluator) rather than parameters.
  */
 public interface Seeder {
     /**
-     * Seeds the OrganismRepository with a set of Organisms.
-     * @param repo The OrganismRepository to seed
+     * Seeds the repositories with evaluated Organisms.
+     * Implementations should use injected ScoredOrganismRepository, OrganismRepository, 
+     * and Evaluator to create, evaluate, and store organisms.
      */
-    void seed(OrganismRepository repo);
+    void seed();
 }
