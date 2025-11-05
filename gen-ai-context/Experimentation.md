@@ -6,18 +6,20 @@ This document describes the Classes and changes to existing Classes to enable ex
 
 An Experiment is composed of seeding a repository with Scored Organisms, and then running a number of Experiment Cycles.
 
-### ExperimentCoordinator
+### Experiment
 
-The ExperimentCoordinator orchestrates the complete experimentation process. It manages seeding the ScoredOrganismRepository with initial evaluated organisms and executing multiple Experiment Cycles.
+Interface.  An Experiment is responsible for orchestrating the complete experimentation process.
 
-ExperimentCoordinator uses the `@Component` annotation to make itself available for dependency injection.
+### BasicExperimentImpl
+
+BasicExperimentImpl uses the `@Component` annotation to make itself available for dependency injection.
 
 #### Autowired Dependencies
 
-The ExperimentCoordinator depends on:
+The BasicExperimentImpl depends on:
 - `Seeder` - for initializing the repositories with evaluated seed organisms
-- `ScoredOrganismRepository` - for storing scored organisms
-- `OrganismRepository` -
+- `ExperimentConfiguration` - for controlling the experimentation process
+- `ExperimentCycle` - for orchestrating the experimentation process`
 
 #### Methods
 
@@ -376,7 +378,7 @@ The evaluation uses CSV data where the first column contains epoch dates (assumi
 
 The ExperimentController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
 
-The ExperimentController autowires a ScoredOrganismRepository and an ExperimentCoordinator.
+The ExperimentController autowires a ScoredOrganismRepository and an Experiment.
 
 ### Endpoints
 
@@ -386,7 +388,7 @@ The ExperimentController autowires a ScoredOrganismRepository and an ExperimentC
 
 #### POST /experiment/run
 
-Runs a complete experiment by calling the ExperimentCoordinator.runExperiment() method. Returns a summary of the experiment results.
+Runs a complete experiment by calling the Experiment.runExperiment() method. Returns a summary of the experiment results.
 
 #### GET /experiment/status
 
