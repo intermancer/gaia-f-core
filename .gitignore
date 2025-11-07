@@ -34,3 +34,9 @@ __pycache__/
 .gradle/8.8/executionHistory/executionHistory.lock
 .gradle/8.8/fileHashes/fileHashes.lock
 .gradle/buildOutputCleanup/buildOutputCleanup.lock
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+src/main/resources/static/

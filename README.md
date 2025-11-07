@@ -49,7 +49,10 @@ To run the application, use the following command:
 
 The application will start on `http://localhost:8080`.
 
-### Testing
+Access the UI at `http://localhost:5173`  
+API available at `http://localhost:8080/api`
+
+#### Production Mode
 
 To run the tests, use the following command:
 
