@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'idea'
     id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.github.node-gradle.node' version '7.0.2'
@@ -39,15 +40,42 @@ idea {
         excludeDirs += file('frontend/node_modules')
         excludeDirs += file('frontend/dist')
         excludeDirs += file('frontend/.vite')
+
+        // Mark frontend/src as a content root so IntelliJ understands the context
+        sourceDirs += file('frontend/src')
     }
 }
 
 // Create a custom task for building the frontend
-task buildFrontend(type: com.github.gradle.node.npm.task.NpmTask) {
-    dependsOn npmInstall
+tasks.register('cleanFrontend', Delete) {
+    delete file("${project.projectDir}/frontend/node_modules")
+    delete file("${project.projectDir}/frontend/package-lock.json")
+}
+
+tasks.register('installFrontendDeps', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn cleanFrontend
+    npmCommand = ['install']
+    args = ['--force']
+    workingDir = file("${project.projectDir}/frontend")
+    
+    // Show npm output
+    execOverrides {
+        it.standardOutput = System.out
+        it.errorOutput = System.err
+    }
+}
+
+tasks.register('buildFrontend', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn installFrontendDeps
     npmCommand = ['run', 'build']
     args = []
     workingDir = file("${project.projectDir}/frontend")
+    
+    // Show npm output
+    execOverrides {
+        it.standardOutput = System.out
+        it.errorOutput = System.err
+    }
 }
 
 processResources.dependsOn buildFrontend
