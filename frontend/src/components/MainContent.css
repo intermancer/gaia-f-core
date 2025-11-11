@@ -1,0 +1,86 @@
+
+.main-content {
+    flex: 1;
+    padding: 30px;
+    background-color: #ecf0f1;
+    overflow-y: auto;
+}
+
+.welcome {
+    text-align: center;
+    padding: 50px;
+}
+
+.welcome h1 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.welcome p {
+    color: #7f8c8d;
+    font-size: 1.2rem;
+}
+
+.experiment-view,
+.repository-view,
+.configure-view,
+.default-view {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.experiment-view h1,
+.repository-view h1,
+.configure-view h1,
+.default-view h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.status-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.status-section h2 {
+    color: #34495e;
+    font-size: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.status-section p {
+    color: #7f8c8d;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.status-badge {
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-badge.running {
+    background-color: #2ecc71;
+    color: #ffffff;
+}
+
+.status-badge.stopped {
+    background-color: #95a5a6;
+    color: #ffffff;
+}
+
+.default-view p {
+    color: #7f8c8d;
+    font-size: 1rem;
+}
