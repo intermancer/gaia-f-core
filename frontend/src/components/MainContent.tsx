@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './MainContent.css';
+import WelcomeScreen from './WelcomeScreen';
+import ExperimentStatusView from './ExperimentStatusView';
+import StartExperimentScreen from './StartExperimentScreen';
+import StopExperimentScreen from './StopExperimentScreen';
+import ScoredOrganismRepositoryView from './ScoredOrganismRepositoryView';
+import ListScoredOrganismsScreen from './ListScoredOrganismsScreen';
+import DisplayTop5ScoredOrganismsScreen from './DisplayTop5ScoredOrganismsScreen';
 
 interface MainContentProps {
   selectedCommand: string | null;
@@ -17,19 +24,6 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
       handleStopExperiment();
     }
   }, [selectedCommand]);
-
-  const handleConfigureExperiment = () => {
-    // TODO: Implement configuration UI
-    return (
-      <div className="configure-view">
-        <h1>Configure Experiment</h1>
-        <div className="status-section">
-          <h2>Configuration</h2>
-          <p>Experiment configuration options will be displayed here.</p>
-        </div>
-      </div>
-    );
-  };
 
   const handleStartExperiment = async () => {
     try {
@@ -63,91 +57,27 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
 
   const renderContent = () => {
     if (!selectedCommand) {
-      return (
-        <div className="welcome">
-          <h1>Welcome to GAIA-F Core</h1>
-          <p>Select a command from the sidebar to get started.</p>
-        </div>
-      );
+      return <WelcomeScreen />;
     }
 
     switch (selectedCommand) {
       case 'Experiment':
-        return (
-          <div className="experiment-view">
-            <h1>Experiment</h1>
-            <div className="status-section">
-              <h2>Status</h2>
-              <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
-                {experimentStatus}
-              </div>
-            </div>
-          </div>
-        );
-      
-      case 'Configure Experiment':
-        return handleConfigureExperiment();
+        return <ExperimentStatusView experimentStatus={experimentStatus} isRunning={isRunning} />;
       
       case 'Start Experiment':
-        return (
-          <div className="experiment-view">
-            <h1>Start Experiment</h1>
-            <div className="status-section">
-              <h2>Status</h2>
-              <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
-                {experimentStatus}
-              </div>
-            </div>
-          </div>
-        );
+        return <StartExperimentScreen experimentStatus={experimentStatus} isRunning={isRunning} />;
       
       case 'Stop Experiment':
-        return (
-          <div className="experiment-view">
-            <h1>Stop Experiment</h1>
-            <div className="status-section">
-              <h2>Status</h2>
-              <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
-                {experimentStatus}
-              </div>
-            </div>
-          </div>
-        );
+        return <StopExperimentScreen experimentStatus={experimentStatus} isRunning={isRunning} />;
       
       case 'Scored Organism Repository':
-        return (
-          <div className="repository-view">
-            <h1>Scored Organism Repository</h1>
-            <div className="status-section">
-              <h2>Repository Information</h2>
-              <p>Select an option from the sidebar to view scored organisms.</p>
-            </div>
-          </div>
-        );
+        return <ScoredOrganismRepositoryView />;
       
       case 'List Scored Organisms':
-        return (
-          <div className="repository-view">
-            <h1>List Scored Organisms</h1>
-            <div className="status-section">
-              <h2>All Scored Organisms</h2>
-              <p>List of all scored organisms will be displayed here.</p>
-              {/* TODO: Implement API call to fetch and display organisms */}
-            </div>
-          </div>
-        );
+        return <ListScoredOrganismsScreen />;
       
       case 'Display Top 5 Scored Organisms':
-        return (
-          <div className="repository-view">
-            <h1>Top 5 Scored Organisms</h1>
-            <div className="status-section">
-              <h2>Top Performers</h2>
-              <p>Top 5 scored organisms will be displayed here.</p>
-              {/* TODO: Implement API call to fetch and display top 5 organisms */}
-            </div>
-          </div>
-        );
+        return <DisplayTop5ScoredOrganismsScreen />;
       
       default:
         return (

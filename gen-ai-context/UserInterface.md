@@ -12,18 +12,21 @@ The sidebar contains a list of all the available commands.  Main commands are li
 
 ## Main Content
 
-The main content area is where status and user input is displayed.
+The main content area is where status and user input is displayed. Main Content screens are implemented in their own components.
 
 ## Commands
 
 ### Experiment
 
 When "Experiment" is selected, the following options are made available in the sidebar:
-- Configure Experiment
 - Start Experiment
 - Stop Experiment
 
-If an experiment is running, the status is shown in the main content area.
+#### Start Experiment
+The Start Experiment screen presents the current configuration of the experiment.  It allows the user to change the configuration and start the experiment.
+
+#### Stop Experiment
+The Stop Experiment screen allows the user to stop the current experiment if one is running.
 
 ### Scored Organism Repository
 
