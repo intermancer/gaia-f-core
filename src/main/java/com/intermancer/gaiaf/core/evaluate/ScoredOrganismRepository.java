@@ -1,5 +1,7 @@
 package com.intermancer.gaiaf.core.evaluate;
 
+import java.util.List;
+
 /**
  * Repository interface for managing ScoredOrganism records.
  * Maintains organisms with their evaluation scores and provides
@@ -70,4 +72,13 @@ public interface ScoredOrganismRepository {
      * @return The current size of the repository
      */
     int size();
+
+    /**
+     * Returns a list of all organism IDs currently stored in the repository.
+     * The list contains the organismId property (not the synthetic id) from
+     * each ScoredOrganism.
+     *
+     * @return A list of all organism IDs in the repository
+     */
+    List<String> getAllOrganismIds();
 }

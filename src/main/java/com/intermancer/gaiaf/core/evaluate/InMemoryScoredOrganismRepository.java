@@ -156,4 +156,11 @@ public class InMemoryScoredOrganismRepository implements ScoredOrganismRepositor
     public int size() {
         return organismMap.size();
     }
+
+    @Override
+    public List<String> getAllOrganismIds() {
+        return organismMap.values().stream()
+                .map(ScoredOrganism::organismId)
+                .toList();
+    }
 }

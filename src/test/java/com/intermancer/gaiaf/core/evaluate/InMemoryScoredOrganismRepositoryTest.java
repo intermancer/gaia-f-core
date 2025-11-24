@@ -272,4 +272,60 @@ class InMemoryScoredOrganismRepositoryTest {
         ScoredOrganism bottom100 = repository.getRandomFromBottomPercent(1.0f);
         assertTrue(bottom100.score() >= 1.0 && bottom100.score() <= 10.0);
     }
+
+    @Test
+    @DisplayName("size() should return the correct number of organisms")
+    void testSize() {
+        assertEquals(0, repository.size());
+
+        repository.save(new ScoredOrganism(10.0, mockOrganism1));
+        assertEquals(1, repository.size());
+
+        repository.save(new ScoredOrganism(20.0, mockOrganism2));
+        assertEquals(2, repository.size());
+
+        repository.save(new ScoredOrganism(30.0, mockOrganism3));
+        assertEquals(3, repository.size());
+    }
+
+    @Test
+    @DisplayName("getAllOrganismIds() should return all organism IDs")
+    void testGetAllOrganismIds() {
+        repository.save(new ScoredOrganism(10.0, mockOrganism1));
+        repository.save(new ScoredOrganism(20.0, mockOrganism2));
+        repository.save(new ScoredOrganism(30.0, mockOrganism3));
+
+        var organismIds = repository.getAllOrganismIds();
+
+        assertEquals(3, organismIds.size());
+        assertTrue(organismIds.contains("organism-1"));
+        assertTrue(organismIds.contains("organism-2"));
+        assertTrue(organismIds.contains("organism-3"));
+    }
+
+    @Test
+    @DisplayName("getAllOrganismIds() should return empty list when repository is empty")
+    void testGetAllOrganismIdsEmpty() {
+        var organismIds = repository.getAllOrganismIds();
+
+        assertNotNull(organismIds);
+        assertTrue(organismIds.isEmpty());
+    }
+
+    @Test
+    @DisplayName("getAllOrganismIds() should reflect deletions")
+    void testGetAllOrganismIdsAfterDeletion() {
+        repository.save(new ScoredOrganism(10.0, mockOrganism1));
+        ScoredOrganism saved2 = repository.save(new ScoredOrganism(20.0, mockOrganism2));
+        repository.save(new ScoredOrganism(30.0, mockOrganism3));
+
+        repository.delete(saved2.id());
+
+        var organismIds = repository.getAllOrganismIds();
+
+        assertEquals(2, organismIds.size());
+        assertTrue(organismIds.contains("organism-1"));
+        assertFalse(organismIds.contains("organism-2"));
+        assertTrue(organismIds.contains("organism-3"));
+    }
 }

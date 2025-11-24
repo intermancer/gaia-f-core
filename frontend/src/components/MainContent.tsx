@@ -18,31 +18,14 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
 
   // Use useEffect to handle side effects when commands are clicked
   useEffect(() => {
-    if (selectedCommand === 'Start Experiment') {
-      handleStartExperiment();
-    } else if (selectedCommand === 'Stop Experiment') {
+    if (selectedCommand === 'Stop Experiment') {
       handleStopExperiment();
     }
   }, [selectedCommand]);
 
-  const handleStartExperiment = async () => {
-    try {
-      // TODO: Replace with actual API call to /gaia-f/experiment/start
-      setExperimentStatus('Starting experiment...');
-      setIsRunning(true);
-      
-      // Simulated API call
-      setTimeout(() => {
-        setExperimentStatus('Experiment is running');
-      }, 1000);
-    } catch (error) {
-      setExperimentStatus(`Error: ${error}`);
-    }
-  };
-
   const handleStopExperiment = async () => {
     try {
-      // TODO: Replace with actual API call to /gaia-f/experiment/stop
+      // TODO: Replace with actual API call to /gaia-f/experiment/stop when endpoint exists
       setExperimentStatus('Stopping experiment...');
       
       // Simulated API call
@@ -51,7 +34,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
         setIsRunning(false);
       }, 1000);
     } catch (error) {
-      setExperimentStatus(`Error: ${error}`);
+      setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -65,7 +48,14 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
         return <ExperimentStatusView experimentStatus={experimentStatus} isRunning={isRunning} />;
       
       case 'Start Experiment':
-        return <StartExperimentScreen experimentStatus={experimentStatus} isRunning={isRunning} />;
+        return (
+          <StartExperimentScreen 
+            experimentStatus={experimentStatus}
+            isRunning={isRunning}
+            onStatusChange={setExperimentStatus}
+            onRunningChange={setIsRunning}
+          />
+        );
       
       case 'Stop Experiment':
         return <StopExperimentScreen experimentStatus={experimentStatus} isRunning={isRunning} />;

@@ -83,6 +83,9 @@ Deletes a ScoredOrganism as identified by the id.
 `int size()`
 Returns the current number of ScoredOrganisms in the repository.
 
+`List<String> getAllOrganismIds()`
+Returns a list of all organism IDs currently stored in the repository. The list contains the organismId property (not the synthetic id) from each ScoredOrganism.
+
 `ScoredOrganism getRandomFromTopPercent(float percent)`
 Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent. Since this is a predictive system, scores closer to 0.0 are better. The "top" percentage, therefore, is determined by the lowest scores.
 
@@ -111,11 +114,11 @@ First looks up the ScoredOrganism from the Map using the id. Using the score pro
 `int size()`
 Returns the size of the Map (or List, they should be the same).
 
+`List<String> getAllOrganismIds()`
+Returns a list of all organism IDs by extracting the organismId property from each ScoredOrganism in the Map.
+
 `ScoredOrganism getRandomFromTopPercent(float percent)`
 First determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the top scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
-
-`ScoredOrganism getRandomFromBottomPercent(float percent)`
-First determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the bottom scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
 
 ## Seeding
 
