@@ -20,6 +20,9 @@ public class BasicExperimentImpl implements Experiment {
     @Autowired
     private ExperimentCycle experimentCycle;
     
+    @Autowired
+    private ExperimentStatus experimentStatus;
+    
     /**
      * Executes the complete experiment process:
      * 1. Seeds the ScoredOrganismRepository by calling the Seeder 
@@ -28,13 +31,26 @@ public class BasicExperimentImpl implements Experiment {
      */
     @Override
     public void runExperiment() {
-        // Step 1: Seed the repository with initial evaluated organisms
-        seeder.seed();
+        // Reset status and set to running
+        experimentStatus.reset();
+        experimentStatus.setStatus(ExperimentState.RUNNING);
         
-        // Step 2: Run the configured number of experiment cycles
-        int cycleCount = experimentConfiguration.getCycleCount();
-        for (int i = 0; i < cycleCount; i++) {
-            experimentCycle.mutationCycle();
+        try {
+            // Step 1: Seed the repository with initial evaluated organisms
+            seeder.seed();
+            
+            // Step 2: Run the configured number of experiment cycles
+            int cycleCount = experimentConfiguration.getCycleCount();
+            for (int i = 0; i < cycleCount; i++) {
+                experimentCycle.mutationCycle();
+                experimentStatus.incrementCyclesCompleted();
+            }
+            
+            // Mark experiment as stopped when complete
+            experimentStatus.setStatus(ExperimentState.STOPPED);
+        } catch (Exception e) {
+            experimentStatus.setStatus(ExperimentState.EXCEPTION);
+            throw e;
         }
     }
 }

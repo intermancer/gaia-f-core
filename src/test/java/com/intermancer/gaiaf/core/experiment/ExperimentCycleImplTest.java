@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -42,16 +43,21 @@ class ExperimentCycleImplTest {
     @Mock
     private ExperimentConfiguration experimentConfiguration;
 
+    @Spy
+    private ExperimentStatus experimentStatus = new ExperimentStatus();
+
     private ExperimentCycleImpl experimentCycle;
 
     @BeforeEach
     void setUp() {
+        experimentStatus.reset();
         experimentCycle = new ExperimentCycleImpl(
                 organismRepository,
                 scoredOrganismRepository,
                 organismBreeder,
                 evaluator,
-                experimentConfiguration
+                experimentConfiguration,
+                experimentStatus
         );
     }
 
@@ -193,8 +199,8 @@ class ExperimentCycleImplTest {
     }
 
     @Test
-    void testMaintainRepositoryWhenBothParentsAreTopTwo() {
-        // Given - parents have the best scores
+    void testMaintainRepositoryWhenNotAtCapacity_addsChildrenWithoutReplacement() {
+        // Given - repository not at capacity
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
         Organism child1Org = new Organism("child1");
@@ -208,6 +214,39 @@ class ExperimentCycleImplTest {
         List<ScoredOrganism> parents = List.of(parent1, parent2);
         List<ScoredOrganism> children = List.of(child1, child2);
 
+        when(scoredOrganismRepository.size()).thenReturn(10);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
+        when(organismRepository.saveOrganism(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(scoredOrganismRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        experimentCycle.maintainRepository(parents, children);
+
+        // Then - children should be added, no replacements tracked
+        verify(organismRepository, times(2)).saveOrganism(any());
+        verify(scoredOrganismRepository, times(2)).save(any());
+        assertEquals(0, experimentStatus.getOrganismsReplaced());
+    }
+
+    @Test
+    void testMaintainRepositoryWhenBothParentsAreTopTwo_noReplacements() {
+        // Given - parents have the best scores, repository at capacity
+        Organism parent1Org = new Organism("parent1");
+        Organism parent2Org = new Organism("parent2");
+        Organism child1Org = new Organism("child1");
+        Organism child2Org = new Organism("child2");
+
+        ScoredOrganism parent1 = new ScoredOrganism("sp1", 1.0, "parent1", parent1Org);
+        ScoredOrganism parent2 = new ScoredOrganism("sp2", 2.0, "parent2", parent2Org);
+        ScoredOrganism child1 = new ScoredOrganism(null, 5.0, "child1", child1Org);
+        ScoredOrganism child2 = new ScoredOrganism(null, 6.0, "child2", child2Org);
+
+        List<ScoredOrganism> parents = List.of(parent1, parent2);
+        List<ScoredOrganism> children = List.of(child1, child2);
+
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
+
         // When
         experimentCycle.maintainRepository(parents, children);
 
@@ -216,11 +255,12 @@ class ExperimentCycleImplTest {
         verify(organismRepository, never()).deleteOrganism(any());
         verify(scoredOrganismRepository, never()).save(any());
         verify(organismRepository, never()).saveOrganism(any());
+        assertEquals(0, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
-    void testMaintainRepositoryWhenOneChildIsInTopTwo() {
-        // Given - one parent and one child in the top two
+    void testMaintainRepositoryWhenOneChildIsInTopTwo_incrementsOrganismsReplacedByOne() {
+        // Given - one parent and one child in the top two, repository at capacity
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
         Organism child1Org = new Organism("child1");
@@ -234,6 +274,8 @@ class ExperimentCycleImplTest {
         List<ScoredOrganism> parents = List.of(parent1, parent2);
         List<ScoredOrganism> children = List.of(child1, child2);
 
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
         when(organismRepository.saveOrganism(child1Org)).thenReturn(child1Org);
         when(scoredOrganismRepository.save(any(ScoredOrganism.class)))
                 .thenAnswer(invocation -> {
@@ -244,16 +286,17 @@ class ExperimentCycleImplTest {
         // When
         experimentCycle.maintainRepository(parents, children);
 
-        // Then - worst parent should be replaced
+        // Then - worst parent should be replaced, organismsReplaced incremented by 1
         verify(scoredOrganismRepository, times(1)).delete(parent2.id());
         verify(organismRepository, times(1)).deleteOrganism(parent2.organismId());
         verify(organismRepository, times(1)).saveOrganism(child1Org);
         verify(scoredOrganismRepository, times(1)).save(any(ScoredOrganism.class));
+        assertEquals(1, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
-    void testMaintainRepositoryWhenBothChildrenAreInTopTwo() {
-        // Given - both children have better scores than both parents
+    void testMaintainRepositoryWhenBothChildrenAreInTopTwo_incrementsOrganismsReplacedByTwo() {
+        // Given - both children have better scores than both parents, repository at capacity
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
         Organism child1Org = new Organism("child1");
@@ -267,6 +310,8 @@ class ExperimentCycleImplTest {
         List<ScoredOrganism> parents = List.of(parent1, parent2);
         List<ScoredOrganism> children = List.of(child1, child2);
 
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
         when(organismRepository.saveOrganism(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(scoredOrganismRepository.save(any(ScoredOrganism.class)))
                 .thenAnswer(invocation -> {
@@ -277,13 +322,14 @@ class ExperimentCycleImplTest {
         // When
         experimentCycle.maintainRepository(parents, children);
 
-        // Then - both parents should be replaced
+        // Then - both parents should be replaced, organismsReplaced incremented by 2
         verify(scoredOrganismRepository, times(1)).delete(parent1.id());
         verify(scoredOrganismRepository, times(1)).delete(parent2.id());
         verify(organismRepository, times(1)).deleteOrganism(parent1.organismId());
         verify(organismRepository, times(1)).deleteOrganism(parent2.organismId());
         verify(organismRepository, times(2)).saveOrganism(any());
         verify(scoredOrganismRepository, times(2)).save(any(ScoredOrganism.class));
+        assertEquals(2, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
@@ -303,6 +349,7 @@ class ExperimentCycleImplTest {
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
         verify(organismRepository, never()).deleteOrganism(any());
+        assertEquals(0, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
@@ -322,6 +369,34 @@ class ExperimentCycleImplTest {
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
         verify(organismRepository, never()).deleteOrganism(any());
+        assertEquals(0, experimentStatus.getOrganismsReplaced());
+    }
+
+    @Test
+    void testMaintainRepository_multipleReplacements_accumulatesOrganismsReplaced() {
+        // Given - run multiple maintenance cycles to accumulate replacements
+        Organism parent1Org = new Organism("parent1");
+        Organism parent2Org = new Organism("parent2");
+        Organism child1Org = new Organism("child1");
+
+        ScoredOrganism parent1 = new ScoredOrganism("sp1", 1.0, "parent1", parent1Org);
+        ScoredOrganism parent2 = new ScoredOrganism("sp2", 5.0, "parent2", parent2Org);
+        ScoredOrganism child1 = new ScoredOrganism(null, 2.0, "child1", child1Org);
+
+        List<ScoredOrganism> parents = List.of(parent1, parent2);
+        List<ScoredOrganism> children = List.of(child1);
+
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
+        when(organismRepository.saveOrganism(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(scoredOrganismRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // When - run maintenance twice
+        experimentCycle.maintainRepository(parents, children);
+        experimentCycle.maintainRepository(parents, children);
+
+        // Then - should accumulate to 2 replacements
+        assertEquals(2, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
@@ -340,6 +415,8 @@ class ExperimentCycleImplTest {
 
         when(scoredOrganismRepository.getRandomFromTopPercent(0.1f)).thenReturn(parent1);
         when(scoredOrganismRepository.getRandomFromBottomPercent(0.9f)).thenReturn(parent2);
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
         when(organismBreeder.breed(any())).thenReturn(List.of(child1Org, child2Org));
         when(evaluator.evaluate(child1Org)).thenReturn(2.0);
         when(evaluator.evaluate(child2Org)).thenReturn(6.0);
@@ -365,10 +442,12 @@ class ExperimentCycleImplTest {
         verify(evaluator).evaluate(child1Org);
         verify(evaluator).evaluate(child2Org);
         verify(mutation, atLeastOnce()).execute();
+        // One child replaced one parent
+        assertEquals(1, experimentStatus.getOrganismsReplaced());
     }
 
     @Test
-    void testMutationCycleWithRepositoryMaintenance() {
+    void testMutationCycleWithRepositoryMaintenance_tracksReplacement() {
         // Given - scenario where one child replaces worst parent
         Organism parent1Org = new Organism("parent1");
         Organism parent2Org = new Organism("parent2");
@@ -383,6 +462,8 @@ class ExperimentCycleImplTest {
 
         when(scoredOrganismRepository.getRandomFromTopPercent(0.1f)).thenReturn(parent1);
         when(scoredOrganismRepository.getRandomFromBottomPercent(0.9f)).thenReturn(parent2);
+        when(scoredOrganismRepository.size()).thenReturn(50);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
         when(organismBreeder.breed(any())).thenReturn(List.of(child1Org, child2Org));
 
         // Child1 performs better than parent2
@@ -403,10 +484,54 @@ class ExperimentCycleImplTest {
         // When
         experimentCycle.mutationCycle();
 
-        // Then - verify repository maintenance occurred
+        // Then - verify repository maintenance occurred and replacement was tracked
         verify(scoredOrganismRepository, times(1)).delete(parent2.id());
         verify(organismRepository, times(1)).deleteOrganism(parent2.organismId());
         verify(organismRepository, times(1)).saveOrganism(child1Org);
         verify(scoredOrganismRepository, times(1)).save(any(ScoredOrganism.class));
+        assertEquals(1, experimentStatus.getOrganismsReplaced());
+    }
+
+    @Test
+    void testMutationCycle_notAtCapacity_noReplacementsTracked() {
+        // Given - repository not at capacity, children should be added without replacement
+        Organism parent1Org = new Organism("parent1");
+        Organism parent2Org = new Organism("parent2");
+        Organism child1Org = mock(Organism.class, withSettings().extraInterfaces(Mutational.class));
+        Organism child2Org = mock(Organism.class, withSettings().extraInterfaces(Mutational.class));
+
+        ScoredOrganism parent1 = new ScoredOrganism("sp1", 1.0, "parent1", parent1Org);
+        ScoredOrganism parent2 = new ScoredOrganism("sp2", 5.0, "parent2", parent2Org);
+
+        when(child1Org.getId()).thenReturn("child1");
+        when(child2Org.getId()).thenReturn("child2");
+
+        when(scoredOrganismRepository.getRandomFromTopPercent(0.1f)).thenReturn(parent1);
+        when(scoredOrganismRepository.getRandomFromBottomPercent(0.9f)).thenReturn(parent2);
+        when(scoredOrganismRepository.size()).thenReturn(10);
+        when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
+        when(organismBreeder.breed(any())).thenReturn(List.of(child1Org, child2Org));
+        when(evaluator.evaluate(child1Org)).thenReturn(2.0);
+        when(evaluator.evaluate(child2Org)).thenReturn(6.0);
+
+        MutationCommand mutation = mock(MutationCommand.class);
+        when(child1Org.getMutationCommandList()).thenReturn(List.of(mutation));
+        when(child2Org.getMutationCommandList()).thenReturn(List.of(mutation));
+
+        when(organismRepository.saveOrganism(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scoredOrganismRepository.save(any(ScoredOrganism.class)))
+                .thenAnswer(invocation -> {
+                    ScoredOrganism arg = invocation.getArgument(0);
+                    return new ScoredOrganism("new-id", arg.score(), arg.organismId(), arg.organism());
+                });
+
+        // When
+        experimentCycle.mutationCycle();
+
+        // Then - children added but no replacements
+        verify(organismRepository, times(2)).saveOrganism(any());
+        verify(scoredOrganismRepository, times(2)).save(any());
+        verify(scoredOrganismRepository, never()).delete(any());
+        assertEquals(0, experimentStatus.getOrganismsReplaced());
     }
 }

@@ -42,6 +42,42 @@ The number of experiment cycles to run. Defaults to 100. Accessible through gett
 `int repoCapacity`
 The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRepository. Defaults to 50. Accessible through getter and setter methods.
 
+### ExperimentStatus
+
+A component that tracks the runtime state and progress of an experiment. ExperimentStatus maintains information about the experiment's current execution state, performance metrics, and operational statistics.
+
+ExperimentStatus uses the `@Component` annotation to make it available for dependency injection.
+
+#### Properties
+
+`int cyclesCompleted`
+The number of experiment cycles that have been completed since the experiment started. Defaults to 0. Accessible through getter and setter methods.
+
+`int organismsReplaced`
+The count of organisms that have been replaced in the ScoredOrganismRepository after it reached capacity. This metric tracks evolutionary progress by counting successful replacements during repository maintenance. Defaults to 0. Accessible through getter and setter methods.
+
+`ExperimentState status`
+The current operational state of the experiment. Possible values are:
+- `STOPPED` - The experiment is not currently running
+- `RUNNING` - The experiment is actively executing cycles
+- `EXCEPTION` - The experiment encountered an error and has stopped
+
+Accessible through getter and setter methods.
+
+#### Methods
+
+`void reset()`
+Resets all tracking metrics to their initial state. Sets cyclesCompleted to 0, organismsReplaced to 0, and status to STOPPED.
+
+`void incrementCyclesCompleted()`
+Increments the cyclesCompleted counter by 1. Called after each successful experiment cycle.
+
+`void incrementOrganismsReplaced()`
+Increments the organismsReplaced counter by 1. Called when an organism is successfully replaced in the ScoredOrganismRepository during repository maintenance.
+
+`void incrementOrganismsReplaced(int count)`
+Increments the organismsReplaced counter by the specified count. Used when multiple organisms are replaced in a single maintenance operation.
+
 ### Classes and Interfaces for General Experiment Coordination
 
 #### ScoredOrganism
@@ -381,7 +417,24 @@ The evaluation uses CSV data where the first column contains epoch dates (assumi
 
 The ExperimentController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
 
-The ExperimentController autowires a ScoredOrganismRepository and an Experiment.
+The ExperimentController autowires a ScoredOrganismRepository, a Seeder, an Experiment, an ExperimentConfiguration, and an ExperimentStatus.
+
+#### Public Methods
+
+`ResponseEntity<List<String>> seed()`
+Seeds the OrganismRepository with the Organisms created by the Seeder and returns all of the Organism IDs. Mapped to GET `/experiment/seed`.
+
+`ResponseEntity<String> startExperiment()`
+Starts the experiment by calling the Experiment.runExperiment() method. Returns a confirmation message. Mapped to POST `/experiment/start`.
+
+`ResponseEntity<ExperimentConfiguration> getConfiguration()`
+Returns the current ExperimentConfiguration. Mapped to GET `/experiment/configuration`.
+
+`ResponseEntity<ExperimentConfiguration> updateConfiguration(ExperimentConfiguration updatedConfig)`
+Updates the experiment configuration with new values for cycleCount and repoCapacity. Returns the updated configuration. Mapped to PUT `/experiment/configuration`.
+
+`ResponseEntity<ExperimentStatus> getStatus()`
+Returns the current ExperimentStatus containing cyclesCompleted, organismsReplaced, and the current experiment state. Mapped to GET `/experiment/status`.
 
 ### Endpoints
 
@@ -389,13 +442,34 @@ The ExperimentController autowires a ScoredOrganismRepository and an Experiment.
 
 `/experiment` is the base context path for endpoints that manage the Experiment.
 
-#### POST /experiment/run
+#### GET /experiment/seed
 
-Runs a complete experiment by calling the Experiment.runExperiment() method. Returns a summary of the experiment results.
+Seeds the OrganismRepository with the Organisms created by the Seeder and returns a list of all Organism IDs.
+
+#### POST /experiment/start
+
+Starts the experiment by calling the Experiment.runExperiment() method. Returns a confirmation message.
+
+#### GET /experiment/configuration
+
+Returns the current ExperimentConfiguration object containing:
+- `cycleCount` - The number of experiment cycles to run
+- `repoCapacity` - The maximum number of ScoredOrganisms that can be stored
+
+#### PUT /experiment/configuration
+
+Updates the experiment configuration with new values. Accepts a JSON body with:
+- `cycleCount` - The new number of experiment cycles to run
+- `repoCapacity` - The new maximum repository capacity
+
+Returns the updated ExperimentConfiguration object.
 
 #### GET /experiment/status
 
-Returns the current status of the experiment including the number of cycles completed and the current best organism score.
+Returns the current ExperimentStatus object containing:
+- `cyclesCompleted` - The number of experiment cycles completed
+- `organismsReplaced` - The count of organisms replaced during repository maintenance
+- `status` - The current experiment state (STOPPED, RUNNING, or EXCEPTION)
 
 ## Support Features
 
@@ -408,7 +482,7 @@ The GeneGenerator is used to provide random Genes to support mutation activities
 #### Methods
 
 `public static Gene getRandomGene()`
-Returns a single, randomly chosen Gene. If the Gene uses any operational constants, they are randomly generated. If the Gene has one targetIndex, it uses the default value of -1. If the Gene has more than one targetIndex, the others will be given random numbers between -2 and -10, with none of them repeating.
+Returns a single, randomly chosen Gene. If the Gene uses any operational constants, they are randomly generated. If the Gene uses one targetIndex, it uses the default value of -1. If the Gene has more than one targetIndex, the others will be given random numbers between -2 and -10, with none of them repeating.
 
 ### ChromosomeGenerator
 

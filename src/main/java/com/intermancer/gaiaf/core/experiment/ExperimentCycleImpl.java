@@ -25,6 +25,7 @@ public class ExperimentCycleImpl implements ExperimentCycle {
     private final OrganismBreeder organismBreeder;
     private final Evaluator evaluator;
     private final ExperimentConfiguration experimentConfiguration;
+    private final ExperimentStatus experimentStatus;
     private final Random random;
     
     @Autowired
@@ -33,12 +34,14 @@ public class ExperimentCycleImpl implements ExperimentCycle {
             ScoredOrganismRepository scoredOrganismRepository,
             OrganismBreeder organismBreeder,
             Evaluator evaluator,
-            ExperimentConfiguration experimentConfiguration) {
+            ExperimentConfiguration experimentConfiguration,
+            ExperimentStatus experimentStatus) {
         this.organismRepository = organismRepository;
         this.scoredOrganismRepository = scoredOrganismRepository;
         this.organismBreeder = organismBreeder;
         this.evaluator = evaluator;
         this.experimentConfiguration = experimentConfiguration;
+        this.experimentStatus = experimentStatus;
         this.random = new Random();
     }
     
@@ -190,6 +193,9 @@ public class ExperimentCycleImpl implements ExperimentCycle {
             ScoredOrganism savedScoredChild = new ScoredOrganism(
                     null, childToAdd.score(), savedOrganism.getId(), savedOrganism);
             scoredOrganismRepository.save(savedScoredChild);
+            
+            // Track the replacement
+            experimentStatus.incrementOrganismsReplaced();
         }
         // 4. If both of the top two organisms are children, delete both parents and add both children
         else if (children.contains(topFirst) && children.contains(topSecond)) {
@@ -206,6 +212,9 @@ public class ExperimentCycleImpl implements ExperimentCycle {
                         null, child.score(), savedOrganism.getId(), savedOrganism);
                 scoredOrganismRepository.save(savedScoredChild);
             }
+            
+            // Track both replacements
+            experimentStatus.incrementOrganismsReplaced(2);
         }
     }
 }
