@@ -18,15 +18,7 @@ The main content area is where status and user input is displayed. Main Content 
 
 ### Experiment
 
-When "Experiment" is selected, the following options are made available in the sidebar:
-- Start Experiment
-- Stop Experiment
-
-#### Start Experiment
-The Start Experiment screen presents the current configuration of the experiment.  It allows the user to change the configuration and start the experiment.
-
-#### Stop Experiment
-The Stop Experiment screen allows the user to stop the current experiment if one is running.
+When "Experiment" is selected the Experiment screen presents the current configuration of the experiment, the current status of the running Experiment, and the command buttons to start or stop the experiment.  If the experiment is not running, the "Start Experiment" button is enabled.  If the experiment is running, the "Stop Experiment" button is enabled.
 
 ### Scored Organism Repository
 

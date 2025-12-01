@@ -11,8 +11,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCommand, onCommandSelect }) =
 
   const getSecondaryCommands = (command: string): string[] => {
     switch (command) {
-      case 'Experiment':
-        return ['Configure Experiment', 'Start Experiment', 'Stop Experiment'];
       case 'Scored Organism Repository':
         return ['List Scored Organisms', 'Display Top 5 Scored Organisms'];
       default:

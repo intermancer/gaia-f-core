@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './MainContent.css';
 import WelcomeScreen from './WelcomeScreen';
 import ExperimentStatusView from './ExperimentStatusView';
-import StartExperimentScreen from './StartExperimentScreen';
-import StopExperimentScreen from './StopExperimentScreen';
 import ScoredOrganismRepositoryView from './ScoredOrganismRepositoryView';
 import ListScoredOrganismsScreen from './ListScoredOrganismsScreen';
 import DisplayTop5ScoredOrganismsScreen from './DisplayTop5ScoredOrganismsScreen';
@@ -16,19 +14,23 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const [experimentStatus, setExperimentStatus] = useState<string>('No experiment running');
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
-  // Use useEffect to handle side effects when commands are clicked
-  useEffect(() => {
-    if (selectedCommand === 'Stop Experiment') {
-      handleStopExperiment();
+  const handleStartExperiment = async () => {
+    try {
+      setExperimentStatus('Starting experiment...');
+      // TODO: Replace with actual API call to /gaia-f/experiment/start
+      setTimeout(() => {
+        setExperimentStatus('Experiment running');
+        setIsRunning(true);
+      }, 1000);
+    } catch (error) {
+      setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [selectedCommand]);
+  };
 
   const handleStopExperiment = async () => {
     try {
-      // TODO: Replace with actual API call to /gaia-f/experiment/stop when endpoint exists
       setExperimentStatus('Stopping experiment...');
-      
-      // Simulated API call
+      // TODO: Replace with actual API call to /gaia-f/experiment/stop
       setTimeout(() => {
         setExperimentStatus('Experiment stopped');
         setIsRunning(false);
@@ -45,20 +47,14 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
 
     switch (selectedCommand) {
       case 'Experiment':
-        return <ExperimentStatusView experimentStatus={experimentStatus} isRunning={isRunning} />;
-      
-      case 'Start Experiment':
         return (
-          <StartExperimentScreen 
-            experimentStatus={experimentStatus}
+          <ExperimentStatusView 
+            experimentStatus={experimentStatus} 
             isRunning={isRunning}
-            onStatusChange={setExperimentStatus}
-            onRunningChange={setIsRunning}
+            onStartExperiment={handleStartExperiment}
+            onStopExperiment={handleStopExperiment}
           />
         );
-      
-      case 'Stop Experiment':
-        return <StopExperimentScreen experimentStatus={experimentStatus} isRunning={isRunning} />;
       
       case 'Scored Organism Repository':
         return <ScoredOrganismRepositoryView />;
