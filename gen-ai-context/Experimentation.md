@@ -37,7 +37,7 @@ ExperimentConfiguration uses the `@Component` and `@ConfigurationProperties` ann
 #### Properties
 
 `int cycleCount`
-The number of experiment cycles to run. Defaults to 100. Accessible through getter and setter methods.
+The number of experiment cycles to run. Defaults to 1000. Accessible through getter and setter methods.
 
 `int repoCapacity`
 The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRepository. Defaults to 50. Accessible through getter and setter methods.

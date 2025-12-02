@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "experiment")
 public class ExperimentConfiguration {
-    private int cycleCount = 100;
+    private int cycleCount = 1000;
     private int repoCapacity = 200;
 
     public int getCycleCount() {

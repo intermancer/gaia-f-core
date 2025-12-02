@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface ExperimentConfiguration {
   cycleCount: number;
   repoCapacity: number;
+}
+
+interface ExperimentStatusData {
+  cyclesCompleted: number;
+  organismsReplaced: number;
+  status: 'STOPPED' | 'RUNNING' | 'EXCEPTION';
 }
 
 interface ExperimentStatusViewProps {
@@ -10,22 +16,83 @@ interface ExperimentStatusViewProps {
   isRunning: boolean;
   onStartExperiment: () => void;
   onStopExperiment: () => void;
+  onStatusChange?: (isRunning: boolean, status: string) => void;
 }
 
 const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({ 
   experimentStatus, 
   isRunning,
   onStartExperiment,
-  onStopExperiment
+  onStopExperiment,
+  onStatusChange
 }) => {
   const [config, setConfig] = useState<ExperimentConfiguration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [editedConfig, setEditedConfig] = useState<ExperimentConfiguration | null>(null);
+  const [statusData, setStatusData] = useState<ExperimentStatusData | null>(null);
+  const [hasExperimentRun, setHasExperimentRun] = useState<boolean>(false);
+  const pollingIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchConfiguration();
+    fetchStatus();
   }, []);
+
+  useEffect(() => {
+    if (isRunning) {
+      // Start polling when experiment is running
+      pollingIntervalRef.current = window.setInterval(() => {
+        fetchStatus();
+        fetchConfiguration();
+      }, 1000);
+    } else {
+      // Stop polling when experiment is not running
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [isRunning]);
+
+  const fetchStatus = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/gaia-f/experiment/status');
+      
+      if (!response.ok) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error(`Failed to fetch status: ${response.statusText}`);
+      }
+      
+      const data: ExperimentStatusData = await response.json();
+      setStatusData(data);
+      
+      // Notify parent component of status changes
+      if (onStatusChange) {
+        const newIsRunning = data.status === 'RUNNING';
+        const newStatusText = getStatusDisplayText(data);
+        onStatusChange(newIsRunning, newStatusText);
+      }
+    } catch (err) {
+      console.error('Error fetching status:', err);
+    }
+  };
+
+  const getStatusDisplayText = (data: ExperimentStatusData): string => {
+    if (data.status === 'RUNNING') {
+      return `Running - Cycles: ${data.cyclesCompleted}, Organisms Replaced: ${data.organismsReplaced}`;
+    } else if (data.status === 'EXCEPTION') {
+      return 'Experiment Error';
+    } else {
+      return 'No Experiment Running';
+    }
+  };
 
   const fetchConfiguration = async () => {
     try {
@@ -89,9 +156,13 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   };
 
   const handleStartExperiment = () => {
+    setHasExperimentRun(true);
     onStartExperiment();
-    // Refresh configuration after starting to get any server-side updates
-    setTimeout(() => fetchConfiguration(), 1000);
+    // Refresh configuration and status after starting
+    setTimeout(() => {
+      fetchConfiguration();
+      fetchStatus();
+    }, 1000);
   };
 
   const hasChanges = () => {
@@ -170,8 +241,21 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       <div className="status-section">
         <h2>Status</h2>
         <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
-          {experimentStatus}
+          {statusData ? getStatusDisplayText(statusData) : experimentStatus}
         </div>
+        {statusData && statusData.status === 'RUNNING' && (
+          <div className="status-details">
+            <p>Cycles Completed: {statusData.cyclesCompleted}</p>
+            <p>Organisms Replaced: {statusData.organismsReplaced}</p>
+          </div>
+        )}
+        {(isRunning || hasExperimentRun) && config && (
+          <div className="status-details">
+            <h3>Experiment Configuration</h3>
+            <p>Cycle Count: {config.cycleCount}</p>
+            <p>Repository Capacity: {config.repoCapacity}</p>
+          </div>
+        )}
       </div>
 
       <div className="button-section">

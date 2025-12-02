@@ -17,27 +17,38 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const handleStartExperiment = async () => {
     try {
       setExperimentStatus('Starting experiment...');
-      // TODO: Replace with actual API call to /gaia-f/experiment/start
-      setTimeout(() => {
-        setExperimentStatus('Experiment running');
-        setIsRunning(true);
-      }, 1000);
+      setIsRunning(true);
+      
+      const response = await fetch('http://localhost:8080/gaia-f/experiment/start', {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error(`Failed to start experiment: ${response.statusText}`);
+      }
+      
+      setExperimentStatus('Experiment running');
     } catch (error) {
       setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsRunning(false);
     }
   };
 
   const handleStopExperiment = async () => {
     try {
       setExperimentStatus('Stopping experiment...');
-      // TODO: Replace with actual API call to /gaia-f/experiment/stop
-      setTimeout(() => {
-        setExperimentStatus('Experiment stopped');
-        setIsRunning(false);
-      }, 1000);
+      // TODO: Replace with actual API call to /gaia-f/experiment/stop when endpoint is available
+      setExperimentStatus('Experiment stopped');
+      setIsRunning(false);
     } catch (error) {
       setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
+
+  const handleStatusChange = (newIsRunning: boolean, newStatus: string) => {
+    setIsRunning(newIsRunning);
+    setExperimentStatus(newStatus);
   };
 
   const renderContent = () => {
@@ -53,6 +64,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
             isRunning={isRunning}
             onStartExperiment={handleStartExperiment}
             onStopExperiment={handleStopExperiment}
+            onStatusChange={handleStatusChange}
           />
         );
       
