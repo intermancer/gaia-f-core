@@ -6,3 +6,12 @@ server:
 spring:
   application:
     name: gaia-f-core
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
