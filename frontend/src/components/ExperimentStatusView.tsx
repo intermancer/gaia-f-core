@@ -86,7 +86,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
 
   const getStatusDisplayText = (data: ExperimentStatusData): string => {
     if (data.status === 'RUNNING') {
-      return `Running - Cycles: ${data.cyclesCompleted}, Organisms Replaced: ${data.organismsReplaced}`;
+      return 'Experiment Running';
     } else if (data.status === 'EXCEPTION') {
       return 'Experiment Error';
     } else {
@@ -243,7 +243,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
         <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
           {statusData ? getStatusDisplayText(statusData) : experimentStatus}
         </div>
-        {statusData && statusData.status === 'RUNNING' && (
+        {statusData && (statusData.status === 'RUNNING' || (statusData.status === 'STOPPED' && hasExperimentRun)) && (
           <div className="status-details">
             <p>Cycles Completed: {statusData.cyclesCompleted}</p>
             <p>Organisms Replaced: {statusData.organismsReplaced}</p>
