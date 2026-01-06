@@ -13,7 +13,8 @@ public record ScoredOrganism(
     String id,
     Double score,
     String organismId,
-    Organism organism
+    Organism organism,
+    String experimentId
 ) implements Comparable<ScoredOrganism> {
 
     /**
@@ -22,9 +23,10 @@ public record ScoredOrganism(
      *
      * @param score The evaluation score for the organism
      * @param organism The actual organism instance (transient, not stored)
+     * @param experimentId The ID of the experiment that produced this score
      */
-    public ScoredOrganism(Double score, Organism organism) {
-        this(UUID.randomUUID().toString(), score, organism.getId(), organism);
+    public ScoredOrganism(Double score, Organism organism, String experimentId) {
+        this(UUID.randomUUID().toString(), score, organism.getId(), organism, experimentId);
     }
 
     /**

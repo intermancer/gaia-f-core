@@ -74,11 +74,52 @@ public interface ScoredOrganismRepository {
     int size();
 
     /**
-     * Returns a list of all organism IDs currently stored in the repository.
-     * The list contains the organismId property (not the synthetic id) from
-     * each ScoredOrganism.
+     * Returns the current number of ScoredOrganisms in the repository for the given experimentId.
      *
-     * @return A list of all organism IDs in the repository
+     * @param experimentId The ID of the experiment to count organisms for
+     * @return The current size of the repository for the given experimentId
      */
-    List<String> getAllOrganismIds();
+    int size(String experimentId);
+
+    /**
+     * Returns a list of all ScoredOrganism IDs currently stored in the repository 
+     * with the given experimentId.
+     * The list contains the id property from each ScoredOrganism, not the organismId property.
+     *
+     * @param experimentId The ID of the experiment to retrieve organism IDs for
+     * @return A list of all ScoredOrganism IDs in the repository with the given experimentId
+     */
+    List<String> getAllOrganismIds(String experimentId);
+
+    /**
+     * Returns a random ScoredOrganism from the top percentage of scores with the given experimentId.
+     * Since lower scores indicate better performance (closer to 0), the top
+     * percentage refers to organisms with the lowest scores.
+     * For example, if the percent is 0.1 (10%), a random organism from the
+     * best-performing 10% (lowest scores) will be returned.
+     *
+     * @param experimentId The ID of the experiment to select from
+     * @param percent The percentage threshold (0.0 to 1.0) for selecting
+     *                from the top-scoring organisms
+     * @return A randomly selected ScoredOrganism from the top percentage
+     * @throws IllegalArgumentException if the repository is empty, or if
+     *                                  percent is not between 0.0 and 1.0
+     */
+    ScoredOrganism getRandomFromTopPercent(String experimentId, float percent);
+
+    /**
+     * Returns a random ScoredOrganism from the bottom percentage of scores with the given experimentId.
+     * Since lower scores indicate better performance (closer to 0), the bottom
+     * percentage refers to organisms with the highest scores.
+     * For example, if the percent is 0.9 (90%), a random organism from the
+     * worst-performing 90% (highest scores) will be returned.
+     *
+     * @param experimentId The ID of the experiment to select from
+     * @param percent The percentage threshold (0.0 to 1.0) for selecting
+     *                from the bottom-scoring organisms
+     * @return A randomly selected ScoredOrganism from the bottom percentage
+     * @throws IllegalArgumentException if the repository is empty, or if
+     *                                  percent is not between 0.0 and 1.0
+     */
+    ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent);
 }

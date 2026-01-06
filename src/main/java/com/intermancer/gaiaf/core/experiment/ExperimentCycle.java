@@ -15,16 +15,19 @@ public interface ExperimentCycle {
     /**
      * Executes a complete mutation cycle including parent selection, breeding,
      * mutation, evaluation, and repository maintenance.
+     * 
+     * @param experimentId The ID of the experiment for tracking organisms
      */
-    void mutationCycle();
+    void mutationCycle(String experimentId);
 
     /**
      * Selects parent organisms for breeding.
      * Default algorithm chooses one parent from the top 10% and one from the bottom 90%.
      *
+     * @param experimentId The ID of the experiment to select parents from
      * @return list of selected parent organisms with their scores
      */
-    List<ScoredOrganism> selectParents();
+    List<ScoredOrganism> selectParents(String experimentId);
 
     /**
      * Breeds the selected parents to generate child organisms.
@@ -45,15 +48,17 @@ public interface ExperimentCycle {
      * Evaluates the child organisms and returns them with their scores.
      *
      * @param children the child organisms to evaluate
+     * @param experimentId The ID of the experiment for tracking organisms
      * @return list of evaluated children with their scores
      */
-    List<ScoredOrganism> evaluateChildren(List<Organism> children);
+    List<ScoredOrganism> evaluateChildren(List<Organism> children, String experimentId);
 
     /**
      * Maintains the repository by potentially replacing parents with better-performing children.
      *
      * @param parents the parent organisms with their scores
      * @param children the child organisms with their scores
+     * @param experimentId The ID of the experiment for tracking organisms
      */
-    void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children);
+    void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId);
 }

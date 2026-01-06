@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Default implementation of the Experiment interface.
+ * Default implementation of the ExperimentCycle interface.
  * Implements the Experiment Life Cycle phases by delegating to injected objects.
  */
 @Component
@@ -48,30 +48,33 @@ public class ExperimentCycleImpl implements ExperimentCycle {
     /**
      * Executes a complete mutation cycle including parent selection, breeding,
      * mutation, evaluation, and repository maintenance.
+     * 
+     * @param experimentId The ID of the experiment for tracking organisms
      */
     @Override
-    public void mutationCycle() {
-        List<ScoredOrganism> parents = selectParents();
+    public void mutationCycle(String experimentId) {
+        List<ScoredOrganism> parents = selectParents(experimentId);
         List<Organism> parentOrganisms = parents.stream()
                 .map(ScoredOrganism::organism)
                 .toList();
         List<Organism> children = breedParents(parentOrganisms);
         mutateChildren(children);
-        List<ScoredOrganism> scoredChildren = evaluateChildren(children);
-        maintainRepository(parents, scoredChildren);
+        List<ScoredOrganism> scoredChildren = evaluateChildren(children, experimentId);
+        maintainRepository(parents, scoredChildren, experimentId);
     }
     
     /**
      * Selects parent organisms for breeding.
      * Chooses one parent from the top 10% and one from the bottom 90%.
      * 
+     * @param experimentId The ID of the experiment to select parents from
      * @return list of selected parent organisms with their scores
      */
     @Override
-    public List<ScoredOrganism> selectParents() {
+    public List<ScoredOrganism> selectParents(String experimentId) {
         List<ScoredOrganism> parents = new ArrayList<>();
-        parents.add(scoredOrganismRepository.getRandomFromTopPercent(0.1f));
-        parents.add(scoredOrganismRepository.getRandomFromBottomPercent(0.9f));
+        parents.add(scoredOrganismRepository.getRandomFromTopPercent(experimentId, 0.1f));
+        parents.add(scoredOrganismRepository.getRandomFromBottomPercent(experimentId, 0.9f));
         return parents;
     }
     
@@ -112,16 +115,18 @@ public class ExperimentCycleImpl implements ExperimentCycle {
     /**
      * Evaluates the child organisms and returns them with their scores.
      * Uses the injected Evaluator to evaluate the child organisms.
+     * Each ScoredOrganism is created with the current experiment's experimentId.
      * 
      * @param children the child organisms to evaluate
+     * @param experimentId The ID of the experiment for tracking organisms
      * @return list of evaluated children with their scores
      */
     @Override
-    public List<ScoredOrganism> evaluateChildren(List<Organism> children) {
+    public List<ScoredOrganism> evaluateChildren(List<Organism> children, String experimentId) {
         List<ScoredOrganism> scoredChildren = new ArrayList<>();
         for (Organism child : children) {
             double score = evaluator.evaluate(child);
-            ScoredOrganism scoredChild = new ScoredOrganism(null, score, child.getId(), child);
+            ScoredOrganism scoredChild = new ScoredOrganism(score, child, experimentId);
             scoredChildren.add(scoredChild);
         }
         return scoredChildren;
@@ -138,15 +143,16 @@ public class ExperimentCycleImpl implements ExperimentCycle {
      *
      * @param parents the parent organisms with their scores
      * @param children the child organisms with their scores
+     * @param experimentId The ID of the experiment for tracking organisms
      */
     @Override
-    public void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children) {
+    public void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId) {
         if (parents.size() != 2 || children.isEmpty()) {
             return;
         }
 
-        // Check if repository is at capacity
-        int currentSize = scoredOrganismRepository.size();
+        // Check if repository is at capacity for this experiment
+        int currentSize = scoredOrganismRepository.size(experimentId);
         int capacity = experimentConfiguration.getRepoCapacity();
 
         // If not at capacity, simply add all children
@@ -154,7 +160,7 @@ public class ExperimentCycleImpl implements ExperimentCycle {
             for (ScoredOrganism child : children) {
                 Organism savedOrganism = organismRepository.saveOrganism(child.organism());
                 ScoredOrganism savedScoredChild = new ScoredOrganism(
-                        null, child.score(), savedOrganism.getId(), savedOrganism);
+                        null, child.score(), savedOrganism.getId(), savedOrganism, experimentId);
                 scoredOrganismRepository.save(savedScoredChild);
             }
             return;
@@ -191,7 +197,7 @@ public class ExperimentCycleImpl implements ExperimentCycle {
 
             Organism savedOrganism = organismRepository.saveOrganism(childToAdd.organism());
             ScoredOrganism savedScoredChild = new ScoredOrganism(
-                    null, childToAdd.score(), savedOrganism.getId(), savedOrganism);
+                    null, childToAdd.score(), savedOrganism.getId(), savedOrganism, experimentId);
             scoredOrganismRepository.save(savedScoredChild);
             
             // Track the replacement
@@ -209,7 +215,7 @@ public class ExperimentCycleImpl implements ExperimentCycle {
             for (ScoredOrganism child : List.of(topFirst, topSecond)) {
                 Organism savedOrganism = organismRepository.saveOrganism(child.organism());
                 ScoredOrganism savedScoredChild = new ScoredOrganism(
-                        null, child.score(), savedOrganism.getId(), savedOrganism);
+                        null, child.score(), savedOrganism.getId(), savedOrganism, experimentId);
                 scoredOrganismRepository.save(savedScoredChild);
             }
             

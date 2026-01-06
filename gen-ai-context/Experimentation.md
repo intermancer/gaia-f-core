@@ -10,23 +10,61 @@ An Experiment is composed of seeding a repository with Scored Organisms, and the
 
 Interface.  An Experiment is responsible for orchestrating the complete experimentation process.
 
+#### Properties
+
+`ExperimentStatus experimentStatus`
+The ExperimentStatus instance associated with this experiment. This creates a bi-directional relationship where the Experiment holds a reference to its ExperimentStatus, and the ExperimentStatus holds the experiment's ID.
+
+#### Methods
+
+`void runExperiment()`
+Executes the complete experiment process.
+
+`String getId()`
+Returns the unique identifier for this experiment.
+
+`ExperimentStatus getExperimentStatus()`
+Returns the ExperimentStatus instance associated with this experiment.
+
+`void setExperimentStatus(ExperimentStatus experimentStatus)`
+Sets the ExperimentStatus instance for this experiment and establishes the bi-directional relationship by setting the experimentId on the status object.
+
 ### BasicExperimentImpl
 
-BasicExperimentImpl uses the `@Component` annotation to make itself available for dependency injection.
+Implementation of the Experiment interface. BasicExperimentImpl does not use the `@Component` annotation; instead, instances are created and managed by the ExperimentController using the ApplicationContext to resolve autowired dependencies.
+
+#### Properties
+
+`String experimentId`
+The unique identifier for this experiment instance, generated as a UUID string when the experiment is instantiated.
+
+`ExperimentStatus experimentStatus`
+The ExperimentStatus instance associated with this experiment. This property establishes the bi-directional relationship with ExperimentStatus.
 
 #### Autowired Dependencies
 
 The BasicExperimentImpl depends on:
 - `Seeder` - for initializing the repositories with evaluated seed organisms
 - `ExperimentConfiguration` - for controlling the experimentation process
-- `ExperimentCycle` - for orchestrating the experimentation process`
+- `ExperimentCycle` - for orchestrating the experimentation process
 
 #### Methods
 
+`String getId()`
+Returns the unique identifier for this experiment.
+
+`ExperimentStatus getExperimentStatus()`
+Returns the ExperimentStatus instance associated with this experiment.
+
+`void setExperimentStatus(ExperimentStatus experimentStatus)`
+Sets the ExperimentStatus instance for this experiment. This method also sets the experimentId on the ExperimentStatus object to establish the bi-directional relationship.
+
 `void runExperiment()`
 Executes the complete experiment process:
-1. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
-2. Runs the number of experiment cycles specified in ExperimentConfiguration
+1. Resets and updates the associated ExperimentStatus
+2. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
+3. Runs the number of experiment cycles specified in ExperimentConfiguration
+4. Updates the ExperimentStatus after each cycle and upon completion
 
 ### ExperimentConfiguration
 
@@ -44,11 +82,17 @@ The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRe
 
 ### ExperimentStatus
 
-A component that tracks the runtime state and progress of an experiment. ExperimentStatus maintains information about the experiment's current execution state, performance metrics, and operational statistics.
+A data class that tracks the runtime state and progress of an experiment. ExperimentStatus maintains information about the experiment's current execution state, performance metrics, and operational statistics.
 
-ExperimentStatus uses the `@Component` annotation to make it available for dependency injection.
+ExperimentStatus instances are created and managed by the ExperimentController. When an experiment starts, the controller creates a new ExperimentStatus instance, associates it bi-directionally with the Experiment, and persists both to their respective repositories. This allows multiple experiments to run concurrently, each with its own status tracking.
 
 #### Properties
+
+`String id`
+A synthetic key used to identify an ExperimentStatus record. A string representation of a UUID, automatically generated when the instance is created.
+
+`String experimentId`
+The id of the experiment associated with this status. Links the status to its corresponding Experiment, establishing the bi-directional relationship.
 
 `int cyclesCompleted`
 The number of experiment cycles that have been completed since the experiment started. Defaults to 0. Accessible through getter and setter methods.
@@ -65,6 +109,21 @@ The current operational state of the experiment. Possible values are:
 Accessible through getter and setter methods.
 
 #### Methods
+
+`ExperimentStatus()`
+Default constructor that generates a unique ID for this ExperimentStatus instance.
+
+`String getId()`
+Returns the unique identifier for this status record.
+
+`void setId(String id)`
+Sets the unique identifier for this status record.
+
+`String getExperimentId()`
+Returns the ID of the associated experiment.
+
+`void setExperimentId(String experimentId)`
+Sets the ID of the associated experiment, establishing the link to the Experiment.
 
 `void reset()`
 Resets all tracking metrics to their initial state. Sets cyclesCompleted to 0, organismsReplaced to 0, and status to STOPPED.
@@ -101,6 +160,9 @@ The Organism instance associated with this score.
 `int compareTo(ScoredOrganism other)`
 This method implements Comparable<ScoredOrganism>.compareTo() by comparing this organism's score with the other.getScore().
 
+`String experimentId`
+The id of the experiment that produced this score.
+
 #### ScoredOrganismRepository
 
 Interface
@@ -119,14 +181,17 @@ Deletes a ScoredOrganism as identified by the id.
 `int size()`
 Returns the current number of ScoredOrganisms in the repository.
 
-`List<String> getAllOrganismIds()`
-Returns a list of all organism IDs currently stored in the repository. The list contains the organismId property (not the synthetic id) from each ScoredOrganism.
+`int size(String experimentId)`
+Returns the current number of ScoredOrganisms in the repository for the given experimentId.
 
-`ScoredOrganism getRandomFromTopPercent(float percent)`
-Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent. Since this is a predictive system, scores closer to 0.0 are better. The "top" percentage, therefore, is determined by the lowest scores.
+`List<String> getAllOrganismIds(String experimentId)`
+Returns a list of all ScoredOrganism IDs currently stored in the repository with the given experimentId. The list contains the id property from each ScoredOrganism, not the organismId property.
 
-`ScoredOrganism getRandomFromBottomPercent(float percent)`
-Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent. Since this is a predictive system, scores closer to 0.0 are better. The "bottom" percentage, therefore, is determined by the highest scores.
+`ScoredOrganism getRandomFromTopPercent(String experimentId, float percent)`
+Returns a random ScoredOrganism from the top percentage of the scores, as determined by percent, with the given experimentId. Since this is a predictive system, scores closer to 0.0 are better. The "top" percentage, therefore, is determined by the lowest scores.
+
+`ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent)`
+Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent, with the given experimentId. Since this is a predictive system, scores closer to 0.0 are better. The "bottom" percentage, therefore, is determined by the highest scores.
 
 #### InMemoryScoredOrganismRepository
 
@@ -136,25 +201,28 @@ Keeps records sorted by score.
 
 ##### Method Implementations
 
-The in-memory implementation maintains a ranked List of ScoredOrganisms, so that we can efficiently search by score, as well as a Map of ScoredOrganisms so that they can be looked up by ID.
+For each experimentId, the in-memory implementation maintains a ranked List of ScoredOrganisms, so that we can efficiently search by score, as well as a Map of ScoredOrganisms, which we will refer to as the "identity Map", so that they can be looked up by ID. It uses a Map of Lists to maintain the order, which we will refer to as the "ordered Map".
 
 `ScoredOrganism getById(String id)`
-Uses the Map of ScoredOrganisms for lookup.
+Uses the identity Map of ScoredOrganisms for lookup.
 
 `ScoredOrganism save(ScoredOrganism scoredOrganism)`
-Adds scoredOrganism to the Map and the List. Uses Collections.binarySearch() to find the insertion point in the List of ranked ScoredOrganisms.
+First checks to see if the ordered Map already contains a List for the given experimentId. If not, creates a new List and adds it to the Map. Adds scoredOrganism to the identity Map and the experiment-ordered List. Uses Collections.binarySearch() to find the insertion point in the List of ranked ScoredOrganisms.
 
 `void delete(String id)`
-First looks up the ScoredOrganism from the Map using the id. Using the score property, looks up the ScoredOrganism from the List. Then deletes the ScoredOrganism from both the Map and the ranked List.
+First looks up the ScoredOrganism from the identity Map using the id. Uses the experimentId of the ScoredOrganism to find the ordered List, and uses the score property to look up the ScoredOrganism from the List. Then deletes the ScoredOrganism from both the identity Map and the ranked List.
 
-`int size()`
-Returns the size of the Map (or List, they should be the same).
+`int size(String experimentId)`
+Returns the size of the ordered List for the given experimentId.
 
-`List<String> getAllOrganismIds()`
-Returns a list of all organism IDs by extracting the organismId property from each ScoredOrganism in the Map.
+`List<String> getAllOrganismIds(String experimentId)`
+Returns a list of all ScoredOrganism IDs by extracting the id property from each ScoredOrganism in the List of ranked ScoredOrganisms for the given experimentId.
 
-`ScoredOrganism getRandomFromTopPercent(float percent)`
-First determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the top scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
+`ScoredOrganism getRandomFromTopPercent(String experimentId, float percent)`
+First retrieves the appropriate List from the ordered Map, then determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the top scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
+
+`ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent)`
+First retrieves the appropriate List from the ordered Map, then determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the bottom scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
 
 ## Seeding
 
@@ -168,8 +236,8 @@ Interface. Seeders provide initial evaluated and scored Organisms for the overal
 
 ##### Methods
 
-`void seed()`
-The seed method of a concrete Seeder will create Organisms, evaluate them using its injected Evaluator, and store both the Organisms and their ScoredOrganisms in the injected repositories.
+`void seed(String experimentId)`
+The seed method of a concrete Seeder will create Organisms, evaluate them using its injected Evaluator, and store both the Organisms and their ScoredOrganisms in the injected repositories.  ScoredOrganisms require an experimentId to be associated with them, so that they can be stored in the correct repository.
 
 #### BasicSeeder
 
@@ -332,7 +400,7 @@ Mutates each of the children a random number (between 1 and 5) of times.
 
 **evaluateChildren(List<Organism> children)**
 
-Uses the injected Evaluator to evaluate the child organisms and returns a list of ScoredOrganisms.
+Uses the injected Evaluator to evaluate the child organisms and returns a list of ScoredOrganisms.  Each ScoredOrganism is created with the current experiment's experimentId.
 
 **maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children)**
 
@@ -417,15 +485,28 @@ The evaluation uses CSV data where the first column contains epoch dates (assumi
 
 The ExperimentController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
 
-The ExperimentController autowires a ScoredOrganismRepository, a Seeder, an Experiment, an ExperimentConfiguration, and an ExperimentStatus.
+The ExperimentController autowires an ApplicationContext, ScoredOrganismRepository, ExperimentConfiguration, ExperimentStatusRepository, and ExperimentRepository.
+
+The ExperimentController is responsible for managing Experiment instances. It uses the ApplicationContext to instantiate Experiments and resolve their autowired dependencies.
+
+The ExperimentController manages the bi-directional relationship between Experiment and ExperimentStatus. When an experiment is started:
+1. Creates a new ExperimentStatus instance (which generates its own ID)
+2. Instantiates a new Experiment using the ApplicationContext (which generates its own ID)
+3. Associates the ExperimentStatus with the Experiment by calling `experiment.setExperimentStatus(status)`, which sets the experimentId on the status
+4. Persists the ExperimentStatus to the ExperimentStatusRepository
+5. Persists the Experiment to the ExperimentRepository
+6. Starts the experiment by calling `experiment.runExperiment()`
+
+This ensures both entities are properly persisted and maintain their bi-directional relationship throughout the experiment lifecycle.
+
+#### Properties
+
+None. The controller does not maintain in-memory lists; instead, it uses repositories to persist and retrieve experiments and their statuses.
 
 #### Public Methods
 
-`ResponseEntity<List<String>> seed()`
-Seeds the OrganismRepository with the Organisms created by the Seeder and returns all of the Organism IDs. Mapped to GET `/experiment/seed`.
-
-`ResponseEntity<String> startExperiment()`
-Starts the experiment by calling the Experiment.runExperiment() method. Returns a confirmation message. Mapped to POST `/experiment/start`.
+`ResponseEntity<ExperimentResponse> startExperiment()`
+Starts a new experiment by creating a new ExperimentStatus instance, instantiating a new Experiment using the ApplicationContext, establishing the bi-directional relationship between them, persisting both to their respective repositories, and calling the Experiment.runExperiment() method. Returns a response containing the experiment ID. Mapped to POST `/experiment/start`.
 
 `ResponseEntity<ExperimentConfiguration> getConfiguration()`
 Returns the current ExperimentConfiguration. Mapped to GET `/experiment/configuration`.
@@ -433,8 +514,14 @@ Returns the current ExperimentConfiguration. Mapped to GET `/experiment/configur
 `ResponseEntity<ExperimentConfiguration> updateConfiguration(ExperimentConfiguration updatedConfig)`
 Updates the experiment configuration with new values for cycleCount and repoCapacity. Returns the updated configuration. Mapped to PUT `/experiment/configuration`.
 
-`ResponseEntity<ExperimentStatus> getStatus()`
-Returns the current ExperimentStatus containing cyclesCompleted, organismsReplaced, and the current experiment state. Mapped to GET `/experiment/status`.
+`ResponseEntity<Experiment> getExperiment(String experimentId)`
+Retrieves an Experiment by its ID from the ExperimentRepository. Returns a 404 if the experiment is not found. Mapped to GET `/experiment/{experimentId}`.
+
+`ResponseEntity<ExperimentStatus> getStatus(String experimentId)`
+Retrieves the ExperimentStatus for a specific experiment by looking it up using the experimentId in the ExperimentStatusRepository. Returns a 404 if the status is not found. Mapped to GET `/experiment/{experimentId}/status`.
+
+`ResponseEntity<List<Experiment>> getAllExperiments()`
+Retrieves all experiments from the ExperimentRepository. Mapped to GET `/experiment/all`.
 
 ### Endpoints
 
@@ -442,13 +529,21 @@ Returns the current ExperimentStatus containing cyclesCompleted, organismsReplac
 
 `/experiment` is the base context path for endpoints that manage the Experiment.
 
-#### GET /experiment/seed
-
-Seeds the OrganismRepository with the Organisms created by the Seeder and returns a list of all Organism IDs.
-
 #### POST /experiment/start
 
-Starts the experiment by calling the Experiment.runExperiment() method. Returns a confirmation message.
+Starts a new experiment by creating and persisting both an Experiment and its associated ExperimentStatus, establishing their bi-directional relationship, and calling the Experiment.runExperiment() method.
+
+Returns a JSON response containing:
+- `experimentId` - The unique identifier of the newly created experiment
+- `message` - A confirmation message
+
+Example response:
+```json
+{
+  "experimentId": "550e8400-e29b-41d4-a716-446655440000",
+  "message": "Experiment started successfully"
+}
+```
 
 #### GET /experiment/configuration
 
@@ -464,12 +559,36 @@ Updates the experiment configuration with new values. Accepts a JSON body with:
 
 Returns the updated ExperimentConfiguration object.
 
-#### GET /experiment/status
+#### GET /experiment/{experimentId}
 
-Returns the current ExperimentStatus object containing:
+Retrieves a specific Experiment by its ID.
+
+Path parameter:
+- `experimentId` - The unique identifier of the experiment
+
+Returns the Experiment object if found, or a 404 status if not found.
+
+#### GET /experiment/{experimentId}/status
+
+Retrieves the ExperimentStatus for a specific experiment.
+
+Path parameter:
+- `experimentId` - The unique identifier of the experiment whose status should be retrieved
+
+Returns the ExperimentStatus object containing:
+- `id` - The unique identifier of the status record
+- `experimentId` - The ID of the associated experiment
 - `cyclesCompleted` - The number of experiment cycles completed
 - `organismsReplaced` - The count of organisms replaced during repository maintenance
 - `status` - The current experiment state (STOPPED, RUNNING, or EXCEPTION)
+
+Returns a 404 status if the experiment status is not found.
+
+#### GET /experiment/all
+
+Retrieves all experiments from the ExperimentRepository.
+
+Returns a list of all Experiment objects.
 
 ## Support Features
 

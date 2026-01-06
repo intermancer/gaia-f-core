@@ -14,4 +14,11 @@ public interface Experiment {
      * 2. Runs the number of experiment cycles specified in ExperimentConfiguration
      */
     void runExperiment();
+    
+    /**
+     * Returns the unique identifier for this experiment.
+     * 
+     * @return The experiment ID
+     */
+    String getId();
 }

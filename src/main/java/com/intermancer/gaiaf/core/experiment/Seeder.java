@@ -10,5 +10,5 @@ public interface Seeder {
      * Implementations should use injected ScoredOrganismRepository, OrganismRepository, 
      * and Evaluator to create, evaluate, and store organisms.
      */
-    void seed();
+    void seed(String experimentId);
 }

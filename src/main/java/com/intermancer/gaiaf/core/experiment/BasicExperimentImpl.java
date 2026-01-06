@@ -3,6 +3,8 @@ package com.intermancer.gaiaf.core.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * BasicExperimentImpl orchestrates the complete experimentation process.
  * It manages seeding the ScoredOrganismRepository with initial evaluated organisms
@@ -11,17 +13,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class BasicExperimentImpl implements Experiment {
     
-    @Autowired
-    private Seeder seeder;
+    private final String experimentId;
+    private final Seeder seeder;
+    private final ExperimentConfiguration experimentConfiguration;
+    private final ExperimentCycle experimentCycle;
+    private final ExperimentStatus experimentStatus;
     
     @Autowired
-    private ExperimentConfiguration experimentConfiguration;
+    public BasicExperimentImpl(Seeder seeder,
+                               ExperimentConfiguration experimentConfiguration,
+                               ExperimentCycle experimentCycle,
+                               ExperimentStatus experimentStatus) {
+        this.experimentId = UUID.randomUUID().toString();
+        this.seeder = seeder;
+        this.experimentConfiguration = experimentConfiguration;
+        this.experimentCycle = experimentCycle;
+        this.experimentStatus = experimentStatus;
+    }
     
-    @Autowired
-    private ExperimentCycle experimentCycle;
-    
-    @Autowired
-    private ExperimentStatus experimentStatus;
+    @Override
+    public String getId() {
+        return experimentId;
+    }
     
     /**
      * Executes the complete experiment process:
@@ -31,22 +44,21 @@ public class BasicExperimentImpl implements Experiment {
      */
     @Override
     public void runExperiment() {
-        // Reset status and set to running
+        // Reset experiment status
         experimentStatus.reset();
         experimentStatus.setStatus(ExperimentState.RUNNING);
         
         try {
-            // Step 1: Seed the repository with initial evaluated organisms
-            seeder.seed();
+            // Seed the repository with the experiment ID
+            seeder.seed(experimentId);
             
-            // Step 2: Run the configured number of experiment cycles
+            // Run experiment cycles
             int cycleCount = experimentConfiguration.getCycleCount();
             for (int i = 0; i < cycleCount; i++) {
-                experimentCycle.mutationCycle();
+                experimentCycle.mutationCycle(experimentId);
                 experimentStatus.incrementCyclesCompleted();
             }
             
-            // Mark experiment as stopped when complete
             experimentStatus.setStatus(ExperimentState.STOPPED);
         } catch (Exception e) {
             experimentStatus.setStatus(ExperimentState.EXCEPTION);

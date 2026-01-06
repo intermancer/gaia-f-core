@@ -31,12 +31,12 @@ public class BasicSeeder implements Seeder {
     }
 
     @Override
-    public void seed() {
-        createSimpleArithmeticOrganism();
-        createTrigonometricAnalysisOrganism();
-        createDataTransformationOrganism();
-        createReductiveProcessingOrganism();
-        createBasicCompositeOrganism();
+    public void seed(String experimentId) {
+        createSimpleArithmeticOrganism(experimentId);
+        createTrigonometricAnalysisOrganism(experimentId);
+        createDataTransformationOrganism(experimentId);
+        createReductiveProcessingOrganism(experimentId);
+        createBasicCompositeOrganism(experimentId);
     }
 
     /**
@@ -45,7 +45,7 @@ public class BasicSeeder implements Seeder {
      * This organism first adds 1.5 to an input value, then multiplies by 1.5
      * Useful for demonstrating basic sequential gene operations
      */
-    private void createSimpleArithmeticOrganism() {
+    private void createSimpleArithmeticOrganism(String experimentId) {
         Organism organism = new Organism("simple-arithmetic-organism");
         Chromosome chromosome = new Chromosome();
         
@@ -60,7 +60,7 @@ public class BasicSeeder implements Seeder {
         chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
-        saveAndScoreOrganism(organism);
+        saveAndScoreOrganism(organism, experimentId);
     }
 
     /**
@@ -69,7 +69,7 @@ public class BasicSeeder implements Seeder {
      * This organism applies sine function and then amplifies the result by 1.5
      * Demonstrates combination of trigonometric and arithmetic operations
      */
-    private void createTrigonometricAnalysisOrganism() {
+    private void createTrigonometricAnalysisOrganism(String experimentId) {
         Organism organism = new Organism("trigonometric-analysis-organism");
         Chromosome chromosome = new Chromosome();
         
@@ -84,7 +84,7 @@ public class BasicSeeder implements Seeder {
         chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
-        saveAndScoreOrganism(organism);
+        saveAndScoreOrganism(organism, experimentId);
     }
 
     /**
@@ -94,7 +94,7 @@ public class BasicSeeder implements Seeder {
      * Two parallel chromosomes: one for additive operations, another for multiplicative
      * Shows how multiple chromosomes can process data differently
      */
-    private void createDataTransformationOrganism() {
+    private void createDataTransformationOrganism(String experimentId) {
         Organism organism = new Organism("data-transformation-organism");
         
         // First chromosome (additive operations)
@@ -119,7 +119,7 @@ public class BasicSeeder implements Seeder {
         
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);
-        saveAndScoreOrganism(organism);
+        saveAndScoreOrganism(organism, experimentId);
     }
 
     /**
@@ -128,7 +128,7 @@ public class BasicSeeder implements Seeder {
      * A 3-gene chromosome that reduces values, normalizes, and applies trigonometry
      * Demonstrates longer processing chains
      */
-    private void createReductiveProcessingOrganism() {
+    private void createReductiveProcessingOrganism(String experimentId) {
         Organism organism = new Organism("reductive-processing-organism");
         Chromosome chromosome = new Chromosome();
         
@@ -148,7 +148,7 @@ public class BasicSeeder implements Seeder {
         chromosome.getGenes().add(sineGene);
         
         organism.addChromosome(chromosome);
-        saveAndScoreOrganism(organism);
+        saveAndScoreOrganism(organism, experimentId);
     }
 
     /**
@@ -159,7 +159,7 @@ public class BasicSeeder implements Seeder {
      * Simple organism with 3 chromosomes showing different gene combinations
      * Useful for testing organism-level data flow
      */
-    private void createBasicCompositeOrganism() {
+    private void createBasicCompositeOrganism(String experimentId) {
         Organism organism = new Organism("basic-composite-organism");
         
         // First chromosome (single multiplication gene)
@@ -187,7 +187,7 @@ public class BasicSeeder implements Seeder {
         organism.addChromosome(chromosome1);
         organism.addChromosome(chromosome2);
         organism.addChromosome(chromosome3);
-        saveAndScoreOrganism(organism);
+        saveAndScoreOrganism(organism, experimentId);
     }
 
     /**
@@ -195,7 +195,7 @@ public class BasicSeeder implements Seeder {
      * 
      * @param organism The organism to save and score
      */
-    private void saveAndScoreOrganism(Organism organism) {
+    private void saveAndScoreOrganism(Organism organism, String experimentId) {
         // Save the organism to the OrganismRepository
         Organism savedOrganism = organismRepository.saveOrganism(organism);
         
@@ -207,7 +207,8 @@ public class BasicSeeder implements Seeder {
                 null, 
                 score, 
                 savedOrganism.getId(), 
-                savedOrganism
+                savedOrganism,
+                experimentId
         );
         scoredOrganismRepository.save(scoredOrganism);
     }
