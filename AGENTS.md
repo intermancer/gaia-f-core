@@ -142,7 +142,28 @@ npm run preview
 
 - Commit messages: clear, imperative mood (e.g., "Add organism mutation support")
 - Small, focused commits are preferred for easier review
-- Push to feature branches before creating pull requests
+
+### Git Push Policy
+
+**IMPORTANT: Do NOT push to GitHub unless explicitly requested by the user.**
+
+When creating commits:
+1. Create the commit and show the user a summary of what changed
+2. Ask the user for explicit confirmation before pushing: "Ready to push to GitHub?"
+3. Wait for the user to confirm with explicit language like "yes, push it" before executing `git push`
+4. Never automatically push to GitHub, even for successful builds or test passes
+5. Never use `git push --force` or other destructive operations without explicit user approval
+
+Example workflow:
+```
+User: "Commit the code"
+Agent: [Creates commit with summary of changes]
+Agent: "Commit 1a2b3c created. Ready to push to GitHub?"
+User: "Yes, push it"
+Agent: [Executes git push]
+```
+
+When the user says "just commit for now" or doesn't request a push, stop after committing.
 
 ## Linting & Type Checking
 
