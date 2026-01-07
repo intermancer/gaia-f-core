@@ -37,8 +37,11 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   const pollingIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Always fetch configuration (component's configuration is available without an experiment ID)
+    fetchConfiguration();
+    
+    // Only fetch status if we have an experiment ID
     if (experimentId) {
-      fetchConfiguration();
       fetchStatus();
     }
   }, [experimentId]);
@@ -104,16 +107,17 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   };
 
   const fetchConfiguration = async () => {
-    // Only fetch configuration if we have an experiment ID
-    if (!experimentId) {
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`);
+      // If we have an experiment ID, fetch the configuration for that specific experiment
+      // Otherwise, fetch the component's current configuration
+      const url = experimentId 
+        ? `http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`
+        : 'http://localhost:8080/gaia-f/experiment/configuration';
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         // noinspection ExceptionCaughtLocallyJS
@@ -140,13 +144,14 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   };
 
   const handleSaveConfiguration = async () => {
-    if (!editedConfig || !experimentId) return;
+    if (!editedConfig) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`, {
+      // Always update the component configuration (not experiment-specific)
+      const response = await fetch('http://localhost:8080/gaia-f/experiment/configuration', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +260,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       <div className="status-section">
         <h2>Status</h2>
         <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
-          {statusData ? getStatusDisplayText(statusData) : experimentStatus}
+          {!experimentId ? 'No Experiment Running' : (statusData ? getStatusDisplayText(statusData) : experimentStatus)}
         </div>
         {statusData && (statusData.status === 'RUNNING' || (statusData.status === 'STOPPED' && hasExperimentRun)) && (
           <div className="status-details">

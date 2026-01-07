@@ -53,27 +53,41 @@ public class ExperimentService {
     }
 
     /**
-     * Retrieves the configuration for a specific experiment.
+     * Retrieves the current configuration of the configuration component.
+     * This is the configuration that will be used for the next experiment.
      *
-     * @param experimentId the ID of the experiment
-     * @return the ExperimentConfiguration
+     * @return the current ExperimentConfiguration
      */
-    public ExperimentConfiguration getConfiguration(String experimentId) {
-        // Configuration is currently global; retrieve the shared configuration
+    public ExperimentConfiguration getComponentConfiguration() {
         return experimentConfiguration;
     }
 
     /**
-     * Updates the configuration for a specific experiment with new values.
+     * Updates the configuration of the configuration component.
+     * This affects the configuration that will be used for the next experiment.
      *
-     * @param experimentId the ID of the experiment
      * @param updatedConfig the new configuration values
      * @return the updated configuration
      */
-    public ExperimentConfiguration updateConfiguration(String experimentId, ExperimentConfiguration updatedConfig) {
-        // Configuration is currently global; update the shared configuration
+    public ExperimentConfiguration updateComponentConfiguration(ExperimentConfiguration updatedConfig) {
         experimentConfiguration.setCycleCount(updatedConfig.getCycleCount());
         experimentConfiguration.setRepoCapacity(updatedConfig.getRepoCapacity());
+        return experimentConfiguration;
+    }
+
+    /**
+     * Retrieves the configuration that was loaded when a specific experiment was created.
+     *
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentConfiguration for the given experiment
+     */
+    public ExperimentConfiguration getExperimentConfiguration(String experimentId) {
+        // Look up the experiment by ID to get its configuration
+        Experiment experiment = experimentRepository.findById(experimentId)
+            .orElseThrow(() -> new IllegalArgumentException("No experiment found with ID: " + experimentId));
+        
+        // Note: Currently, the configuration is a singleton component
+        // In the future, this could be enhanced to store experiment-specific configurations
         return experimentConfiguration;
     }
 

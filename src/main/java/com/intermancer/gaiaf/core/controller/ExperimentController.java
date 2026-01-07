@@ -34,27 +34,38 @@ public class ExperimentController {
     }
 
     /**
-     * Retrieves the configuration for a specific experiment.
+     * Retrieves the current configuration of the configuration component.
+     * This is the configuration that will be used for the next experiment.
      *
-     * @param experimentId the ID of the experiment
-     * @return the ExperimentConfiguration
+     * @return the current ExperimentConfiguration
      */
-    @GetMapping("/{experimentId}/configuration")
-    public ResponseEntity<ExperimentConfiguration> getConfiguration(@PathVariable String experimentId) {
-        return ResponseEntity.ok(experimentService.getConfiguration(experimentId));
+    @GetMapping("/configuration")
+    public ResponseEntity<ExperimentConfiguration> getComponentConfiguration() {
+        return ResponseEntity.ok(experimentService.getComponentConfiguration());
     }
 
     /**
-     * Updates the configuration for a specific experiment with new values.
+     * Updates the configuration of the configuration component.
+     * This affects the configuration that will be used for the next experiment.
      *
-     * @param experimentId the ID of the experiment
      * @param updatedConfig the new configuration values
      * @return the updated configuration
      */
-    @PutMapping("/{experimentId}/configuration")
-    public ResponseEntity<ExperimentConfiguration> updateConfiguration(@PathVariable String experimentId, @RequestBody ExperimentConfiguration updatedConfig) {
-        ExperimentConfiguration result = experimentService.updateConfiguration(experimentId, updatedConfig);
+    @PutMapping("/configuration")
+    public ResponseEntity<ExperimentConfiguration> updateComponentConfiguration(@RequestBody ExperimentConfiguration updatedConfig) {
+        ExperimentConfiguration result = experimentService.updateComponentConfiguration(updatedConfig);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Retrieves the configuration that was loaded when a specific experiment was created.
+     *
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentConfiguration for the given experiment
+     */
+    @GetMapping("/{experimentId}/configuration")
+    public ResponseEntity<ExperimentConfiguration> getExperimentConfiguration(@PathVariable String experimentId) {
+        return ResponseEntity.ok(experimentService.getExperimentConfiguration(experimentId));
     }
 
     /**
