@@ -25,7 +25,7 @@ public class ExperimentController {
     /**
      * Starts a new experiment.
      *
-     * @return a confirmation message
+     * @return the ID of the started experiment
      */
     @PostMapping("/start")
     public ResponseEntity<String> startExperiment() {
@@ -34,34 +34,37 @@ public class ExperimentController {
     }
 
     /**
-     * Retrieves the current experiment configuration.
+     * Retrieves the configuration for a specific experiment.
      *
-     * @return the current ExperimentConfiguration
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentConfiguration
      */
-    @GetMapping("/configuration")
-    public ResponseEntity<ExperimentConfiguration> getConfiguration() {
-        return ResponseEntity.ok(experimentService.getConfiguration());
+    @GetMapping("/{experimentId}/configuration")
+    public ResponseEntity<ExperimentConfiguration> getConfiguration(@PathVariable String experimentId) {
+        return ResponseEntity.ok(experimentService.getConfiguration(experimentId));
     }
 
     /**
-     * Updates the experiment configuration with new values.
+     * Updates the configuration for a specific experiment with new values.
      *
+     * @param experimentId the ID of the experiment
      * @param updatedConfig the new configuration values
      * @return the updated configuration
      */
-    @PutMapping("/configuration")
-    public ResponseEntity<ExperimentConfiguration> updateConfiguration(@RequestBody ExperimentConfiguration updatedConfig) {
-        ExperimentConfiguration result = experimentService.updateConfiguration(updatedConfig);
+    @PutMapping("/{experimentId}/configuration")
+    public ResponseEntity<ExperimentConfiguration> updateConfiguration(@PathVariable String experimentId, @RequestBody ExperimentConfiguration updatedConfig) {
+        ExperimentConfiguration result = experimentService.updateConfiguration(experimentId, updatedConfig);
         return ResponseEntity.ok(result);
     }
 
     /**
-     * Retrieves the current experiment status.
+     * Retrieves the status for a specific experiment.
      *
-     * @return the current ExperimentStatus
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentStatus
      */
-    @GetMapping("/status")
-    public ResponseEntity<ExperimentStatus> getStatus() {
-        return ResponseEntity.ok(experimentService.getStatus());
+    @GetMapping("/{experimentId}/status")
+    public ResponseEntity<ExperimentStatus> getStatus(@PathVariable String experimentId) {
+        return ResponseEntity.ok(experimentService.getStatus(experimentId));
     }
 }

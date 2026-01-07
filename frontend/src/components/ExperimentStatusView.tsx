@@ -14,6 +14,7 @@ interface ExperimentStatusData {
 interface ExperimentStatusViewProps {
   experimentStatus: string;
   isRunning: boolean;
+  experimentId: string | null;
   onStartExperiment: () => void;
   onStopExperiment: () => void;
   onStatusChange?: (isRunning: boolean, status: string) => void;
@@ -22,6 +23,7 @@ interface ExperimentStatusViewProps {
 const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({ 
   experimentStatus, 
   isRunning,
+  experimentId,
   onStartExperiment,
   onStopExperiment,
   onStatusChange
@@ -35,9 +37,11 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   const pollingIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
-    fetchConfiguration();
-    fetchStatus();
-  }, []);
+    if (experimentId) {
+      fetchConfiguration();
+      fetchStatus();
+    }
+  }, [experimentId]);
 
   useEffect(() => {
     if (isRunning) {
@@ -62,8 +66,13 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   }, [isRunning]);
 
   const fetchStatus = async () => {
+    // Only fetch status if we have an experiment ID
+    if (!experimentId) {
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/status');
+      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/status`);
       
       if (!response.ok) {
         // noinspection ExceptionCaughtLocallyJS
@@ -95,11 +104,16 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   };
 
   const fetchConfiguration = async () => {
+    // Only fetch configuration if we have an experiment ID
+    if (!experimentId) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/configuration');
+      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`);
       
       if (!response.ok) {
         // noinspection ExceptionCaughtLocallyJS
@@ -126,13 +140,13 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   };
 
   const handleSaveConfiguration = async () => {
-    if (!editedConfig) return;
+    if (!editedConfig || !experimentId) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/configuration', {
+      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

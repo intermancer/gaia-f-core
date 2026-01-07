@@ -13,6 +13,7 @@ interface MainContentProps {
 const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const [experimentStatus, setExperimentStatus] = useState<string>('No experiment running');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [experimentId, setExperimentId] = useState<string | null>(null);
 
   const handleStartExperiment = async () => {
     try {
@@ -28,6 +29,8 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
         throw new Error(`Failed to start experiment: ${response.statusText}`);
       }
       
+      const expId = await response.text();
+      setExperimentId(expId);
       setExperimentStatus('Experiment running');
     } catch (error) {
       setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -57,16 +60,17 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
     }
 
     switch (selectedCommand) {
-      case 'Experiment':
-        return (
-          <ExperimentStatusView 
-            experimentStatus={experimentStatus} 
-            isRunning={isRunning}
-            onStartExperiment={handleStartExperiment}
-            onStopExperiment={handleStopExperiment}
-            onStatusChange={handleStatusChange}
-          />
-        );
+       case 'Experiment':
+         return (
+           <ExperimentStatusView 
+             experimentStatus={experimentStatus} 
+             isRunning={isRunning}
+             experimentId={experimentId}
+             onStartExperiment={handleStartExperiment}
+             onStopExperiment={handleStopExperiment}
+             onStatusChange={handleStatusChange}
+           />
+         );
       
       case 'Scored Organism Repository':
         return <ScoredOrganismRepositoryView />;

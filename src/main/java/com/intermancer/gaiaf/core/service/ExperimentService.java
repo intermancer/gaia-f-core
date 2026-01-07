@@ -4,6 +4,7 @@ import com.intermancer.gaiaf.core.experiment.Experiment;
 import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
 import com.intermancer.gaiaf.core.experiment.ExperimentStatus;
 import com.intermancer.gaiaf.core.experiment.repo.ExperimentRepository;
+import com.intermancer.gaiaf.core.experiment.repo.ExperimentStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -11,32 +12,32 @@ import org.springframework.stereotype.Service;
 /**
  * Service class for managing experiment operations.
  * Handles the business logic for starting experiments, managing configuration,
- * and tracking experiment status.
+ * and tracking experiment status for specific experiments.
  */
 @Service
 public class ExperimentService {
 
     private final ApplicationContext applicationContext;
     private final ExperimentRepository experimentRepository;
+    private final ExperimentStatusRepository experimentStatusRepository;
     private final ExperimentConfiguration experimentConfiguration;
-    private final ExperimentStatus experimentStatus;
 
     @Autowired
     public ExperimentService(ApplicationContext applicationContext,
                              ExperimentRepository experimentRepository,
-                             ExperimentConfiguration experimentConfiguration,
-                             ExperimentStatus experimentStatus) {
+                             ExperimentStatusRepository experimentStatusRepository,
+                             ExperimentConfiguration experimentConfiguration) {
         this.applicationContext = applicationContext;
         this.experimentRepository = experimentRepository;
+        this.experimentStatusRepository = experimentStatusRepository;
         this.experimentConfiguration = experimentConfiguration;
-        this.experimentStatus = experimentStatus;
     }
 
     /**
      * Starts a new experiment by instantiating it using ApplicationContext,
      * saving it to the repository, and calling its runExperiment() method.
      *
-     * @return a confirmation message
+     * @return the ID of the started experiment
      */
     public String startExperiment() {
         // Instantiate Experiment using ApplicationContext to resolve autowired dependencies
@@ -48,36 +49,47 @@ public class ExperimentService {
         // Start the experiment
         experiment.runExperiment();
 
-        return "Experiment started";
+        return experiment.getId();
     }
 
     /**
-     * Retrieves the current experiment configuration.
+     * Retrieves the configuration for a specific experiment.
      *
-     * @return the current ExperimentConfiguration
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentConfiguration
      */
-    public ExperimentConfiguration getConfiguration() {
+    public ExperimentConfiguration getConfiguration(String experimentId) {
+        // Configuration is currently global; retrieve the shared configuration
         return experimentConfiguration;
     }
 
     /**
-     * Updates the experiment configuration with new values.
+     * Updates the configuration for a specific experiment with new values.
      *
+     * @param experimentId the ID of the experiment
      * @param updatedConfig the new configuration values
      * @return the updated configuration
      */
-    public ExperimentConfiguration updateConfiguration(ExperimentConfiguration updatedConfig) {
+    public ExperimentConfiguration updateConfiguration(String experimentId, ExperimentConfiguration updatedConfig) {
+        // Configuration is currently global; update the shared configuration
         experimentConfiguration.setCycleCount(updatedConfig.getCycleCount());
         experimentConfiguration.setRepoCapacity(updatedConfig.getRepoCapacity());
         return experimentConfiguration;
     }
 
     /**
-     * Retrieves the current experiment status.
+     * Retrieves the status for a specific experiment.
      *
-     * @return the current ExperimentStatus
+     * @param experimentId the ID of the experiment
+     * @return the ExperimentStatus for the given experiment ID
      */
-    public ExperimentStatus getStatus() {
-        return experimentStatus;
+    public ExperimentStatus getStatus(String experimentId) {
+        // Try to find the status for the specific experiment
+        var statusOptional = experimentStatusRepository.findByExperimentId(experimentId);
+        if (statusOptional.isPresent()) {
+            return statusOptional.get();
+        }
+        // Return empty/default status if not found
+        throw new IllegalArgumentException("No status found for experiment ID: " + experimentId);
     }
 }
