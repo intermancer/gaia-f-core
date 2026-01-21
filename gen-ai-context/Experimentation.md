@@ -8,30 +8,19 @@ An Experiment is composed of seeding a repository with Scored Organisms, and the
 
 ### Experiment
 
-Interface.  An Experiment is responsible for orchestrating the complete experimentation process.
-
-#### Properties
-
-`ExperimentStatus experimentStatus`
-The ExperimentStatus instance associated with this experiment. This creates a bi-directional relationship where the Experiment holds a reference to its ExperimentStatus, and the ExperimentStatus holds the experiment's ID.
+Interface. An Experiment is responsible for orchestrating the complete experimentation process.
 
 #### Methods
 
 `void runExperiment()`
-Executes the complete experiment process.
+Executes the complete experiment process, including creating and managing its own ExperimentStatus.
 
 `String getId()`
 Returns the unique identifier for this experiment.
 
-`ExperimentStatus getExperimentStatus()`
-Returns the ExperimentStatus instance associated with this experiment.
-
-`void setExperimentStatus(ExperimentStatus experimentStatus)`
-Sets the ExperimentStatus instance for this experiment and establishes the bi-directional relationship by setting the experimentId on the status object.
-
 ### BasicExperimentImpl
 
-Implementation of the Experiment interface. BasicExperimentImpl does not use the `@Component` annotation; instead, instances are created and managed by the ExperimentController using the ApplicationContext to resolve autowired dependencies.
+Implementation of the Experiment interface. BasicExperimentImpl uses the `@Component` annotation with prototype scope; instances are created by the ExperimentService using the ApplicationContext to resolve autowired dependencies.
 
 #### Properties
 
@@ -39,7 +28,7 @@ Implementation of the Experiment interface. BasicExperimentImpl does not use the
 The unique identifier for this experiment instance, generated as a UUID string when the experiment is instantiated.
 
 `ExperimentStatus experimentStatus`
-The ExperimentStatus instance associated with this experiment. This property establishes the bi-directional relationship with ExperimentStatus.
+The ExperimentStatus instance associated with this experiment, created internally by the experiment when it starts running.
 
 #### Autowired Dependencies
 
@@ -47,24 +36,24 @@ The BasicExperimentImpl depends on:
 - `Seeder` - for initializing the repositories with evaluated seed organisms
 - `ExperimentConfiguration` - for controlling the experimentation process
 - `ExperimentCycle` - for orchestrating the experimentation process
+- `ExperimentStatusRepository` - for persisting experiment status
 
 #### Methods
 
 `String getId()`
 Returns the unique identifier for this experiment.
 
-`ExperimentStatus getExperimentStatus()`
-Returns the ExperimentStatus instance associated with this experiment.
-
-`void setExperimentStatus(ExperimentStatus experimentStatus)`
-Sets the ExperimentStatus instance for this experiment. This method also sets the experimentId on the ExperimentStatus object to establish the bi-directional relationship.
-
 `void runExperiment()`
 Executes the complete experiment process:
-1. Resets and updates the associated ExperimentStatus
-2. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
-3. Runs the number of experiment cycles specified in ExperimentConfiguration
-4. Updates the ExperimentStatus after each cycle and upon completion
+1. Creates a new ExperimentStatus instance and associates it with this experiment
+2. Sets the status to RUNNING and persists it to the ExperimentStatusRepository
+3. Logs the experiment start with experiment ID and cycle count
+4. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
+5. Runs the number of experiment cycles specified in ExperimentConfiguration
+6. Logs a dot (`.`) every 100 cycles for progress tracking
+7. Increments cyclesCompleted in ExperimentStatus after each cycle
+8. Sets status to STOPPED upon successful completion and logs completion
+9. Sets status to EXCEPTION and logs error if an exception occurs during execution
 
 ### ExperimentConfiguration
 
@@ -84,7 +73,7 @@ The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRe
 
 A data class that tracks the runtime state and progress of an experiment. ExperimentStatus maintains information about the experiment's current execution state, performance metrics, and operational statistics.
 
-ExperimentStatus instances are created and managed by the ExperimentController. When an experiment starts, the controller creates a new ExperimentStatus instance, associates it bi-directionally with the Experiment, and persists both to their respective repositories. This allows multiple experiments to run concurrently, each with its own status tracking.
+ExperimentStatus instances are created and managed by the Experiment implementations. When an experiment starts running, it creates a new ExperimentStatus instance and persists it to the ExperimentStatusRepository. This allows multiple experiments to run concurrently, each with its own status tracking.
 
 #### Properties
 
@@ -349,11 +338,11 @@ An ExperimentCycle class implements the phases, mostly by delegating to injected
 
 ##### Methods
 
-`void mutationCycle()`
-Executes a complete mutation cycle including parent selection, breeding, mutation, evaluation, and repository maintenance.
+`void mutationCycle(String experimentId, ExperimentStatus experimentStatus)`
+Executes a complete mutation cycle including parent selection, breeding, mutation, evaluation, and repository maintenance. Takes the experimentId to track organisms and the experimentStatus to update progress metrics.
 
-`List<ScoredOrganism> selectParents()`
-Selects parent organisms for breeding. Default algorithm chooses one parent from the top 10% and one from the bottom 90%.
+`List<ScoredOrganism> selectParents(String experimentId)`
+Selects parent organisms for breeding from the specified experiment. Default algorithm chooses one parent from the top 10% and one from the bottom 90%.
 
 `List<Organism> breedParents(List<Organism> parents)`
 Breeds the selected parents to generate child organisms.
@@ -361,11 +350,11 @@ Breeds the selected parents to generate child organisms.
 `void mutateChildren(List<Organism> children)`
 Mutates the child organisms to introduce new behavior.
 
-`List<ScoredOrganism> evaluateChildren(List<Organism> children)`
-Evaluates the child organisms and returns them with their scores.
+`List<ScoredOrganism> evaluateChildren(List<Organism> children, String experimentId)`
+Evaluates the child organisms and returns them with their scores. Each ScoredOrganism is tagged with the experimentId.
 
-`void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children)`
-Maintains the ScoredOrganismRepository by potentially replacing parents with better-performing children, based on repository capacity.
+`void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId, ExperimentStatus experimentStatus)`
+Maintains the ScoredOrganismRepository by potentially replacing parents with better-performing children, based on repository capacity. Updates the experimentStatus with replacement counts.
 
 #### ExperimentCycleImpl
 
@@ -382,13 +371,13 @@ The ExperimentCycleImpl depends on Autowired instances of:
 
 ##### Method Implementations
 
-**mutationPhase()**
+**mutationCycle(String experimentId, ExperimentStatus experimentStatus)**
 
-Executes a complete mutation cycle by calling each phase method in sequence.
+Executes a complete mutation cycle by calling each phase method in sequence, passing the experimentId and experimentStatus through the pipeline.
 
-**selectParents()**
+**selectParents(String experimentId)**
 
-Chooses one parent from the top 10% of the ScoredOrganismRepository, and one parent from the bottom 90%.
+Chooses one parent from the top 10% of the ScoredOrganismRepository for the specified experiment, and one parent from the bottom 90%.
 
 **breedParents(List<Organism> parents)**
 
@@ -398,13 +387,13 @@ Uses the injected OrganismBreeder to generate a list of child Organisms.
 
 Mutates each of the children a random number (between 1 and 5) of times.
 
-**evaluateChildren(List<Organism> children)**
+**evaluateChildren(List<Organism> children, String experimentId)**
 
-Uses the injected Evaluator to evaluate the child organisms and returns a list of ScoredOrganisms.  Each ScoredOrganism is created with the current experiment's experimentId.
+Uses the injected Evaluator to evaluate the child organisms and returns a list of ScoredOrganisms. Each ScoredOrganism is created with the experimentId parameter.
 
-**maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children)**
+**maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId, ExperimentStatus experimentStatus)**
 
-Checks if the ScoredOrganismRepository is at capacity (using ExperimentConfiguration.repoCapacity). If not at capacity, simply adds the children. If at capacity, compares parents and children and replaces parents with better-performing children according to the algorithm described in the ScoredOrganismRepository Maintenance section above.
+Checks if the ScoredOrganismRepository is at capacity for the given experiment (using ExperimentConfiguration.repoCapacity). If not at capacity, simply adds the children. If at capacity, compares parents and children and replaces parents with better-performing children according to the algorithm described in the ScoredOrganismRepository Maintenance section above. Updates the experimentStatus.organismsReplaced counter when replacements occur.
 
 ## Evaluation
 
@@ -481,47 +470,84 @@ The evaluation uses CSV data where the first column contains epoch dates (assumi
 
 ## Server Details
 
-### ExperimentController
+### ExperimentService
 
-The ExperimentController is in the `controller` package that inherits from the base project package. It implements the endpoints described in this document.
+The ExperimentService is in the `service` package that inherits from the base project package. It provides the business logic for managing experiments, delegating to repositories and coordinating the experiment lifecycle.
 
-The ExperimentController autowires an ApplicationContext, ScoredOrganismRepository, ExperimentConfiguration, ExperimentStatusRepository, and ExperimentRepository.
+The ExperimentService is a Spring `@Service` component that autowires:
+- `ApplicationContext` - for instantiating Experiment beans with resolved dependencies
+- `ExperimentRepository` - for persisting and retrieving experiments
+- `ExperimentStatusRepository` - for persisting and retrieving experiment status
+- `ExperimentConfiguration` - the singleton configuration component
+- `ObjectProvider<ExperimentService>` - for enabling asynchronous execution through Spring proxy
 
-The ExperimentController is responsible for managing Experiment instances. It uses the ApplicationContext to instantiate Experiments and resolve their autowired dependencies.
+#### Key Design Patterns
 
-The ExperimentController manages the bi-directional relationship between Experiment and ExperimentStatus. When an experiment is started:
-1. Creates a new ExperimentStatus instance (which generates its own ID)
-2. Instantiates a new Experiment using the ApplicationContext (which generates its own ID)
-3. Associates the ExperimentStatus with the Experiment by calling `experiment.setExperimentStatus(status)`, which sets the experimentId on the status
-4. Persists the ExperimentStatus to the ExperimentStatusRepository
-5. Persists the Experiment to the ExperimentRepository
-6. Starts the experiment by calling `experiment.runExperiment()`
+**Asynchronous Execution**: The ExperimentService uses `@Async` on the `runExperimentAsync()` method to run experiments on separate threads. To enable this, it uses `ObjectProvider<ExperimentService>` to obtain a reference to its Spring proxy, avoiding circular dependencies while allowing proper AOP interception.
 
-This ensures both entities are properly persisted and maintain their bi-directional relationship throughout the experiment lifecycle.
-
-#### Properties
-
-None. The controller does not maintain in-memory lists; instead, it uses repositories to persist and retrieve experiments and their statuses.
+**Configuration Management**: The service manages two types of configuration:
+1. Component configuration - the current ExperimentConfiguration singleton that will be used for the next experiment
+2. Experiment-specific configuration - the configuration snapshot that was used when a specific experiment was created (currently returns the singleton, but designed to support per-experiment configuration in the future)
 
 #### Public Methods
 
-`ResponseEntity<ExperimentResponse> startExperiment()`
-Starts a new experiment by creating a new ExperimentStatus instance, instantiating a new Experiment using the ApplicationContext, establishing the bi-directional relationship between them, persisting both to their respective repositories, and calling the Experiment.runExperiment() method. Returns a response containing the experiment ID. Mapped to POST `/experiment/start`.
+`String startExperiment()`
+Starts a new experiment by:
+1. Instantiating a new Experiment using ApplicationContext (which generates its own ID)
+2. Saving the experiment to ExperimentRepository
+3. Logging the experiment start with its ID
+4. Calling `runExperimentAsync()` through the service proxy to execute on a separate thread
+5. Returning the experiment ID
 
-`ResponseEntity<ExperimentConfiguration> getConfiguration()`
-Returns the current ExperimentConfiguration. Mapped to GET `/experiment/configuration`.
+Returns the experiment ID as a String.
 
-`ResponseEntity<ExperimentConfiguration> updateConfiguration(ExperimentConfiguration updatedConfig)`
-Updates the experiment configuration with new values for cycleCount and repoCapacity. Returns the updated configuration. Mapped to PUT `/experiment/configuration`.
+`void runExperimentAsync(Experiment experiment)`
+Marked with `@Async` to run on a separate thread. Calls `experiment.runExperiment()` to execute the complete experiment process. This method must be called through the Spring proxy (via ObjectProvider) to enable asynchronous behavior.
 
-`ResponseEntity<Experiment> getExperiment(String experimentId)`
-Retrieves an Experiment by its ID from the ExperimentRepository. Returns a 404 if the experiment is not found. Mapped to GET `/experiment/{experimentId}`.
+`ExperimentConfiguration getComponentConfiguration()`
+Returns the current ExperimentConfiguration singleton - the configuration that will be used for the next experiment started.
+
+`ExperimentConfiguration updateComponentConfiguration(ExperimentConfiguration updatedConfig)`
+Updates the component configuration with new values for cycleCount and repoCapacity. Returns the updated configuration.
+
+`ExperimentConfiguration getExperimentConfiguration(String experimentId)`
+Retrieves the configuration for a specific experiment by experimentId. Currently returns the singleton configuration component. In the future, this could be enhanced to return experiment-specific configuration snapshots. Throws `IllegalArgumentException` if the experiment is not found.
+
+`ExperimentStatus getStatus(String experimentId)`
+Retrieves the ExperimentStatus for a specific experiment by looking it up using the experimentId in the ExperimentStatusRepository. Throws `IllegalArgumentException` if the status is not found.
+
+### ExperimentController
+
+The ExperimentController is in the `controller` package that inherits from the base project package. It implements the REST endpoints described in this document and delegates all business logic to ExperimentService.
+
+The ExperimentController is a Spring `@RestController` that autowires only ExperimentService. It acts as a thin HTTP layer, mapping REST requests to service method calls.
+
+#### Design Philosophy
+
+The controller follows the principle of separation of concerns:
+- **Controller Layer**: Handles HTTP request/response mapping, path variables, request bodies, and response entities
+- **Service Layer**: Contains all business logic, repository interactions, and transaction management
+
+#### Properties
+
+None. The controller maintains no state and delegates all operations to ExperimentService.
+
+#### Public Methods
+
+`ResponseEntity<String> startExperiment()`
+Starts a new experiment by delegating to `experimentService.startExperiment()`. Returns the experiment ID as plain text. Mapped to POST `/experiment/start`.
+
+`ResponseEntity<ExperimentConfiguration> getComponentConfiguration()`
+Returns the current component configuration by delegating to `experimentService.getComponentConfiguration()`. Mapped to GET `/experiment/configuration`.
+
+`ResponseEntity<ExperimentConfiguration> updateComponentConfiguration(ExperimentConfiguration updatedConfig)`
+Updates the component configuration by delegating to `experimentService.updateComponentConfiguration(updatedConfig)`. Returns the updated configuration. Mapped to PUT `/experiment/configuration`.
+
+`ResponseEntity<ExperimentConfiguration> getExperimentConfiguration(String experimentId)`
+Retrieves the configuration for a specific experiment by delegating to `experimentService.getExperimentConfiguration(experimentId)`. Mapped to GET `/experiment/{experimentId}/configuration`.
 
 `ResponseEntity<ExperimentStatus> getStatus(String experimentId)`
-Retrieves the ExperimentStatus for a specific experiment by looking it up using the experimentId in the ExperimentStatusRepository. Returns a 404 if the status is not found. Mapped to GET `/experiment/{experimentId}/status`.
-
-`ResponseEntity<List<Experiment>> getAllExperiments()`
-Retrieves all experiments from the ExperimentRepository. Mapped to GET `/experiment/all`.
+Retrieves the ExperimentStatus for a specific experiment by delegating to `experimentService.getStatus(experimentId)`. Logs "Pinging status..." for monitoring purposes. Mapped to GET `/experiment/{experimentId}/status`.
 
 ### Endpoints
 
@@ -531,42 +557,57 @@ Retrieves all experiments from the ExperimentRepository. Mapped to GET `/experim
 
 #### POST /experiment/start
 
-Starts a new experiment by creating and persisting both an Experiment and its associated ExperimentStatus, establishing their bi-directional relationship, and calling the Experiment.runExperiment() method.
+Starts a new experiment by instantiating an Experiment, saving it to the repository, and executing it asynchronously on a separate thread.
+
+Returns a plain text response containing the experiment ID:
+```
+550e8400-e29b-41d4-a716-446655440000
+```
+
+The experiment runs asynchronously, so the response is returned immediately while the experiment executes in the background. Clients should poll the status endpoint to monitor progress.
+
+#### GET /experiment/configuration
+
+Returns the current component configuration - the ExperimentConfiguration that will be used for the next experiment started.
 
 Returns a JSON response containing:
-- `experimentId` - The unique identifier of the newly created experiment
-- `message` - A confirmation message
+- `cycleCount` - The number of experiment cycles to run
+- `repoCapacity` - The maximum number of ScoredOrganisms that can be stored
 
 Example response:
 ```json
 {
-  "experimentId": "550e8400-e29b-41d4-a716-446655440000",
-  "message": "Experiment started successfully"
+  "cycleCount": 1500,
+  "repoCapacity": 200
 }
 ```
 
-#### GET /experiment/configuration
-
-Returns the current ExperimentConfiguration object containing:
-- `cycleCount` - The number of experiment cycles to run
-- `repoCapacity` - The maximum number of ScoredOrganisms that can be stored
-
 #### PUT /experiment/configuration
 
-Updates the experiment configuration with new values. Accepts a JSON body with:
+Updates the component configuration with new values. This affects the configuration that will be used for the next experiment started.
+
+Accepts a JSON body with:
 - `cycleCount` - The new number of experiment cycles to run
 - `repoCapacity` - The new maximum repository capacity
 
 Returns the updated ExperimentConfiguration object.
 
-#### GET /experiment/{experimentId}
+Example request body:
+```json
+{
+  "cycleCount": 2000,
+  "repoCapacity": 250
+}
+```
 
-Retrieves a specific Experiment by its ID.
+#### GET /experiment/{experimentId}/configuration
+
+Retrieves the configuration that was used when a specific experiment was created.
 
 Path parameter:
 - `experimentId` - The unique identifier of the experiment
 
-Returns the Experiment object if found, or a 404 status if not found.
+Returns the ExperimentConfiguration object. Currently returns the singleton component configuration, but designed to support per-experiment configuration snapshots in the future.
 
 #### GET /experiment/{experimentId}/status
 
@@ -582,13 +623,18 @@ Returns the ExperimentStatus object containing:
 - `organismsReplaced` - The count of organisms replaced during repository maintenance
 - `status` - The current experiment state (STOPPED, RUNNING, or EXCEPTION)
 
-Returns a 404 status if the experiment status is not found.
+Example response:
+```json
+{
+  "id": "450e8400-e29b-41d4-a716-446655440001",
+  "experimentId": "550e8400-e29b-41d4-a716-446655440000",
+  "cyclesCompleted": 750,
+  "organismsReplaced": 42,
+  "status": "RUNNING"
+}
+```
 
-#### GET /experiment/all
-
-Retrieves all experiments from the ExperimentRepository.
-
-Returns a list of all Experiment objects.
+This endpoint is typically polled by clients (e.g., every 1 second) to monitor experiment progress in real-time.
 
 ## Support Features
 
