@@ -3,6 +3,7 @@ package com.intermancer.gaiaf.core;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.core.PrettyPrinter;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 
 @SpringBootApplication
+@EnableAsync
 public class GaiaFCoreApplication {
 
     public static void main(String[] args) {

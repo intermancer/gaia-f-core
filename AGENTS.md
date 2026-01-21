@@ -33,30 +33,34 @@ This guide provides essential information for agentic coding agents operating in
 ./gradlew clean
 ```
 
-### Frontend (npm via Gradle)
+### Frontend Development
 
 ```bash
-# From frontend directory
 cd frontend
 
 # Install dependencies
 npm install
 
-# Build for production
-npm run build
-
 # Type check
 tsc -b
 
-# Lint
+# Lint and fix issues
 npm run lint
 
-# Development server
+# Development server (runs on :5173, proxies /api to :8080)
 npm run dev
+
+# Build for production (outputs to ../src/main/resources/static)
+npm run build
 
 # Preview production build
 npm run preview
 ```
+
+**Note**: Frontend and backend run on separate ports during development:
+- Frontend: http://localhost:5173 (Vite dev server)
+- Backend: http://localhost:8080 (Spring Boot)
+- Frontend proxies `/api` requests to the backend via Vite proxy configuration
 
 ## Java Code Style Guidelines
 

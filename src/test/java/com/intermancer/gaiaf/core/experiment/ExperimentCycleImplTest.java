@@ -57,8 +57,7 @@ class ExperimentCycleImplTest {
                 scoredOrganismRepository,
                 organismBreeder,
                 evaluator,
-                experimentConfiguration,
-                experimentStatus
+                experimentConfiguration
         );
     }
 
@@ -190,7 +189,7 @@ class ExperimentCycleImplTest {
         when(scoredOrganismRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - children should be added, no replacements tracked
         verify(scoredOrganismRepository).size(TEST_EXPERIMENT_ID);
@@ -219,7 +218,7 @@ class ExperimentCycleImplTest {
         when(experimentConfiguration.getRepoCapacity()).thenReturn(50);
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository).size(TEST_EXPERIMENT_ID);
@@ -256,7 +255,7 @@ class ExperimentCycleImplTest {
                 });
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - worst parent should be replaced, organismsReplaced incremented by 1
         verify(scoredOrganismRepository).size(TEST_EXPERIMENT_ID);
@@ -293,7 +292,7 @@ class ExperimentCycleImplTest {
                 });
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - both parents should be replaced, organismsReplaced incremented by 2
         verify(scoredOrganismRepository).size(TEST_EXPERIMENT_ID);
@@ -340,7 +339,7 @@ class ExperimentCycleImplTest {
                 });
 
         // When
-        experimentCycle.mutationCycle(TEST_EXPERIMENT_ID);
+        experimentCycle.mutationCycle(TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - verify experimentId was used throughout
         verify(scoredOrganismRepository).getRandomFromTopPercent(TEST_EXPERIMENT_ID, 0.1f);
@@ -387,7 +386,7 @@ class ExperimentCycleImplTest {
                 });
 
         // When
-        experimentCycle.mutationCycle(TEST_EXPERIMENT_ID);
+        experimentCycle.mutationCycle(TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - children added but no replacements
         verify(scoredOrganismRepository).size(TEST_EXPERIMENT_ID);
@@ -409,7 +408,7 @@ class ExperimentCycleImplTest {
         List<ScoredOrganism> children = new ArrayList<>();
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
@@ -429,7 +428,7 @@ class ExperimentCycleImplTest {
         List<ScoredOrganism> children = List.of(child1);
 
         // When
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - no changes should be made
         verify(scoredOrganismRepository, never()).delete(any());
@@ -457,8 +456,8 @@ class ExperimentCycleImplTest {
         when(scoredOrganismRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // When - run maintenance twice
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
-        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
+        experimentCycle.maintainRepository(parents, children, TEST_EXPERIMENT_ID, experimentStatus);
 
         // Then - should accumulate to 2 replacements
         assertEquals(2, experimentStatus.getOrganismsReplaced());

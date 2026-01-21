@@ -17,8 +17,9 @@ public interface ExperimentCycle {
      * mutation, evaluation, and repository maintenance.
      * 
      * @param experimentId The ID of the experiment for tracking organisms
+     * @param experimentStatus The status object to track experiment progress
      */
-    void mutationCycle(String experimentId);
+    void mutationCycle(String experimentId, ExperimentStatus experimentStatus);
 
     /**
      * Selects parent organisms for breeding.
@@ -59,6 +60,7 @@ public interface ExperimentCycle {
      * @param parents the parent organisms with their scores
      * @param children the child organisms with their scores
      * @param experimentId The ID of the experiment for tracking organisms
+     * @param experimentStatus The status object to track experiment progress
      */
-    void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId);
+    void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId, ExperimentStatus experimentStatus);
 }

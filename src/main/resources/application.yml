@@ -7,6 +7,10 @@ spring:
   application:
     name: gaia-f-core
     
+experiment:
+  cycleCount: 1500
+  repoCapacity: 200
+
 management:
   endpoints:
     web:

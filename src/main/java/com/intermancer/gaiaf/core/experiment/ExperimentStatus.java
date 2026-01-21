@@ -1,18 +1,16 @@
 package com.intermancer.gaiaf.core.experiment;
 
 import java.util.UUID;
-import org.springframework.stereotype.Component;
 
 /**
  * A data class that tracks the runtime state and progress of an experiment.
  * ExperimentStatus maintains information about the experiment's current execution state,
  * performance metrics, and operational statistics.
  * 
- * ExperimentStatus instances are created and managed by the ExperimentController.
- * When an experiment starts, the controller creates a new ExperimentStatus instance
- * and persists it to the ExperimentStatusRepository.
+ * ExperimentStatus instances are created and managed by the Experiment implementations.
+ * When an experiment starts, a new ExperimentStatus instance is created
+ * and persisted to the ExperimentStatusRepository.
  */
-@Component
 public class ExperimentStatus {
 
     private int cyclesCompleted = 0;

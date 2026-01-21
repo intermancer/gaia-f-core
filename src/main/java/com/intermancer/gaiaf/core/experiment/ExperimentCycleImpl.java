@@ -19,13 +19,11 @@ import java.util.Random;
  */
 @Component
 public class ExperimentCycleImpl implements ExperimentCycle {
-    
     private final OrganismRepository organismRepository;
     private final ScoredOrganismRepository scoredOrganismRepository;
     private final OrganismBreeder organismBreeder;
     private final Evaluator evaluator;
     private final ExperimentConfiguration experimentConfiguration;
-    private final ExperimentStatus experimentStatus;
     private final Random random;
     
     @Autowired
@@ -34,14 +32,12 @@ public class ExperimentCycleImpl implements ExperimentCycle {
             ScoredOrganismRepository scoredOrganismRepository,
             OrganismBreeder organismBreeder,
             Evaluator evaluator,
-            ExperimentConfiguration experimentConfiguration,
-            ExperimentStatus experimentStatus) {
+            ExperimentConfiguration experimentConfiguration) {
         this.organismRepository = organismRepository;
         this.scoredOrganismRepository = scoredOrganismRepository;
         this.organismBreeder = organismBreeder;
         this.evaluator = evaluator;
         this.experimentConfiguration = experimentConfiguration;
-        this.experimentStatus = experimentStatus;
         this.random = new Random();
     }
     
@@ -50,9 +46,10 @@ public class ExperimentCycleImpl implements ExperimentCycle {
      * mutation, evaluation, and repository maintenance.
      * 
      * @param experimentId The ID of the experiment for tracking organisms
+     * @param experimentStatus The status object to track experiment progress
      */
     @Override
-    public void mutationCycle(String experimentId) {
+    public void mutationCycle(String experimentId, ExperimentStatus experimentStatus) {
         List<ScoredOrganism> parents = selectParents(experimentId);
         List<Organism> parentOrganisms = parents.stream()
                 .map(ScoredOrganism::organism)
@@ -60,7 +57,7 @@ public class ExperimentCycleImpl implements ExperimentCycle {
         List<Organism> children = breedParents(parentOrganisms);
         mutateChildren(children);
         List<ScoredOrganism> scoredChildren = evaluateChildren(children, experimentId);
-        maintainRepository(parents, scoredChildren, experimentId);
+        maintainRepository(parents, scoredChildren, experimentId, experimentStatus);
     }
     
     /**
@@ -132,21 +129,22 @@ public class ExperimentCycleImpl implements ExperimentCycle {
         return scoredChildren;
     }
 
-    /**
-     * Maintains the repository by potentially replacing parents with better-performing children.
-     * If the repository is not at capacity, simply adds the children to the repository.
-     * If the repository is at capacity, combines all family members (parents and children) 
-     * into a single list and sorts by score.
-     * If the top two organisms are the parents, no changes are made (preserves best parent).
-     * If one of the top two is a child, the worst parent is replaced.
-     * If both top two are children, both parents are replaced.
-     *
-     * @param parents the parent organisms with their scores
-     * @param children the child organisms with their scores
-     * @param experimentId The ID of the experiment for tracking organisms
-     */
-    @Override
-    public void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId) {
+     /**
+      * Maintains the repository by potentially replacing parents with better-performing children.
+      * If the repository is not at capacity, simply adds the children to the repository.
+      * If the repository is at capacity, combines all family members (parents and children) 
+      * into a single list and sorts by score.
+      * If the top two organisms are the parents, no changes are made (preserves best parent).
+      * If one of the top two is a child, the worst parent is replaced.
+      * If both top two are children, both parents are replaced.
+      *
+      * @param parents the parent organisms with their scores
+      * @param children the child organisms with their scores
+      * @param experimentId The ID of the experiment for tracking organisms
+      * @param experimentStatus The status object to track experiment progress
+      */
+     @Override
+     public void maintainRepository(List<ScoredOrganism> parents, List<ScoredOrganism> children, String experimentId, ExperimentStatus experimentStatus) {
         if (parents.size() != 2 || children.isEmpty()) {
             return;
         }

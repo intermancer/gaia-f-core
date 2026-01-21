@@ -5,8 +5,12 @@ import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
 import com.intermancer.gaiaf.core.experiment.ExperimentStatus;
 import com.intermancer.gaiaf.core.experiment.repo.ExperimentRepository;
 import com.intermancer.gaiaf.core.experiment.repo.ExperimentStatusRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,25 +21,30 @@ import org.springframework.stereotype.Service;
 @Service
 public class ExperimentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExperimentService.class);
     private final ApplicationContext applicationContext;
     private final ExperimentRepository experimentRepository;
     private final ExperimentStatusRepository experimentStatusRepository;
     private final ExperimentConfiguration experimentConfiguration;
+    private final ObjectProvider<ExperimentService> serviceProvider;
 
     @Autowired
     public ExperimentService(ApplicationContext applicationContext,
                              ExperimentRepository experimentRepository,
                              ExperimentStatusRepository experimentStatusRepository,
-                             ExperimentConfiguration experimentConfiguration) {
+                             ExperimentConfiguration experimentConfiguration,
+                             ObjectProvider<ExperimentService> serviceProvider) {
         this.applicationContext = applicationContext;
         this.experimentRepository = experimentRepository;
         this.experimentStatusRepository = experimentStatusRepository;
         this.experimentConfiguration = experimentConfiguration;
+        this.serviceProvider = serviceProvider;
     }
 
     /**
      * Starts a new experiment by instantiating it using ApplicationContext,
-     * saving it to the repository, and calling its runExperiment() method.
+     * saving it to the repository, and calling its runExperiment() method asynchronously.
+     * The experiment runs on a separate thread so status updates are visible in real-time.
      *
      * @return the ID of the started experiment
      */
@@ -46,10 +55,25 @@ public class ExperimentService {
         // Save experiment to repository
         experimentRepository.save(experiment);
 
-        // Start the experiment
-        experiment.runExperiment();
+        logger.info("Starting experiment with ID: {}", experiment.getId());
+
+        // Start the experiment asynchronously (call through proxy to enable @Async)
+        serviceProvider.getObject().runExperimentAsync(experiment);
+
+        logger.info("Returned from runExperimentAsync()");
 
         return experiment.getId();
+    }
+
+    /**
+     * Runs an experiment asynchronously on a separate thread.
+     * This allows status updates to be polled and observed in real-time.
+     *
+     * @param experiment the experiment to run
+     */
+    @Async
+    public void runExperimentAsync(Experiment experiment) {
+        experiment.runExperiment();
     }
 
     /**

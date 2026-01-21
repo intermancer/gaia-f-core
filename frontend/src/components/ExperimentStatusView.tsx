@@ -46,36 +46,38 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     }
   }, [experimentId]);
 
-  useEffect(() => {
-    if (isRunning) {
-      // Start polling when experiment is running
-      pollingIntervalRef.current = window.setInterval(() => {
-        fetchStatus();
-        fetchConfiguration();
-      }, 1000);
-    } else {
-      // Stop polling when experiment is not running
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    }
+   useEffect(() => {
+     if (isRunning && experimentId) {
+       // Start polling when experiment is running and we have an experiment ID
+       pollingIntervalRef.current = window.setInterval(() => {
+         fetchStatus();
+         fetchConfiguration();
+       }, 1000);
+     } else {
+       // Stop polling when experiment is not running or no experiment ID
+       if (pollingIntervalRef.current) {
+         clearInterval(pollingIntervalRef.current);
+         pollingIntervalRef.current = null;
+       }
+     }
 
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [isRunning]);
+     return () => {
+       if (pollingIntervalRef.current) {
+         clearInterval(pollingIntervalRef.current);
+       }
+     };
+   }, [isRunning, experimentId]);
 
-  const fetchStatus = async () => {
-    // Only fetch status if we have an experiment ID
-    if (!experimentId) {
-      return;
-    }
+   const fetchStatus = async () => {
+     // Only fetch status if we have an experiment ID
+     if (!experimentId) {
+       return;
+     }
 
-    try {
-      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/status`);
+     console.log('Pinging status...');
+
+     try {
+       const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/status`);
       
       if (!response.ok) {
         // noinspection ExceptionCaughtLocallyJS

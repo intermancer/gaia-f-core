@@ -3,6 +3,8 @@ package com.intermancer.gaiaf.core.controller;
 import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
 import com.intermancer.gaiaf.core.experiment.ExperimentStatus;
 import com.intermancer.gaiaf.core.service.ExperimentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/experiment")
 public class ExperimentController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExperimentController.class);
     private final ExperimentService experimentService;
 
     @Autowired
@@ -76,6 +79,7 @@ public class ExperimentController {
      */
     @GetMapping("/{experimentId}/status")
     public ResponseEntity<ExperimentStatus> getStatus(@PathVariable String experimentId) {
+        logger.info("Pinging status...");
         return ResponseEntity.ok(experimentService.getStatus(experimentId));
     }
 }
