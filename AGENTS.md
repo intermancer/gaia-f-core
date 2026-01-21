@@ -9,6 +9,15 @@ This guide provides essential information for agentic coding agents operating in
 - **Tests**: JUnit tests in `/src/test/java`, no existing frontend tests yet
 - **Build**: Gradle orchestrates both backend and frontend builds
 
+## Project context
+
+There are several context documents that describe the project features:
+- /gen-ai-context/OrganicClasses.md describes the basic structure of organisms, and how they consume data.
+- /gen-ai-context/Experimentation.md describes the experimentation process, including the evolutionary algorithm.
+- /gen-ai-context/BasicGenes.md describes the basic genes and mutations.
+- /gen-ai-context/Design.md describes the overall design of the project.
+- /gen-ai-context/UserInterface.md describes the user interface.
+
 ## Build Commands
 
 ### Backend (Gradle)
