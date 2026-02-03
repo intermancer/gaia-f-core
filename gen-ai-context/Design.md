@@ -73,6 +73,20 @@ Complete algorithms composed of one or more chromosomes:
 
 ### Evolution Engine
 
+**Experiment Control and Monitoring**
+The system provides comprehensive control over experiment execution through pause/resume functionality:
+- **Pausable Experiments**: Experiments can be configured to allow pausing, enabling users to temporarily halt execution without losing progress
+- **Automatic Pausing**: Experiments can be set to automatically pause after a specified number of cycles, useful for checkpoint-based experimentation
+- **Manual Control**: Users can manually pause and resume experiments through the UI at any time during execution
+- **State Preservation**: When paused, all experiment state (progress metrics, organism population, configuration) is maintained for seamless resumption
+- **Thread-Safe Operation**: Pause/resume operations are thread-safe, allowing control from the UI while the experiment executes asynchronously
+
+This pause capability enables:
+- Inspection of intermediate results without restarting experiments
+- Resource management by pausing long-running experiments during high-load periods
+- Iterative experimentation workflows where users analyze results at specific checkpoints
+- Safe interruption of experiments for system maintenance or configuration review
+
 **Seeding Strategy**
 The system begins with five carefully designed seed organisms:
 

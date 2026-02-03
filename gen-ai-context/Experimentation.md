@@ -18,6 +18,15 @@ Executes the complete experiment process, including creating and managing its ow
 `String getId()`
 Returns the unique identifier for this experiment.
 
+`void pause()`
+Pauses the experiment execution. The experiment will stop processing cycles but maintain its current state for later resumption. Only valid when the experiment is in RUNNING state.
+
+`void resume()`
+Resumes a paused experiment. The experiment will continue processing cycles from where it left off. Only valid when the experiment is in PAUSED state.
+
+`boolean isPaused()`
+Returns true if the experiment is currently paused, false otherwise.
+
 ### BasicExperimentImpl
 
 Implementation of the Experiment interface. BasicExperimentImpl uses the `@Component` annotation with prototype scope; instances are created by the ExperimentService using the ApplicationContext to resolve autowired dependencies.
@@ -29,6 +38,17 @@ The unique identifier for this experiment instance, generated as a UUID string w
 
 `ExperimentStatus experimentStatus`
 The ExperimentStatus instance associated with this experiment, created internally by the experiment when it starts running.
+
+#### Properties
+
+`volatile boolean paused`
+A thread-safe flag indicating whether the experiment is currently paused. Uses volatile keyword to ensure visibility across threads since the experiment loop runs on one thread while pause/resume commands come from another thread.
+
+`boolean pausable`
+Indicates whether this experiment can be paused. Copied from ExperimentConfiguration when the experiment starts.
+
+`int pauseCycles`
+The number of cycles after which the experiment will automatically pause (if pausable is true). Copied from ExperimentConfiguration when the experiment starts. A value of 0 means no automatic pausing.
 
 #### Autowired Dependencies
 
@@ -45,15 +65,27 @@ Returns the unique identifier for this experiment.
 
 `void runExperiment()`
 Executes the complete experiment process:
-1. Creates a new ExperimentStatus instance and associates it with this experiment
-2. Sets the status to RUNNING and persists it to the ExperimentStatusRepository
-3. Logs the experiment start with experiment ID and cycle count
-4. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
-5. Runs the number of experiment cycles specified in ExperimentConfiguration
-6. Logs a dot (`.`) every 100 cycles for progress tracking
-7. Increments cyclesCompleted in ExperimentStatus after each cycle
-8. Sets status to STOPPED upon successful completion and logs completion
-9. Sets status to EXCEPTION and logs error if an exception occurs during execution
+1. Copies pausable and pauseCycles values from ExperimentConfiguration to local properties
+2. Creates a new ExperimentStatus instance and associates it with this experiment
+3. Sets the status to RUNNING and persists it to the ExperimentStatusRepository
+4. Logs the experiment start with experiment ID and cycle count
+5. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
+6. Runs the number of experiment cycles specified in ExperimentConfiguration
+7. During each cycle iteration, checks the paused flag and blocks if paused (using wait/sleep mechanism)
+8. If pausable is true and pauseCycles > 0, automatically pauses when cyclesCompleted reaches pauseCycles
+9. Logs a dot (`.`) every 100 cycles for progress tracking
+10. Increments cyclesCompleted in ExperimentStatus after each cycle
+11. Sets status to STOPPED upon successful completion and logs completion
+12. Sets status to EXCEPTION and logs error if an exception occurs during execution
+
+`void pause()`
+Sets the paused flag to true and updates the ExperimentStatus to PAUSED state. Logs the pause action with the experiment ID.
+
+`void resume()`
+Sets the paused flag to false and updates the ExperimentStatus to RUNNING state. Logs the resume action with the experiment ID. Notifies any waiting threads to continue execution.
+
+`boolean isPaused()`
+Returns the current value of the paused flag.
 
 ### ExperimentConfiguration
 
@@ -68,6 +100,30 @@ The number of experiment cycles to run. Defaults to 1000. Accessible through get
 
 `int repoCapacity`
 The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRepository. Defaults to 50. Accessible through getter and setter methods.
+
+`boolean pausable`
+Indicates whether experiments created with this configuration can be paused and resumed. Defaults to false. Accessible through getter and setter methods.
+
+`int pauseCycles`
+The number of cycles after which an experiment will automatically pause (if pausable is true). A value of 0 means the experiment will not automatically pause and can only be paused manually through the pause endpoint. Defaults to 250. Accessible through getter and setter methods.
+
+### ExperimentState
+
+An enum that defines the possible operational states of an experiment.
+
+#### Values
+
+`STOPPED`
+The experiment is not currently running. This is the initial state before an experiment starts and the final state after successful completion.
+
+`RUNNING`
+The experiment is actively executing cycles.
+
+`PAUSED`
+The experiment has been paused and is not executing cycles, but maintains its current state and can be resumed to continue from where it left off.
+
+`EXCEPTION`
+The experiment encountered an error and has stopped abnormally.
 
 ### ExperimentStatus
 
@@ -93,6 +149,7 @@ The count of organisms that have been replaced in the ScoredOrganismRepository a
 The current operational state of the experiment. Possible values are:
 - `STOPPED` - The experiment is not currently running
 - `RUNNING` - The experiment is actively executing cycles
+- `PAUSED` - The experiment is paused and can be resumed
 - `EXCEPTION` - The experiment encountered an error and has stopped
 
 Accessible through getter and setter methods.
@@ -508,13 +565,31 @@ Marked with `@Async` to run on a separate thread. Calls `experiment.runExperimen
 Returns the current ExperimentConfiguration singleton - the configuration that will be used for the next experiment started.
 
 `ExperimentConfiguration updateComponentConfiguration(ExperimentConfiguration updatedConfig)`
-Updates the component configuration with new values for cycleCount and repoCapacity. Returns the updated configuration.
+Updates the component configuration with new values for cycleCount, repoCapacity, pausable, and pauseCycles. Returns the updated configuration.
 
 `ExperimentConfiguration getExperimentConfiguration(String experimentId)`
 Retrieves the configuration for a specific experiment by experimentId. Currently returns the singleton configuration component. In the future, this could be enhanced to return experiment-specific configuration snapshots. Throws `IllegalArgumentException` if the experiment is not found.
 
 `ExperimentStatus getStatus(String experimentId)`
 Retrieves the ExperimentStatus for a specific experiment by looking it up using the experimentId in the ExperimentStatusRepository. Throws `IllegalArgumentException` if the status is not found.
+
+`void pauseExperiment(String experimentId)`
+Pauses a running experiment by:
+1. Looking up the Experiment instance from the ExperimentRepository using the experimentId
+2. Validating that the experiment is in RUNNING state
+3. Calling the experiment's `pause()` method
+4. Logging the pause action
+
+Throws `IllegalArgumentException` if the experiment is not found or is not in a pausable state (must be RUNNING).
+
+`void resumeExperiment(String experimentId)`
+Resumes a paused experiment by:
+1. Looking up the Experiment instance from the ExperimentRepository using the experimentId
+2. Validating that the experiment is in PAUSED state
+3. Calling the experiment's `resume()` method
+4. Logging the resume action
+
+Throws `IllegalArgumentException` if the experiment is not found or is not in PAUSED state.
 
 ### ExperimentController
 
@@ -549,6 +624,12 @@ Retrieves the configuration for a specific experiment by delegating to `experime
 `ResponseEntity<ExperimentStatus> getStatus(String experimentId)`
 Retrieves the ExperimentStatus for a specific experiment by delegating to `experimentService.getStatus(experimentId)`. Logs "Pinging status..." for monitoring purposes. Mapped to GET `/experiment/{experimentId}/status`.
 
+`ResponseEntity<Void> pauseExperiment(String experimentId)`
+Pauses a running experiment by delegating to `experimentService.pauseExperiment(experimentId)`. Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in a pausable state. Mapped to POST `/experiment/{experimentId}/pause`.
+
+`ResponseEntity<Void> resumeExperiment(String experimentId)`
+Resumes a paused experiment by delegating to `experimentService.resumeExperiment(experimentId)`. Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in PAUSED state. Mapped to POST `/experiment/{experimentId}/resume`.
+
 ### Endpoints
 
 #### /experiment
@@ -578,7 +659,9 @@ Example response:
 ```json
 {
   "cycleCount": 1500,
-  "repoCapacity": 200
+  "repoCapacity": 200,
+  "pausable": false,
+  "pauseCycles": 250
 }
 ```
 
@@ -589,6 +672,8 @@ Updates the component configuration with new values. This affects the configurat
 Accepts a JSON body with:
 - `cycleCount` - The new number of experiment cycles to run
 - `repoCapacity` - The new maximum repository capacity
+- `pausable` - Whether experiments can be paused
+- `pauseCycles` - Number of cycles after which to auto-pause (0 for no auto-pause)
 
 Returns the updated ExperimentConfiguration object.
 
@@ -596,7 +681,9 @@ Example request body:
 ```json
 {
   "cycleCount": 2000,
-  "repoCapacity": 250
+  "repoCapacity": 250,
+  "pausable": true,
+  "pauseCycles": 500
 }
 ```
 
@@ -635,6 +722,40 @@ Example response:
 ```
 
 This endpoint is typically polled by clients (e.g., every 1 second) to monitor experiment progress in real-time.
+
+#### POST /experiment/{experimentId}/pause
+
+Pauses a running experiment, allowing it to be resumed later from the same point.
+
+Path parameter:
+- `experimentId` - The unique identifier of the experiment to pause
+
+The experiment must be in RUNNING state for this operation to succeed. When paused:
+- The experiment stops executing cycles but maintains its current state
+- The ExperimentStatus is updated to PAUSED
+- All progress metrics (cyclesCompleted, organismsReplaced) are preserved
+- The experiment thread blocks until resumed
+
+Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in a pausable state.
+
+This endpoint is typically called by users through the UI when they want to temporarily halt an experiment without losing progress.
+
+#### POST /experiment/{experimentId}/resume
+
+Resumes a paused experiment, continuing execution from where it left off.
+
+Path parameter:
+- `experimentId` - The unique identifier of the experiment to resume
+
+The experiment must be in PAUSED state for this operation to succeed. When resumed:
+- The experiment continues executing cycles from its current position
+- The ExperimentStatus is updated to RUNNING
+- All progress metrics continue from their paused values
+- The experiment thread is notified to continue execution
+
+Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in PAUSED state.
+
+This endpoint is typically called by users through the UI when they want to continue a previously paused experiment.
 
 ## Support Features
 
