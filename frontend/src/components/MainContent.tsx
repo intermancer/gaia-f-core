@@ -38,17 +38,6 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
     }
   };
 
-  const handleStopExperiment = async () => {
-    try {
-      setExperimentStatus('Stopping experiment...');
-      // TODO: Replace with actual API call to /gaia-f/experiment/stop when endpoint is available
-      setExperimentStatus('Experiment stopped');
-      setIsRunning(false);
-    } catch (error) {
-      setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
   const handleStatusChange = (newIsRunning: boolean, newStatus: string) => {
     setIsRunning(newIsRunning);
     setExperimentStatus(newStatus);
@@ -67,7 +56,6 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
              isRunning={isRunning}
              experimentId={experimentId}
              onStartExperiment={handleStartExperiment}
-             onStopExperiment={handleStopExperiment}
              onStatusChange={handleStatusChange}
            />
          );

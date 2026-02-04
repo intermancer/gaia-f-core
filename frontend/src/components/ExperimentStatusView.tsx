@@ -3,12 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 interface ExperimentConfiguration {
   cycleCount: number;
   repoCapacity: number;
+  pausable: boolean;
+  pauseCycles: number;
 }
 
 interface ExperimentStatusData {
   cyclesCompleted: number;
   organismsReplaced: number;
-  status: 'STOPPED' | 'RUNNING' | 'EXCEPTION';
+  status: 'STOPPED' | 'RUNNING' | 'PAUSED' | 'EXCEPTION';
 }
 
 interface ExperimentStatusViewProps {
@@ -16,7 +18,6 @@ interface ExperimentStatusViewProps {
   isRunning: boolean;
   experimentId: string | null;
   onStartExperiment: () => void;
-  onStopExperiment: () => void;
   onStatusChange?: (isRunning: boolean, status: string) => void;
 }
 
@@ -25,7 +26,6 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   isRunning,
   experimentId,
   onStartExperiment,
-  onStopExperiment,
   onStatusChange
 }) => {
   const [config, setConfig] = useState<ExperimentConfiguration | null>(null);
@@ -101,6 +101,8 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   const getStatusDisplayText = (data: ExperimentStatusData): string => {
     if (data.status === 'RUNNING') {
       return 'Experiment Running';
+    } else if (data.status === 'PAUSED') {
+      return 'Experiment Paused';
     } else if (data.status === 'EXCEPTION') {
       return 'Experiment Error';
     } else {
@@ -186,10 +188,50 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     }, 1000);
   };
 
+  const handlePauseExperiment = async () => {
+    if (!experimentId) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/pause`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to pause experiment: ${response.statusText}`);
+      }
+      
+      // Refresh status after pausing
+      fetchStatus();
+    } catch (error) {
+      console.error('Error pausing experiment:', error);
+    }
+  };
+
+  const handleResumeExperiment = async () => {
+    if (!experimentId) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/resume`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to resume experiment: ${response.statusText}`);
+      }
+      
+      // Refresh status after resuming
+      fetchStatus();
+    } catch (error) {
+      console.error('Error resuming experiment:', error);
+    }
+  };
+
   const hasChanges = () => {
     if (!config || !editedConfig) return false;
     return config.cycleCount !== editedConfig.cycleCount || 
-           config.repoCapacity !== editedConfig.repoCapacity;
+           config.repoCapacity !== editedConfig.repoCapacity ||
+           config.pausable !== editedConfig.pausable ||
+           config.pauseCycles !== editedConfig.pauseCycles;
   };
 
   if (loading && !config) {
@@ -228,7 +270,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
                 type="number"
                 value={editedConfig.cycleCount}
                 onChange={(e) => handleConfigChange('cycleCount', parseInt(e.target.value))}
-                disabled={isRunning}
+                disabled={isRunning || statusData?.status === 'PAUSED'}
                 min="1"
               />
             </div>
@@ -240,10 +282,37 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
                 type="number"
                 value={editedConfig.repoCapacity}
                 onChange={(e) => handleConfigChange('repoCapacity', parseInt(e.target.value))}
-                disabled={isRunning}
+                disabled={isRunning || statusData?.status === 'PAUSED'}
                 min="1"
               />
             </div>
+            
+            <div className="config-field checkbox-field">
+              <label htmlFor="pausable">
+                <input
+                  id="pausable"
+                  type="checkbox"
+                  checked={editedConfig.pausable}
+                  onChange={(e) => setEditedConfig({ ...editedConfig, pausable: e.target.checked })}
+                  disabled={isRunning || statusData?.status === 'PAUSED'}
+                />
+                <span>Pausable</span>
+              </label>
+            </div>
+            
+            {editedConfig.pausable && (
+              <div className="config-field">
+                <label htmlFor="pauseCycles">Pause Cycles:</label>
+                <input
+                  id="pauseCycles"
+                  type="number"
+                  value={editedConfig.pauseCycles}
+                  onChange={(e) => handleConfigChange('pauseCycles', parseInt(e.target.value))}
+                  disabled={isRunning || statusData?.status === 'PAUSED'}
+                  min="0"
+                />
+              </div>
+            )}
 
             {hasChanges() && !isRunning && (
               <div className="config-actions">
@@ -261,20 +330,26 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
 
       <div className="status-section">
         <h2>Status</h2>
-        <div className={`status-badge ${isRunning ? 'running' : 'stopped'}`}>
+        <div className={`status-badge ${statusData?.status === 'RUNNING' ? 'running' : statusData?.status === 'PAUSED' ? 'paused' : 'stopped'}`}>
           {!experimentId ? 'No Experiment Running' : (statusData ? getStatusDisplayText(statusData) : experimentStatus)}
         </div>
-        {statusData && (statusData.status === 'RUNNING' || (statusData.status === 'STOPPED' && hasExperimentRun)) && (
+        {statusData && (statusData.status === 'RUNNING' || statusData.status === 'PAUSED' || (statusData.status === 'STOPPED' && hasExperimentRun)) && (
           <div className="status-details">
             <p>Cycles Completed: {statusData.cyclesCompleted}</p>
             <p>Organisms Replaced: {statusData.organismsReplaced}</p>
           </div>
         )}
-        {(isRunning || hasExperimentRun) && config && (
+        {(isRunning || statusData?.status === 'PAUSED' || hasExperimentRun) && config && (
           <div className="status-details">
             <h3>Experiment Configuration</h3>
             <p>Cycle Count: {config.cycleCount}</p>
             <p>Repository Capacity: {config.repoCapacity}</p>
+            {config.pausable && (
+              <>
+                <p>Pausable: Yes</p>
+                <p>Pause Cycles: {config.pauseCycles}</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -282,18 +357,30 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       <div className="button-section">
         <button 
           onClick={handleStartExperiment} 
-          disabled={isRunning || hasChanges()}
+          disabled={isRunning || statusData?.status === 'PAUSED' || hasChanges()}
           className="experiment-button start-button"
         >
           Start Experiment
         </button>
-        <button 
-          onClick={onStopExperiment} 
-          disabled={!isRunning}
-          className="experiment-button stop-button"
-        >
-          Stop Experiment
-        </button>
+        
+        {config?.pausable && statusData?.status === 'RUNNING' && (
+          <button 
+            onClick={handlePauseExperiment} 
+            className="experiment-button pause-button"
+          >
+            Pause Experiment
+          </button>
+        )}
+        
+        {statusData?.status === 'PAUSED' && (
+          <button 
+            onClick={handleResumeExperiment} 
+            className="experiment-button resume-button"
+          >
+            Resume Experiment
+          </button>
+        )}
+        
         {hasChanges() && (
           <p className="warning-text">Save configuration changes before starting</p>
         )}

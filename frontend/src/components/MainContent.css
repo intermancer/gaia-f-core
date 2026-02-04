@@ -102,6 +102,7 @@
 .config-field label {
   text-align: right;
   font-weight: 500;
+  color: #333;
 }
 
 .config-field input {
@@ -115,13 +116,46 @@
 
 .config-field input:disabled {
   background-color: #f5f5f5;
+  color: #333;
   cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: #333;
 }
 
 .config-field input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.config-field.checkbox-field {
+  grid-template-columns: auto 1fr;
+  gap: 0;
+}
+
+.config-field.checkbox-field label {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.config-field.checkbox-field input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.config-field.checkbox-field input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.config-field.checkbox-field span {
+  color: #333;
+  font-weight: 500;
 }
 
 .config-actions {
