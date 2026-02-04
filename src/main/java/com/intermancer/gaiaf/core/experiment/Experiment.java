@@ -21,4 +21,24 @@ public interface Experiment {
      * @return The experiment ID
      */
     String getId();
+    
+    /**
+     * Pauses the experiment execution. The experiment will stop processing cycles
+     * but maintain its current state for later resumption.
+     * Only valid when the experiment is in RUNNING state.
+     */
+    void pause();
+    
+    /**
+     * Resumes a paused experiment. The experiment will continue processing cycles
+     * from where it left off. Only valid when the experiment is in PAUSED state.
+     */
+    void resume();
+    
+    /**
+     * Returns true if the experiment is currently paused, false otherwise.
+     * 
+     * @return true if paused, false otherwise
+     */
+    boolean isPaused();
 }

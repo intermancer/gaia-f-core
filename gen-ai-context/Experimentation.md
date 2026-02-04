@@ -48,7 +48,7 @@ A thread-safe flag indicating whether the experiment is currently paused. Uses v
 Indicates whether this experiment can be paused. Copied from ExperimentConfiguration when the experiment starts.
 
 `int pauseCycles`
-The number of cycles after which the experiment will automatically pause (if pausable is true). Copied from ExperimentConfiguration when the experiment starts. A value of 0 means no automatic pausing.
+The interval at which the experiment will automatically pause (if pausable is true). The experiment pauses every time the number of completed cycles is a multiple of pauseCycles. Copied from ExperimentConfiguration when the experiment starts. A value of 0 means no automatic pausing.
 
 #### Autowired Dependencies
 
@@ -72,7 +72,7 @@ Executes the complete experiment process:
 5. Seeds the ScoredOrganismRepository by calling the Seeder (the Seeder evaluates organisms and stores them)
 6. Runs the number of experiment cycles specified in ExperimentConfiguration
 7. During each cycle iteration, checks the paused flag and blocks if paused (using wait/sleep mechanism)
-8. If pausable is true and pauseCycles > 0, automatically pauses when cyclesCompleted reaches pauseCycles
+8. If pausable is true and pauseCycles > 0, automatically pauses when cyclesCompleted is a multiple of pauseCycles (e.g., at 250, 500, 750 cycles if pauseCycles is 250)
 9. Logs a dot (`.`) every 100 cycles for progress tracking
 10. Increments cyclesCompleted in ExperimentStatus after each cycle
 11. Sets status to STOPPED upon successful completion and logs completion
@@ -105,7 +105,7 @@ The maximum number of ScoredOrganisms that can be stored in the ScoredOrganismRe
 Indicates whether experiments created with this configuration can be paused and resumed. Defaults to false. Accessible through getter and setter methods.
 
 `int pauseCycles`
-The number of cycles after which an experiment will automatically pause (if pausable is true). A value of 0 means the experiment will not automatically pause and can only be paused manually through the pause endpoint. Defaults to 250. Accessible through getter and setter methods.
+The interval at which an experiment will automatically pause (if pausable is true). The experiment pauses every time the number of completed cycles is a multiple of pauseCycles. For example, if pauseCycles is 250, the experiment will pause at 250 cycles, then at 500 cycles, then at 750 cycles, and so on. After each pause, the experiment waits for a resume command before continuing. A value of 0 means the experiment will not automatically pause and can only be paused manually through the pause endpoint. Defaults to 250. Accessible through getter and setter methods.
 
 ### ExperimentState
 
@@ -673,7 +673,7 @@ Accepts a JSON body with:
 - `cycleCount` - The new number of experiment cycles to run
 - `repoCapacity` - The new maximum repository capacity
 - `pausable` - Whether experiments can be paused
-- `pauseCycles` - Number of cycles after which to auto-pause (0 for no auto-pause)
+- `pauseCycles` - The interval at which to auto-pause. Experiment pauses every time cyclesCompleted is a multiple of this value (0 for no auto-pause, manual pause only)
 
 Returns the updated ExperimentConfiguration object.
 

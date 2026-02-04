@@ -82,4 +82,38 @@ public class ExperimentController {
         logger.info("Pinging status...");
         return ResponseEntity.ok(experimentService.getStatus(experimentId));
     }
+    
+    /**
+     * Pauses a running experiment.
+     *
+     * @param experimentId the ID of the experiment to pause
+     * @return HTTP 200 OK on success, HTTP 400 Bad Request if not in pausable state
+     */
+    @PostMapping("/{experimentId}/pause")
+    public ResponseEntity<Void> pauseExperiment(@PathVariable String experimentId) {
+        try {
+            experimentService.pauseExperiment(experimentId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            logger.error("Cannot pause experiment {}: {}", experimentId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
+     * Resumes a paused experiment.
+     *
+     * @param experimentId the ID of the experiment to resume
+     * @return HTTP 200 OK on success, HTTP 400 Bad Request if not in PAUSED state
+     */
+    @PostMapping("/{experimentId}/resume")
+    public ResponseEntity<Void> resumeExperiment(@PathVariable String experimentId) {
+        try {
+            experimentService.resumeExperiment(experimentId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            logger.error("Cannot resume experiment {}: {}", experimentId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

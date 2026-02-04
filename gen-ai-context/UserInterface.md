@@ -26,7 +26,7 @@ The Configuration panel displays editable fields for experiment parameters:
 - **Cycle Count**: The number of experiment cycles to run (numeric input)
 - **Repository Capacity**: The maximum number of organisms in the repository (numeric input)
 - **Pausable**: A checkbox indicating whether the experiment can be paused
-- **Pause Cycles**: A numeric input field that appears when Pausable is checked, specifying after how many cycles the experiment will automatically pause (0 means no auto-pause, manual pause only)
+- **Pause Cycles**: A numeric input field that appears when Pausable is checked, specifying the interval at which the experiment will automatically pause. The experiment pauses every time the number of completed cycles is a multiple of this value (e.g., if set to 250, pauses at 250, 500, 750 cycles, etc.). A value of 0 means no auto-pause, manual pause only.
 
 Configuration fields are disabled while an experiment is running or paused. Users must save configuration changes before starting a new experiment.
 

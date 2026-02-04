@@ -2,6 +2,7 @@ package com.intermancer.gaiaf.core.service;
 
 import com.intermancer.gaiaf.core.experiment.Experiment;
 import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
+import com.intermancer.gaiaf.core.experiment.ExperimentState;
 import com.intermancer.gaiaf.core.experiment.ExperimentStatus;
 import com.intermancer.gaiaf.core.experiment.repo.ExperimentRepository;
 import com.intermancer.gaiaf.core.experiment.repo.ExperimentStatusRepository;
@@ -96,6 +97,8 @@ public class ExperimentService {
     public ExperimentConfiguration updateComponentConfiguration(ExperimentConfiguration updatedConfig) {
         experimentConfiguration.setCycleCount(updatedConfig.getCycleCount());
         experimentConfiguration.setRepoCapacity(updatedConfig.getRepoCapacity());
+        experimentConfiguration.setPausable(updatedConfig.isPausable());
+        experimentConfiguration.setPauseCycles(updatedConfig.getPauseCycles());
         return experimentConfiguration;
     }
 
@@ -129,5 +132,47 @@ public class ExperimentService {
         }
         // Return empty/default status if not found
         throw new IllegalArgumentException("No status found for experiment ID: " + experimentId);
+    }
+    
+    /**
+     * Pauses a running experiment.
+     *
+     * @param experimentId the ID of the experiment to pause
+     * @throws IllegalArgumentException if the experiment is not found or not in RUNNING state
+     */
+    public void pauseExperiment(String experimentId) {
+        Experiment experiment = experimentRepository.findById(experimentId)
+            .orElseThrow(() -> new IllegalArgumentException("No experiment found with ID: " + experimentId));
+        
+        // Validate that the experiment is in RUNNING state
+        ExperimentStatus status = getStatus(experimentId);
+        if (status.getStatus() != ExperimentState.RUNNING) {
+            throw new IllegalArgumentException("Cannot pause experiment " + experimentId + 
+                " - current state: " + status.getStatus());
+        }
+        
+        logger.info("Pausing experiment with ID: {}", experimentId);
+        experiment.pause();
+    }
+    
+    /**
+     * Resumes a paused experiment.
+     *
+     * @param experimentId the ID of the experiment to resume
+     * @throws IllegalArgumentException if the experiment is not found or not in PAUSED state
+     */
+    public void resumeExperiment(String experimentId) {
+        Experiment experiment = experimentRepository.findById(experimentId)
+            .orElseThrow(() -> new IllegalArgumentException("No experiment found with ID: " + experimentId));
+        
+        // Validate that the experiment is in PAUSED state
+        ExperimentStatus status = getStatus(experimentId);
+        if (status.getStatus() != ExperimentState.PAUSED) {
+            throw new IllegalArgumentException("Cannot resume experiment " + experimentId + 
+                " - current state: " + status.getStatus());
+        }
+        
+        logger.info("Resuming experiment with ID: {}", experimentId);
+        experiment.resume();
     }
 }

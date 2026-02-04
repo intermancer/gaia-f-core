@@ -8,6 +8,8 @@ public enum ExperimentState {
     STOPPED,
     /** The experiment is actively executing cycles */
     RUNNING,
+    /** The experiment is paused and can be resumed */
+    PAUSED,
     /** The experiment encountered an error and has stopped */
     EXCEPTION
 }
