@@ -58,4 +58,44 @@ public class BasicEvaluatorTest {
         return organism;
     }
 
+    @Test
+    public void testCachedDataNotMutatedAcrossEvaluations() {
+        BasicEvaluator evaluator = new BasicEvaluator();
+        Organism organism = createTestAdderOrganism();
+        
+        List<DataQuantum> historicalData = new ArrayList<>();
+        historicalData.add(new DataQuantum().addDataPoint(new DataPoint(1.0)));
+        historicalData.add(new DataQuantum().addDataPoint(new DataPoint(2.0)));
+        historicalData.add(new DataQuantum().addDataPoint(new DataPoint(3.0)));
+        historicalData.add(new DataQuantum().addDataPoint(new DataPoint(4.0)));
+        
+        evaluator.setHistoricalData(historicalData);
+        evaluator.setLeadConsumptionCount(2);
+        evaluator.setTargetIndex(0);
+        
+        // Record original sizes
+        int[] originalSizes = historicalData.stream()
+            .mapToInt(dq -> dq.getDataPoints().size())
+            .toArray();
+        
+        // First evaluation
+        double score1 = evaluator.evaluate(organism);
+        
+        // Verify cached data was not mutated
+        for (int i = 0; i < historicalData.size(); i++) {
+            assertEquals(originalSizes[i], historicalData.get(i).getDataPoints().size(),
+                "DataQuantum at index " + i + " should not be mutated after evaluation");
+        }
+        
+        // Second evaluation should produce same score (data not accumulated)
+        double score2 = evaluator.evaluate(organism);
+        assertEquals(score1, score2, "Scores should be identical across evaluations");
+        
+        // Verify cached data still unchanged
+        for (int i = 0; i < historicalData.size(); i++) {
+            assertEquals(originalSizes[i], historicalData.get(i).getDataPoints().size(),
+                "DataQuantum at index " + i + " should not be mutated after second evaluation");
+        }
+    }
+
 }

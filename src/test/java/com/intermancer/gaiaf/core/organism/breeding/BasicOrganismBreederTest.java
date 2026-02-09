@@ -100,20 +100,20 @@ public class BasicOrganismBreederTest {
         // Verify child 1 (should have chromosomes from parent1)
         Organism child1 = children.get(0);
         assertEquals(1, child1.getChromosomes().size(), "Child 1 should have one chromosome");
-        assertSame(p1c1, child1.getChromosomes().get(0), 
-                "Child 1's chromosome should be from parent 1");
+        assertEquals(p1c1, child1.getChromosomes().get(0), 
+                "Child 1's chromosome should be a copy of parent 1's chromosome");
         
         // Verify child 2 (should have chromosomes from parent2)
         Organism child2 = children.get(1);
         assertEquals(1, child2.getChromosomes().size(), "Child 2 should have one chromosome");
-        assertSame(p2c1, child2.getChromosomes().get(0), 
-                "Child 2's chromosome should be from parent 2");
+        assertEquals(p2c1, child2.getChromosomes().get(0), 
+                "Child 2's chromosome should be a copy of parent 2's chromosome");
         
         // Verify child 3 (should have chromosomes from parent3)
         Organism child3 = children.get(2);
         assertEquals(1, child3.getChromosomes().size(), "Child 3 should have one chromosome");
-        assertSame(p3c1, child3.getChromosomes().get(0), 
-                "Child 3's chromosome should be from parent 3");
+        assertEquals(p3c1, child3.getChromosomes().get(0), 
+                "Child 3's chromosome should be a copy of parent 3's chromosome");
     }
     
     @Test
@@ -151,10 +151,10 @@ public class BasicOrganismBreederTest {
         // Verify child 2
         Organism child2 = children.get(1);
         assertEquals(2, child2.getChromosomes().size(), "Child 2 should have two chromosomes");
-        assertSame(p2c1, child2.getChromosomes().get(0), 
-                "Child 2's first chromosome should be from parent 2");
-        assertSame(p1c2, child2.getChromosomes().get(1), 
-                "Child 2's second chromosome should be from parent 1");
+        assertEquals(p2c1, child2.getChromosomes().get(0), 
+                "Child 2's first chromosome should be a copy of parent 2's chromosome");
+        assertEquals(p1c2, child2.getChromosomes().get(1), 
+                "Child 2's second chromosome should be a copy of parent 1's chromosome");
     }
     
     @Test

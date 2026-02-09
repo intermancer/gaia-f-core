@@ -115,6 +115,27 @@ public class DataQuantum {
     }
 
     /**
+     * Creates a deep copy of this DataQuantum, including copies of all DataPoints.
+     * The copy contains new DataPoint instances with the same sourceId and value
+     * as the originals, ensuring that modifications to the copy do not affect
+     * the original DataQuantum.
+     * 
+     * <p>This method is essential when passing DataQuanta to organisms for evaluation.
+     * Since organisms modify DataQuanta by adding new DataPoints during consumption
+     * (via Gene.consume()), callers who need to preserve the original data must
+     * pass a copy rather than the original instance.</p>
+     * 
+     * @return A new DataQuantum containing copies of all DataPoints
+     */
+    public DataQuantum copyOf() {
+        DataQuantum copy = new DataQuantum();
+        for (DataPoint dp : this.dataPoints) {
+            copy.addDataPoint(new DataPoint(dp.getSourceId(), dp.getValue()));
+        }
+        return copy;
+    }
+
+    /**
      * Represents a single DataPoint within a DataQuantum.
      * Each DataPoint has a sourceId and a value.
      */

@@ -474,6 +474,22 @@ Defines the number of data points the organism processes before making predictio
 `List<DataQuantum> historicalData`
 Cached historical data loaded from the CSV file. Uses lazy loading - data is loaded only when first needed during evaluation.
 
+#### Data Copying During Evaluation
+
+**IMPORTANT**: During organism evaluation, the BasicEvaluator must create deep copies of each DataQuantum from the cached `historicalData` before passing them to organisms for consumption.
+
+**Rationale**: When an organism consumes a DataQuantum, its Genes add new DataPoints to that DataQuantum (as described in the Gene.consume() template method in OrganicClasses.md). If the same cached DataQuantum instances were reused across multiple organism evaluations:
+- Each organism would add its output DataPoints to the shared DataQuantum
+- The DataQuanta would grow unbounded with each evaluation
+- Subsequent organisms would see DataPoints from previous organisms' evaluations
+- Memory usage would increase with each experiment cycle
+
+**Implementation**: Before feeding each DataQuantum to an organism, the evaluator calls `dataQuantum.copyOf()` to create a fresh copy containing only the original data points. This ensures:
+- Each organism evaluation starts with clean, unmodified input data
+- DataQuanta do not retain computed values from previous evaluations
+- Memory remains bounded regardless of the number of evaluation cycles
+- Evaluation results are reproducible and isolated
+
 `BasicEvaluator()`
 Default constructor using sensible defaults. Sets targetIndex to 1 (typically the "Open" column in stock data) and leadConsumptionCount to 3.
 
@@ -486,7 +502,8 @@ Implements the Evaluator interface. Evaluates an organism by feeding it historic
 **Evaluation Process:**
 - Loads historical data from CSV file if not already cached
 - Uses an internal EvaluationState to manage prediction timing through a queue-based buffering system
-- Feeds each DataQuantum to the organism in sequence
+- Creates a deep copy of each cached DataQuantum using `copyOf()` before feeding it to the organism, preventing mutation of cached data
+- Feeds each copied DataQuantum to the organism in sequence
 - Captures organism predictions (final DataPoint value from each consumption)
 - Maintains a lead-in period defined by leadConsumptionCount before comparing predictions to actual values
 - Calculates absolute difference between predicted and actual target values

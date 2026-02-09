@@ -91,4 +91,46 @@ public class DataQuantumTest {
         assertEquals(20.0, dataPoint2.getValue());
         assertNull(dataPoint2.getSourceId());
     }
+
+    @Test
+    public void testCopyOf() {
+        DataQuantum original = new DataQuantum();
+        original.addDataPoint(new DataQuantum.DataPoint("source1", 1.0));
+        original.addDataPoint(new DataQuantum.DataPoint("source2", 2.0));
+        original.addDataPoint(new DataQuantum.DataPoint(null, 3.0));
+        
+        DataQuantum copy = original.copyOf();
+        
+        // Verify copy has same values
+        assertEquals(3, copy.getDataPoints().size());
+        assertEquals(1.0, copy.getValue(0));
+        assertEquals(2.0, copy.getValue(1));
+        assertEquals(3.0, copy.getValue(2));
+        assertEquals("source1", copy.getDataPoint(0).getSourceId());
+        assertEquals("source2", copy.getDataPoint(1).getSourceId());
+        assertNull(copy.getDataPoint(2).getSourceId());
+        
+        // Verify modifications to copy don't affect original
+        copy.addValue(4.0);
+        assertEquals(4, copy.getDataPoints().size());
+        assertEquals(3, original.getDataPoints().size());
+        
+        // Verify modifications to original don't affect copy
+        original.addValue(5.0);
+        assertEquals(4, original.getDataPoints().size());
+        assertEquals(4, copy.getDataPoints().size());
+    }
+
+    @Test
+    public void testCopyOfEmptyDataQuantum() {
+        DataQuantum original = new DataQuantum();
+        DataQuantum copy = original.copyOf();
+        
+        assertEquals(0, copy.getDataPoints().size());
+        
+        // Verify they are independent
+        copy.addValue(1.0);
+        assertEquals(1, copy.getDataPoints().size());
+        assertEquals(0, original.getDataPoints().size());
+    }
 }

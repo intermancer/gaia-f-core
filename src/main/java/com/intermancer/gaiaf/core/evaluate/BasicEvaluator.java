@@ -105,11 +105,14 @@ public class BasicEvaluator implements Evaluator {
         // Prediction phase: feed data and compare predictions against actual values
         return historicalData.stream()
             .mapToDouble(dataQuantum -> {
-                // Feed the organism the current data
-                organism.consume(dataQuantum);
+                // Create a copy to prevent mutation of cached data
+                DataQuantum dataQuantumCopy = dataQuantum.copyOf();
+                
+                // Feed the organism the copied data
+                organism.consume(dataQuantumCopy);
                 
                 // Get the organism's prediction (final DataPoint value)
-                double futurePrediction = dataQuantum.getValue(dataQuantum.getDataPoints().size() - 1);
+                double futurePrediction = dataQuantumCopy.getValue(dataQuantumCopy.getDataPoints().size() - 1);
                 double currentPrediction = 0.0;
 
                 if (state.offerPrediction(futurePrediction)) {

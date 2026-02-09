@@ -49,7 +49,7 @@ public class BasicOrganismBreeder implements OrganismBreeder {
                 // Only add chromosome if parent has enough chromosomes
                 if (chromPos < parent.getChromosomes().size()) {
                     // Add a copy of the chromosome to the child
-                    Chromosome chromosome = parent.getChromosomes().get(chromPos);
+                    Chromosome chromosome = parent.getChromosomes().get(chromPos).copyOf();
                     child.addChromosome(chromosome);
                 }
             }

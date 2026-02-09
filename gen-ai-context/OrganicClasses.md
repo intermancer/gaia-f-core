@@ -49,6 +49,11 @@ Creates a new DataPoint with the provided value and a null sourceId, then adds i
 `double getValue(int index)`
 A convenience method for getDataPoint(index).getValue()
 
+`DataQuantum copyOf()`
+Creates a deep copy of this DataQuantum, including copies of all DataPoints. The copy contains new DataPoint instances with the same sourceId and value as the originals, ensuring that modifications to the copy do not affect the original DataQuantum.
+
+**Important**: This method is essential when passing DataQuanta to organisms for evaluation. Since organisms modify DataQuanta by adding new DataPoints during consumption (via Gene.consume()), callers who need to preserve the original data must pass a copy rather than the original instance.
+
 ### DataQuantumConsumer
 
 interface
