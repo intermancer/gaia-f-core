@@ -27,6 +27,9 @@ Resumes a paused experiment. The experiment will continue processing cycles from
 `boolean isPaused()`
 Returns true if the experiment is currently paused, false otherwise.
 
+`Instant getCreatedAt()`
+Returns the timestamp when this experiment was created.
+
 ### BasicExperimentImpl
 
 Implementation of the Experiment interface. BasicExperimentImpl uses the `@Component` annotation with prototype scope; instances are created by the ExperimentService using the ApplicationContext to resolve autowired dependencies.
@@ -35,6 +38,9 @@ Implementation of the Experiment interface. BasicExperimentImpl uses the `@Compo
 
 `String experimentId`
 The unique identifier for this experiment instance, generated as a UUID string when the experiment is instantiated.
+
+`Instant createdAt`
+The timestamp when this experiment was created. Set to the current time (`Instant.now()`) when the experiment is instantiated.
 
 `ExperimentStatus experimentStatus`
 The ExperimentStatus instance associated with this experiment, created internally by the experiment when it starts running.
@@ -62,6 +68,9 @@ The BasicExperimentImpl depends on:
 
 `String getId()`
 Returns the unique identifier for this experiment.
+
+`Instant getCreatedAt()`
+Returns the timestamp when this experiment was created.
 
 `void runExperiment()`
 Executes the complete experiment process:
@@ -138,6 +147,9 @@ A synthetic key used to identify an ExperimentStatus record. A string representa
 
 `String experimentId`
 The id of the experiment associated with this status. Links the status to its corresponding Experiment, establishing the bi-directional relationship.
+
+`Instant createdAt`
+The timestamp when this status record was created. Set to the current time (`Instant.now()`) when the status is instantiated. Accessible through getter and setter methods.
 
 `int cyclesCompleted`
 The number of experiment cycles that have been completed since the experiment started. Defaults to 0. Accessible through getter and setter methods.
@@ -239,6 +251,12 @@ Returns a random ScoredOrganism from the top percentage of the scores, as determ
 `ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent)`
 Returns a random ScoredOrganism from the bottom percentage of the scores, as determined by percent, with the given experimentId. Since this is a predictive system, scores closer to 0.0 are better. The "bottom" percentage, therefore, is determined by the highest scores.
 
+`List<ScoredOrganism> getScoredOrganismsByExperiment(String experimentId, int offset, int limit)`
+Returns a paginated list of ScoredOrganisms for the given experiment, sorted by score ascending (best scores first). The offset parameter specifies the starting index (0-based), and limit specifies the maximum number of results to return.
+
+`Set<String> getAllExperimentIds()`
+Returns a set of all unique experiment IDs that have scored organisms in the repository.
+
 #### InMemoryScoredOrganismRepository
 
 An in-memory implementation of the ScoredOrganismRepository interface.
@@ -269,6 +287,12 @@ First retrieves the appropriate List from the ordered Map, then determines the s
 
 `ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent)`
 First retrieves the appropriate List from the ordered Map, then determines the subset of the List to choose from. Since the List is sorted, simply use the size of the List to determine the cutoff of the bottom scoring Organisms, then use a random number to choose a ScoredOrganism from the subset.
+
+`List<ScoredOrganism> getScoredOrganismsByExperiment(String experimentId, int offset, int limit)`
+Retrieves the ranked List for the given experimentId from the ordered Map. If the list is null or empty, returns an empty list. Otherwise, returns a sublist from the offset index up to offset + limit (or the end of the list, whichever comes first). The list is already sorted by score ascending.
+
+`Set<String> getAllExperimentIds()`
+Returns the key set from the ordered Map, which contains all experiment IDs that have scored organisms stored.
 
 ## Seeding
 
@@ -542,6 +566,59 @@ Consider evaluating an organism with historical Dow Jones data containing column
 
 The evaluation uses CSV data where the first column contains epoch dates (assuming years starting with "20"), and subsequent columns contain numerical values for analysis. Each row represents a single time point in the historical dataset.
 
+## Data Transfer Objects
+
+Data Transfer Objects (DTOs) are used to transfer data between the server and client, providing a clean API contract that is independent of internal domain objects.
+
+### ExperimentSummary
+
+A record class in the `dto` package that provides summary information about an experiment for list displays.
+
+#### Properties
+
+`String id`
+The unique identifier of the experiment.
+
+`Instant createdAt`
+The timestamp when the experiment was created.
+
+`ExperimentState status`
+The current operational state of the experiment (STOPPED, RUNNING, PAUSED, or EXCEPTION).
+
+### ScoredOrganismSummary
+
+A record class in the `dto` package that provides summary information about a scored organism for list displays. This DTO excludes the full Organism object to reduce response payload size in paginated lists.
+
+#### Properties
+
+`String id`
+The unique identifier of the scored organism record.
+
+`Double score`
+The evaluation score for the organism.
+
+### PaginatedResponse
+
+A generic record class in the `dto` package that wraps paginated list responses.
+
+#### Type Parameter
+
+`<T>` - The type of items in the paginated list.
+
+#### Properties
+
+`List<T> items`
+The list of items for the current page.
+
+`int totalCount`
+The total number of items across all pages.
+
+`int offset`
+The starting index of the current page (0-based).
+
+`int limit`
+The maximum number of items per page.
+
 ## Server Details
 
 ### ExperimentService
@@ -554,6 +631,7 @@ The ExperimentService is a Spring `@Service` component that autowires:
 - `ExperimentStatusRepository` - for persisting and retrieving experiment status
 - `ExperimentConfiguration` - the singleton configuration component
 - `ObjectProvider<ExperimentService>` - for enabling asynchronous execution through Spring proxy
+- `ScoredOrganismRepository` - for accessing scored organisms for repository browsing
 
 #### Key Design Patterns
 
@@ -608,6 +686,15 @@ Resumes a paused experiment by:
 
 Throws `IllegalArgumentException` if the experiment is not found or is not in PAUSED state.
 
+`List<ExperimentSummary> getAllExperiments()`
+Returns a list of all experiments with their summary information (id, createdAt, status). The list is sorted by creation date with the most recent experiments first. For each experiment, the status is retrieved from the ExperimentStatusRepository; if no status is found, defaults to STOPPED.
+
+`PaginatedResponse<ScoredOrganismSummary> getScoredOrganismsForExperiment(String experimentId, int offset, int limit)`
+Returns a paginated list of scored organisms for the specified experiment. Retrieves organisms from the ScoredOrganismRepository using the pagination parameters, converts them to ScoredOrganismSummary DTOs, and wraps the result in a PaginatedResponse that includes the total count for pagination controls.
+
+`ScoredOrganism getScoredOrganismById(String id)`
+Retrieves a single ScoredOrganism by its ID from the ScoredOrganismRepository. Returns the full ScoredOrganism record including the Organism object. Throws `IllegalArgumentException` if no scored organism with the given ID exists.
+
 ### ExperimentController
 
 The ExperimentController is in the `controller` package that inherits from the base project package. It implements the REST endpoints described in this document and delegates all business logic to ExperimentService.
@@ -646,6 +733,15 @@ Pauses a running experiment by delegating to `experimentService.pauseExperiment(
 
 `ResponseEntity<Void> resumeExperiment(String experimentId)`
 Resumes a paused experiment by delegating to `experimentService.resumeExperiment(experimentId)`. Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in PAUSED state. Mapped to POST `/experiment/{experimentId}/resume`.
+
+`ResponseEntity<List<ExperimentSummary>> getAllExperiments()`
+Returns a list of all experiments with summary information by delegating to `experimentService.getAllExperiments()`. Mapped to GET `/experiment/list`.
+
+`ResponseEntity<PaginatedResponse<ScoredOrganismSummary>> getScoredOrganisms(String experimentId, int offset, int limit)`
+Returns a paginated list of scored organisms for an experiment by delegating to `experimentService.getScoredOrganismsForExperiment(experimentId, offset, limit)`. The offset defaults to 0 and limit defaults to 50 if not specified. Mapped to GET `/experiment/{experimentId}/scored-organisms`.
+
+`ResponseEntity<ScoredOrganism> getScoredOrganismDetail(String id)`
+Returns the full detail of a scored organism by delegating to `experimentService.getScoredOrganismById(id)`. Returns HTTP 200 OK with the ScoredOrganism on success, or HTTP 404 Not Found if the scored organism does not exist. Mapped to GET `/experiment/scored-organism/{id}`.
 
 ### Endpoints
 
@@ -773,6 +869,96 @@ The experiment must be in PAUSED state for this operation to succeed. When resum
 Returns HTTP 200 OK on success, or HTTP 400 Bad Request if the experiment is not in PAUSED state.
 
 This endpoint is typically called by users through the UI when they want to continue a previously paused experiment.
+
+#### GET /experiment/list
+
+Returns a list of all experiments with summary information, sorted by creation date (most recent first).
+
+Returns a JSON array of experiment summaries:
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-02-12T14:30:00Z",
+    "status": "STOPPED"
+  },
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "createdAt": "2026-02-11T10:15:00Z",
+    "status": "RUNNING"
+  }
+]
+```
+
+This endpoint is used by the Repository UI to display the list of all experiments.
+
+#### GET /experiment/{experimentId}/scored-organisms
+
+Returns a paginated list of scored organisms for the specified experiment, sorted by score ascending (best scores first).
+
+Path parameter:
+- `experimentId` - The unique identifier of the experiment
+
+Query parameters:
+- `offset` - Starting index (0-based), defaults to 0
+- `limit` - Maximum number of results to return, defaults to 50
+
+Returns a paginated response:
+```json
+{
+  "items": [
+    {
+      "id": "650e8400-e29b-41d4-a716-446655440001",
+      "score": 0.0012345
+    },
+    {
+      "id": "750e8400-e29b-41d4-a716-446655440002",
+      "score": 0.0023456
+    }
+  ],
+  "totalCount": 50,
+  "offset": 0,
+  "limit": 50
+}
+```
+
+This endpoint is used by the Repository UI to display the list of scored organisms for a selected experiment with pagination support.
+
+#### GET /experiment/scored-organism/{id}
+
+Returns the full detail of a scored organism, including the complete organism JSON structure.
+
+Path parameter:
+- `id` - The unique identifier of the scored organism
+
+Returns the full ScoredOrganism record:
+```json
+{
+  "id": "650e8400-e29b-41d4-a716-446655440001",
+  "score": 0.0012345,
+  "organismId": "750e8400-e29b-41d4-a716-446655440002",
+  "organism": {
+    "id": "750e8400-e29b-41d4-a716-446655440002",
+    "chromosomes": [
+      {
+        "genes": [
+          {
+            "type": "com.intermancer.gaiaf.core.organism.gene.AdditionGene",
+            "id": "gene-001",
+            "targetIndexList": [-1],
+            "operationConstantList": [1.5]
+          }
+        ]
+      }
+    ]
+  },
+  "experimentId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Returns HTTP 404 Not Found if the scored organism does not exist.
+
+This endpoint is used by the Repository UI to display the full details of a selected scored organism.
 
 ## Support Features
 

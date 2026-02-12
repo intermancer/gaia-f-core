@@ -1,6 +1,7 @@
 package com.intermancer.gaiaf.core.evaluate;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Repository interface for managing ScoredOrganism records.
@@ -122,4 +123,23 @@ public interface ScoredOrganismRepository {
      *                                  percent is not between 0.0 and 1.0
      */
     ScoredOrganism getRandomFromBottomPercent(String experimentId, float percent);
+
+    /**
+     * Returns a paginated list of ScoredOrganisms for the given experiment,
+     * sorted by score ascending (best scores first).
+     *
+     * @param experimentId The ID of the experiment to retrieve organisms for
+     * @param offset The starting index (0-based)
+     * @param limit The maximum number of results to return
+     * @return A list of ScoredOrganisms sorted by score
+     */
+    List<ScoredOrganism> getScoredOrganismsByExperiment(String experimentId, int offset, int limit);
+
+    /**
+     * Returns a set of all unique experiment IDs that have scored organisms
+     * in the repository.
+     *
+     * @return A set of experiment IDs
+     */
+    Set<String> getAllExperimentIds();
 }

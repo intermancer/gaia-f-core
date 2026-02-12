@@ -1,5 +1,6 @@
 package com.intermancer.gaiaf.core.experiment;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -18,12 +19,15 @@ public class ExperimentStatus {
     private ExperimentState status = ExperimentState.STOPPED;
     private String experimentId;
     private String id;
+    private Instant createdAt;
 
     /**
-     * Default constructor that generates a unique ID for this ExperimentStatus instance.
+     * Default constructor that generates a unique ID for this ExperimentStatus instance
+     * and sets the creation timestamp to the current time.
      */
     public ExperimentStatus() {
         this.id = UUID.randomUUID().toString();
+        this.createdAt = Instant.now();
     }
 
     /**
@@ -94,6 +98,24 @@ public class ExperimentStatus {
     
     public void setId(String id) {
         this.id = id;
+    }
+    
+    /**
+     * Gets the timestamp when this status record was created.
+     *
+     * @return the creation timestamp
+     */
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+    
+    /**
+     * Sets the timestamp when this status record was created.
+     *
+     * @param createdAt the creation timestamp
+     */
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     /**

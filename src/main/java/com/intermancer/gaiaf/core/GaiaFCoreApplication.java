@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
@@ -42,6 +43,12 @@ public class GaiaFCoreApplication {
     @Bean
     public ObjectMapper objectMapper(PrettyPrinter prettyPrinter) {
         ObjectMapper mapper = new ObjectMapper();
+        
+        // Register JavaTimeModule for Java 8 date/time types (Instant, etc.)
+        mapper.registerModule(new JavaTimeModule());
+        
+        // Write dates as ISO-8601 strings instead of timestamps
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         
         // Enable pretty printing with indentation
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
