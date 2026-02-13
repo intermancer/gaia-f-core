@@ -408,8 +408,8 @@ Interface
 
 ##### Methods
 
-`List<MutationCommand> getMutationCommandList()`
-Returns a list of all possible mutations for this genetic element.
+`@JsonIgnore List<MutationCommand> getMutationCommandList()`
+Returns a list of all possible mutations for this genetic element. This method should be annotated with @JsonIgnore to exclude it from JSON serialization.
 
 #### ExperimentCycle
 

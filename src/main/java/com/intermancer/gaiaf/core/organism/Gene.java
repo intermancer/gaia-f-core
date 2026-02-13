@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.intermancer.gaiaf.core.experiment.MutationCommand;
 import com.intermancer.gaiaf.core.experiment.Mutational;
@@ -159,9 +160,11 @@ public abstract class Gene implements DataQuantumConsumer, Mutational {
  /**
      * Implements the Mutational interface. Returns a list of possible mutations 
      * that can be applied to this Gene.
+     * This method is annotated with @JsonIgnore to exclude it from JSON serialization.
      * 
      * @return List of MutationCommand objects
      */
+    @JsonIgnore
     @Override
     public List<MutationCommand> getMutationCommandList() {
         List<MutationCommand> mutations = new ArrayList<>();

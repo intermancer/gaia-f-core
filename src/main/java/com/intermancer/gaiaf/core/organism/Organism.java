@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.intermancer.gaiaf.core.experiment.ChromosomeGenerator;
 import com.intermancer.gaiaf.core.experiment.MutationCommand;
@@ -131,9 +132,11 @@ public class Organism implements DataQuantumConsumer, Mutational {
      * Implements the Mutational interface. Returns a list of possible mutations 
      * that can be applied to this Organism. This includes mutations for the 
      * organism itself as well as all of the MutationCommands of its Chromosomes.
+     * This method is annotated with @JsonIgnore to exclude it from JSON serialization.
      * 
      * @return List of MutationCommand objects
      */
+    @JsonIgnore
     @Override
     public List<MutationCommand> getMutationCommandList() {
         List<MutationCommand> mutations = new ArrayList<>();

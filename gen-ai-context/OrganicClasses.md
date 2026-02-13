@@ -104,8 +104,8 @@ Every concrete Gene will need to implement the copyOf() method by first instanti
 `boolean equals(Object obj)`
 Gene overrides the java.lang.Object.equals() method.  Two Genes are equal if and only if their targetIndexList and operationalConstantList properties are also equal.  Concrete genes might further override the `equals()` method, but the id property should never be considered when determining if two Genes are equal.
 
-`List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. The method uses helper methods to generate specific types of mutations:
+`@JsonIgnore List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. This method is annotated with @JsonIgnore to exclude it from JSON serialization. The method uses helper methods to generate specific types of mutations:
 - For each element in targetIndexList: calls `getTargetIndexUpMutationCommand()` and `getTargetIndexDownMutationCommand()` to create mutations that adjust target indices up or down by a random value between 1 and 5.
 - For each element in operationConstantList: calls `getOperationalConstantUpMutationCommand()` and `getOperationalConstantDownMutationCommand()` to create mutations that adjust operational constants up or down by a random percentage between 1 and 20.
 
@@ -140,8 +140,8 @@ Returns a new instance of Chromosome. The genes property of the new Chromosome i
 `boolean equals(Object obj)`
 Chromosome overrides the java.lang.Object.equals() method. Two Chromosomes are equal if and only if their genes properties are equal.
 
-`List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes. The method uses helper methods to generate specific types of mutations:
+`@JsonIgnore List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This method is annotated with @JsonIgnore to exclude it from JSON serialization. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes. The method uses helper methods to generate specific types of mutations:
 - If genes list has more than one element: calls `getExchangeGeneMutationCommand()` to move a random Gene to a different place in the List.
 - If genes list is not empty: calls `getRemoveRandomGeneMutationCommand()` to delete a random Gene.
 - Always calls `getAddRandomGeneMutationCommand()` to add a random Gene using the GeneGenerator.
@@ -177,8 +177,8 @@ Adds chromosome to the end of the list of chromosomes.
 `boolean equals(Object obj)`
 Organism overrides the java.lang.Object.equals() method. Two Organisms are equal if and only if their chromosomes properties are equal. The id property is not part of equals comparison.
 
-`List<MutationCommand> getMutationCommandList()`
-Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes. The method uses helper methods to generate specific types of mutations:
+`@JsonIgnore List<MutationCommand> getMutationCommandList()`
+Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This method is annotated with @JsonIgnore to exclude it from JSON serialization. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes. The method uses helper methods to generate specific types of mutations:
 - If chromosomes list has more than one element: calls `getExchangeChromosomeMutationCommand()` to reorder a single Chromosome and `getDeleteRandomChromosomeMutationCommand()` to delete a Chromosome.
 - Always calls `getAddRandomChromosomeMutationCommand()` to add a random Chromosome using the ChromosomeGenerator.
 - Collects and includes all MutationCommands from each Chromosome in the organism.
