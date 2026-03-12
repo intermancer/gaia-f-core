@@ -4,6 +4,8 @@ import com.intermancer.gaiaf.core.experiment.repo.ExperimentStatusRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -13,8 +15,13 @@ import java.util.UUID;
  * BasicExperimentImpl orchestrates the complete experimentation process.
  * It manages seeding the ScoredOrganismRepository with initial evaluated organisms
  * and executing multiple Experiment Cycles.
+ *
+ * <p>Prototype-scoped so that each call to {@code getBean(Experiment.class)} produces
+ * a new instance with a distinct UUID, allowing multiple concurrent experiments to be
+ * tracked independently in the repository.
  */
 @Component
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class BasicExperimentImpl implements Experiment {
     
     private static final Logger logger = LoggerFactory.getLogger(BasicExperimentImpl.class);
