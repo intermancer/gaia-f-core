@@ -5,10 +5,12 @@ import './ExperimentsListScreen.css';
 
 interface ExperimentsListScreenProps {
   onExperimentSelect: (experimentId: string) => void;
+  refreshKey?: number;
 }
 
 const ExperimentsListScreen: React.FC<ExperimentsListScreenProps> = ({
   onExperimentSelect,
+  refreshKey = 0,
 }) => {
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ const ExperimentsListScreen: React.FC<ExperimentsListScreenProps> = ({
 
   useEffect(() => {
     fetchExperiments();
-  }, []);
+  }, [refreshKey]);
 
   const fetchExperiments = async () => {
     try {

@@ -521,17 +521,37 @@ Default constructor using sensible defaults. Sets targetIndex to 1 (typically th
 Constructor with custom configuration parameters.
 
 `double evaluate(Organism organism)`
-Implements the Evaluator interface. Evaluates an organism by feeding it historical data and measuring prediction accuracy. Returns the cumulative prediction error score where lower values indicate better performance (0 represents perfect accuracy).
+Implements the Evaluator interface. Evaluates an organism by feeding it historical data and measuring prediction accuracy. Returns the mean absolute error per scored data point where lower values indicate better performance (0 represents perfect accuracy).
+
+**Warming Cycles and Effective Lead Count:**
+
+Before scoring begins, the evaluator computes an effective lead count as:
+
+`effectiveLeadCount = max(leadConsumptionCount, organism.getWarmingCycles())`
+
+This ensures that Window Genes (such as MovingAverageGene or DelayGene) are fully warmed up before any predictions are compared against actual values. For organisms containing only Basic Arithmetic or Control Genes, `getWarmingCycles()` returns 0 and the behavior is identical to the previous fixed `leadConsumptionCount`.
+
+If `effectiveLeadCount` is greater than or equal to the number of historical data rows, no scoring is possible and `Double.MAX_VALUE` is returned, preventing such an organism from competing favorably in the repository.
+
+**Score Normalization:**
+
+The accumulated absolute error is divided by the number of data points that actually contributed to the score:
+
+`score = totalError / (historicalData.size() - effectiveLeadCount)`
+
+This yields a mean absolute error per scored point rather than a raw cumulative sum. Without normalization, organisms with large warming requirements (which skip more of the dataset) would appear to score better simply because they are scored against fewer data points. Normalization ensures that scores are directly comparable across organisms with different warming requirements, allowing fair competition in the ScoredOrganismRepository.
 
 **Evaluation Process:**
 - Loads historical data from CSV file if not already cached
-- Uses an internal EvaluationState to manage prediction timing through a queue-based buffering system
+- Computes effectiveLeadCount as the greater of leadConsumptionCount and organism.getWarmingCycles()
+- Returns Double.MAX_VALUE immediately if effectiveLeadCount >= historicalData.size()
+- Uses an internal EvaluationState (initialized with effectiveLeadCount) to manage prediction timing through a queue-based buffering system
 - Creates a deep copy of each cached DataQuantum using `copyOf()` before feeding it to the organism, preventing mutation of cached data
 - Feeds each copied DataQuantum to the organism in sequence
 - Captures organism predictions (final DataPoint value from each consumption)
-- Maintains a lead-in period defined by leadConsumptionCount before comparing predictions to actual values
+- Maintains a lead-in period defined by effectiveLeadCount before comparing predictions to actual values
 - Calculates absolute difference between predicted and actual target values
-- Returns accumulated error as the fitness score
+- Returns total accumulated error divided by (historicalData.size() - effectiveLeadCount)
 
 `void setHistoricalData(List<DataQuantum> historicalData)`
 Sets the historical data used for evaluation. Useful for testing scenarios.

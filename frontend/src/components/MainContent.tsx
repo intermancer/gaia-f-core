@@ -21,6 +21,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const [repositoryView, setRepositoryView] = useState<RepositoryView>('experiments');
   const [selectedRepoExperimentId, setSelectedRepoExperimentId] = useState<string | null>(null);
   const [selectedScoredOrganismId, setSelectedScoredOrganismId] = useState<string | null>(null);
+  const [experimentsRefreshKey, setExperimentsRefreshKey] = useState<number>(0);
 
   // Reset repository navigation when switching away from Repository
   useEffect(() => {
@@ -28,6 +29,9 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
       setRepositoryView('experiments');
       setSelectedRepoExperimentId(null);
       setSelectedScoredOrganismId(null);
+    } else {
+      // Navigated to Repository — refresh the experiments list
+      setExperimentsRefreshKey(k => k + 1);
     }
   }, [selectedCommand]);
 
@@ -74,6 +78,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
     setRepositoryView('experiments');
     setSelectedRepoExperimentId(null);
     setSelectedScoredOrganismId(null);
+    setExperimentsRefreshKey(k => k + 1);
   };
 
   const handleBackToScoredOrganisms = () => {
@@ -84,11 +89,11 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const renderRepositoryContent = () => {
     switch (repositoryView) {
       case 'experiments':
-        return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} />;
+        return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} refreshKey={experimentsRefreshKey} />;
 
       case 'scoredOrganisms':
         if (!selectedRepoExperimentId) {
-          return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} />;
+          return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} refreshKey={experimentsRefreshKey} />;
         }
         return (
           <ScoredOrganismsListScreen
@@ -111,7 +116,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
         );
 
       default:
-        return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} />;
+        return <ExperimentsListScreen onExperimentSelect={handleExperimentSelect} refreshKey={experimentsRefreshKey} />;
     }
   };
 

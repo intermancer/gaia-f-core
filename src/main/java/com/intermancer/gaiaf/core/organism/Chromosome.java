@@ -72,6 +72,20 @@ public class Chromosome implements DataQuantumConsumer, Mutational {
         return clone;
     }
 
+    /**
+     * Returns the total number of warming cycles required by this Chromosome,
+     * computed by summing getWarmingCycles() across all Genes.
+     *
+     * @return The total warming cycles for this Chromosome.
+     */
+    public int getWarmingCycles() {
+        int total = 0;
+        for (Gene gene : genes) {
+            total += gene.getWarmingCycles();
+        }
+        return total;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

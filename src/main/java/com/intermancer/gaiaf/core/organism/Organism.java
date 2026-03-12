@@ -103,6 +103,20 @@ public class Organism implements DataQuantumConsumer, Mutational {
         return id;
     }
 
+    /**
+     * Returns the total number of warming cycles required by this Organism,
+     * computed by summing getWarmingCycles() across all Chromosomes.
+     *
+     * @return The total warming cycles for this Organism.
+     */
+    public int getWarmingCycles() {
+        int total = 0;
+        for (Chromosome chromosome : chromosomes) {
+            total += chromosome.getWarmingCycles();
+        }
+        return total;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

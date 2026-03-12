@@ -104,6 +104,9 @@ Every concrete Gene will need to implement the copyOf() method by first instanti
 `boolean equals(Object obj)`
 Gene overrides the java.lang.Object.equals() method.  Two Genes are equal if and only if their targetIndexList and operationalConstantList properties are also equal.  Concrete genes might further override the `equals()` method, but the id property should never be considered when determining if two Genes are equal.
 
+`int getWarmingCycles()`
+Returns the number of DataQuanta this Gene must consume before its output is considered meaningful. The default implementation in Gene returns 0, meaning the Gene produces valid output immediately. Subclasses that require a warm-up period (such as WindowGene) override this method to return the appropriate count.
+
 `@JsonIgnore List<MutationCommand> getMutationCommandList()`
 Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Gene. This method is annotated with @JsonIgnore to exclude it from JSON serialization. The method uses helper methods to generate specific types of mutations:
 - For each element in targetIndexList: calls `getTargetIndexUpMutationCommand()` and `getTargetIndexDownMutationCommand()` to create mutations that adjust target indices up or down by a random value between 1 and 5.
@@ -139,6 +142,9 @@ Returns a new instance of Chromosome. The genes property of the new Chromosome i
 
 `boolean equals(Object obj)`
 Chromosome overrides the java.lang.Object.equals() method. Two Chromosomes are equal if and only if their genes properties are equal.
+
+`int getWarmingCycles()`
+Returns the total number of warming cycles required by this Chromosome. Computed by summing the result of `getWarmingCycles()` across all Genes in the chromosome.
 
 `@JsonIgnore List<MutationCommand> getMutationCommandList()`
 Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Chromosome. This method is annotated with @JsonIgnore to exclude it from JSON serialization. This includes mutations for the chromosome itself, as well as the MutationCommands for each of its Genes. The method uses helper methods to generate specific types of mutations:
@@ -176,6 +182,9 @@ Adds chromosome to the end of the list of chromosomes.
 
 `boolean equals(Object obj)`
 Organism overrides the java.lang.Object.equals() method. Two Organisms are equal if and only if their chromosomes properties are equal. The id property is not part of equals comparison.
+
+`int getWarmingCycles()`
+Returns the total number of warming cycles required by this Organism. Computed by summing the result of `getWarmingCycles()` across all Chromosomes in the organism.
 
 `@JsonIgnore List<MutationCommand> getMutationCommandList()`
 Implements the Mutational interface. Returns a list of possible mutations that can be applied to this Organism. This method is annotated with @JsonIgnore to exclude it from JSON serialization. This includes mutations for the organism itself as well as all of the MutationCommands of its Chromosomes. The method uses helper methods to generate specific types of mutations:

@@ -83,6 +83,18 @@ public abstract class Gene implements DataQuantumConsumer, Mutational {
     }
     
     /**
+     * Returns the number of DataQuanta this Gene must consume before its output
+     * is considered meaningful. The default implementation returns 0, meaning the
+     * Gene produces valid output immediately. Subclasses that require a warm-up
+     * period (such as WindowGene) override this method to return the appropriate count.
+     *
+     * @return The number of warming cycles required by this Gene.
+     */
+    public int getWarmingCycles() {
+        return 0;
+    }
+
+    /**
      * Abstract method to define the operation performed on the input values.
      *
      * @param values The values extracted from DataQuantum.

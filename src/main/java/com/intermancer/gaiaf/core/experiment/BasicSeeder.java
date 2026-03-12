@@ -10,6 +10,8 @@ import com.intermancer.gaiaf.core.organism.repo.OrganismRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * BasicSeeder is a very basic implementation of the Seeder interface.
  * It statically defines 5 Organisms, evaluates them, and loads them into the repositories.
@@ -46,17 +48,15 @@ public class BasicSeeder implements Seeder {
      * Useful for demonstrating basic sequential gene operations
      */
     private void createSimpleArithmeticOrganism(String experimentId) {
-        Organism organism = new Organism("simple-arithmetic-organism");
+        Organism organism = new Organism(UUID.randomUUID().toString());
         Chromosome chromosome = new Chromosome();
         
-        // Add AdditionGene
         AdditionGene additionGene = new AdditionGene();
-        additionGene.setId("addition-gene-1");
+        additionGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(additionGene);
         
-        // Add MultiplicationGene
         MultiplicationGene multiplicationGene = new MultiplicationGene();
-        multiplicationGene.setId("multiplication-gene-1");
+        multiplicationGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
@@ -70,17 +70,15 @@ public class BasicSeeder implements Seeder {
      * Demonstrates combination of trigonometric and arithmetic operations
      */
     private void createTrigonometricAnalysisOrganism(String experimentId) {
-        Organism organism = new Organism("trigonometric-analysis-organism");
+        Organism organism = new Organism(UUID.randomUUID().toString());
         Chromosome chromosome = new Chromosome();
         
-        // Add SineGene
         SineGene sineGene = new SineGene();
-        sineGene.setId("sine-gene-1");
+        sineGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(sineGene);
         
-        // Add MultiplicationGene
         MultiplicationGene multiplicationGene = new MultiplicationGene();
-        multiplicationGene.setId("multiplication-gene-2");
+        multiplicationGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(multiplicationGene);
         
         organism.addChromosome(chromosome);
@@ -95,26 +93,24 @@ public class BasicSeeder implements Seeder {
      * Shows how multiple chromosomes can process data differently
      */
     private void createDataTransformationOrganism(String experimentId) {
-        Organism organism = new Organism("data-transformation-organism");
+        Organism organism = new Organism(UUID.randomUUID().toString());
         
-        // First chromosome (additive operations)
         Chromosome chromosome1 = new Chromosome();
         AdditionGene additionGene = new AdditionGene();
-        additionGene.setId("addition-gene-2");
+        additionGene.setId(UUID.randomUUID().toString());
         chromosome1.getGenes().add(additionGene);
         
         SubtractionGene subtractionGene = new SubtractionGene();
-        subtractionGene.setId("subtraction-gene-1");
+        subtractionGene.setId(UUID.randomUUID().toString());
         chromosome1.getGenes().add(subtractionGene);
         
-        // Second chromosome (multiplicative operations)
         Chromosome chromosome2 = new Chromosome();
         MultiplicationGene multiplicationGene = new MultiplicationGene();
-        multiplicationGene.setId("multiplication-gene-3");
+        multiplicationGene.setId(UUID.randomUUID().toString());
         chromosome2.getGenes().add(multiplicationGene);
         
         DivisionGene divisionGene = new DivisionGene();
-        divisionGene.setId("division-gene-1");
+        divisionGene.setId(UUID.randomUUID().toString());
         chromosome2.getGenes().add(divisionGene);
         
         organism.addChromosome(chromosome1);
@@ -129,22 +125,19 @@ public class BasicSeeder implements Seeder {
      * Demonstrates longer processing chains
      */
     private void createReductiveProcessingOrganism(String experimentId) {
-        Organism organism = new Organism("reductive-processing-organism");
+        Organism organism = new Organism(UUID.randomUUID().toString());
         Chromosome chromosome = new Chromosome();
         
-        // Add DivisionGene
         DivisionGene divisionGene = new DivisionGene();
-        divisionGene.setId("division-gene-2");
+        divisionGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(divisionGene);
         
-        // Add SubtractionGene
         SubtractionGene subtractionGene = new SubtractionGene();
-        subtractionGene.setId("subtraction-gene-2");
+        subtractionGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(subtractionGene);
         
-        // Add SineGene
         SineGene sineGene = new SineGene();
-        sineGene.setId("sine-gene-2");
+        sineGene.setId(UUID.randomUUID().toString());
         chromosome.getGenes().add(sineGene);
         
         organism.addChromosome(chromosome);
@@ -160,28 +153,25 @@ public class BasicSeeder implements Seeder {
      * Useful for testing organism-level data flow
      */
     private void createBasicCompositeOrganism(String experimentId) {
-        Organism organism = new Organism("basic-composite-organism");
+        Organism organism = new Organism(UUID.randomUUID().toString());
         
-        // First chromosome (single multiplication gene)
         Chromosome chromosome1 = new Chromosome();
         MultiplicationGene multiplicationGene = new MultiplicationGene();
-        multiplicationGene.setId("multiplication-gene-4");
+        multiplicationGene.setId(UUID.randomUUID().toString());
         chromosome1.getGenes().add(multiplicationGene);
         
-        // Second chromosome (addition followed by sine)
         Chromosome chromosome2 = new Chromosome();
         AdditionGene additionGene = new AdditionGene();
-        additionGene.setId("addition-gene-3");
+        additionGene.setId(UUID.randomUUID().toString());
         chromosome2.getGenes().add(additionGene);
         
         SineGene sineGene = new SineGene();
-        sineGene.setId("sine-gene-3");
+        sineGene.setId(UUID.randomUUID().toString());
         chromosome2.getGenes().add(sineGene);
         
-        // Third chromosome (single subtraction gene)
         Chromosome chromosome3 = new Chromosome();
         SubtractionGene subtractionGene = new SubtractionGene();
-        subtractionGene.setId("subtraction-gene-3");
+        subtractionGene.setId(UUID.randomUUID().toString());
         chromosome3.getGenes().add(subtractionGene);
         
         organism.addChromosome(chromosome1);
