@@ -255,4 +255,26 @@ public class InMemoryScoredOrganismRepository implements ScoredOrganismRepositor
             return rankedList.get(randomIndex);
         }
     }
+
+    @Override
+    public List<ScoredOrganism> getScoredOrganismsByExperiment(String experimentId, int offset, int limit) {
+        List<ScoredOrganism> rankedList = orderedMap.get(experimentId);
+        if (rankedList == null || rankedList.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        synchronized (rankedList) {
+            int size = rankedList.size();
+            if (offset >= size) {
+                return Collections.emptyList();
+            }
+            int endIndex = Math.min(offset + limit, size);
+            return new ArrayList<>(rankedList.subList(offset, endIndex));
+        }
+    }
+
+    @Override
+    public Set<String> getAllExperimentIds() {
+        return new HashSet<>(orderedMap.keySet());
+    }
 }

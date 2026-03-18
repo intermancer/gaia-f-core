@@ -13,10 +13,20 @@ import org.junit.jupiter.api.Test;
 import com.intermancer.gaiaf.core.organism.DataQuantum;
 import com.intermancer.gaiaf.core.organism.Gene;
 import com.intermancer.gaiaf.core.organism.gene.basic.AdditionGene;
+import com.intermancer.gaiaf.core.organism.gene.basic.DataPointAdditionGene;
+import com.intermancer.gaiaf.core.organism.gene.basic.DataPointDivisionGene;
+import com.intermancer.gaiaf.core.organism.gene.basic.DataPointMultiplicationGene;
+import com.intermancer.gaiaf.core.organism.gene.basic.DataPointSubtractionGene;
 import com.intermancer.gaiaf.core.organism.gene.basic.DivisionGene;
 import com.intermancer.gaiaf.core.organism.gene.basic.MultiplicationGene;
 import com.intermancer.gaiaf.core.organism.gene.basic.SineGene;
 import com.intermancer.gaiaf.core.organism.gene.basic.SubtractionGene;
+import com.intermancer.gaiaf.core.organism.gene.control.ClampGene;
+import com.intermancer.gaiaf.core.organism.gene.control.SelectMaxGene;
+import com.intermancer.gaiaf.core.organism.gene.control.SelectMinGene;
+import com.intermancer.gaiaf.core.organism.gene.control.ThresholdSwitchGene;
+import com.intermancer.gaiaf.core.organism.gene.window.DelayGene;
+import com.intermancer.gaiaf.core.organism.gene.window.MovingAverageGene;
 
 public class GeneGeneratorTest {
     
@@ -43,15 +53,15 @@ public class GeneGeneratorTest {
             geneTypes.add(gene.getClass());
         }
         
-        // Should generate the basic gene types
-        assertTrue(geneTypes.contains(AdditionGene.class));
-        assertTrue(geneTypes.contains(SubtractionGene.class));
-        assertTrue(geneTypes.contains(MultiplicationGene.class));
-        assertTrue(geneTypes.contains(DivisionGene.class));
-        assertTrue(geneTypes.contains(SineGene.class));
-        
-        // Should generate all 5 types
-        assertEquals(5, geneTypes.size(), "Should generate all 5 basic gene types");
+        // Should generate representatives from all three Gene categories
+        assertTrue(geneTypes.contains(AdditionGene.class), "Should generate AdditionGene");
+        assertTrue(geneTypes.contains(SubtractionGene.class), "Should generate SubtractionGene");
+        assertTrue(geneTypes.contains(MultiplicationGene.class), "Should generate MultiplicationGene");
+        assertTrue(geneTypes.contains(DivisionGene.class), "Should generate DivisionGene");
+        assertTrue(geneTypes.contains(SineGene.class), "Should generate SineGene");
+
+        // Should generate the pool from all 26 gene types with enough samples
+        assertTrue(geneTypes.size() > 5, "Should generate more than just the 5 basic gene types");
     }
     
     @Test
@@ -93,13 +103,18 @@ public class GeneGeneratorTest {
         for (int i = 0; i < 50; i++) {
             Gene gene = GeneGenerator.getRandomGene();
             List<Integer> targetIndexList = gene.getTargetIndexList();
-            
+
             assertNotNull(targetIndexList);
             assertFalse(targetIndexList.isEmpty());
-            
-            // According to the code, basic genes use default -1 for single target index
-            assertEquals(1, targetIndexList.size(), "Basic genes should have one target index");
-            assertEquals(-1, targetIndexList.get(0), "Default target index should be -1");
+
+            // The last target index is always -1 (chain convention)
+            assertEquals(-1, targetIndexList.get(targetIndexList.size() - 1),
+                "Last target index should always be -1");
+
+            // All indices should be negative (relative indexing)
+            for (Integer index : targetIndexList) {
+                assertTrue(index < 0, "Target indices should be negative, found: " + index);
+            }
         }
     }
     
@@ -156,28 +171,27 @@ public class GeneGeneratorTest {
     
     @Test
     public void testGetRandomGeneDistribution() {
-        int[] counts = new int[5]; // For 5 gene types
-        
-        // Generate many genes and count distribution
-        for (int i = 0; i < 500; i++) {
-            Gene gene = GeneGenerator.getRandomGene();
-            
-            if (gene instanceof AdditionGene) counts[0]++;
-            else if (gene instanceof SubtractionGene) counts[1]++;
-            else if (gene instanceof MultiplicationGene) counts[2]++;
-            else if (gene instanceof DivisionGene) counts[3]++;
-            else if (gene instanceof SineGene) counts[4]++;
+        Set<Class<?>> observedTypes = new HashSet<>();
+
+        // Generate enough genes to expect all 26 types to appear
+        for (int i = 0; i < 2000; i++) {
+            observedTypes.add(GeneGenerator.getRandomGene().getClass());
         }
-        
-        // Each type should appear at least once in 500 generations
-        for (int i = 0; i < 5; i++) {
-            assertTrue(counts[i] > 0, "Gene type " + i + " should appear at least once");
-        }
-        
-        // Distribution should be roughly even (allowing for randomness)
-        for (int i = 0; i < 5; i++) {
-            assertTrue(counts[i] > 50, "Gene type " + i + " should appear reasonably often, was: " + counts[i]);
-            assertTrue(counts[i] < 200, "Gene type " + i + " should not dominate, was: " + counts[i]);
-        }
+
+        // Spot-check representatives from each category
+        assertTrue(observedTypes.contains(AdditionGene.class), "Basic: AdditionGene missing");
+        assertTrue(observedTypes.contains(DataPointAdditionGene.class), "Basic multi: DataPointAdditionGene missing");
+        assertTrue(observedTypes.contains(DataPointSubtractionGene.class), "Basic multi: DataPointSubtractionGene missing");
+        assertTrue(observedTypes.contains(DataPointMultiplicationGene.class), "Basic multi: DataPointMultiplicationGene missing");
+        assertTrue(observedTypes.contains(DataPointDivisionGene.class), "Basic multi: DataPointDivisionGene missing");
+        assertTrue(observedTypes.contains(MovingAverageGene.class), "Window: MovingAverageGene missing");
+        assertTrue(observedTypes.contains(DelayGene.class), "Window: DelayGene missing");
+        assertTrue(observedTypes.contains(ClampGene.class), "Control: ClampGene missing");
+        assertTrue(observedTypes.contains(ThresholdSwitchGene.class), "Control: ThresholdSwitchGene missing");
+        assertTrue(observedTypes.contains(SelectMaxGene.class), "Control: SelectMaxGene missing");
+        assertTrue(observedTypes.contains(SelectMinGene.class), "Control: SelectMinGene missing");
+
+        // All 27 types should appear with 2000 samples
+        assertEquals(27, observedTypes.size(), "Expected all 27 gene types to appear");
     }
 }

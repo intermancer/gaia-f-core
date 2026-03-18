@@ -7,15 +7,12 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedCommand, onCommandSelect }) => {
-  const mainCommands = ['Experiment', 'Scored Organism Repository'];
+  const mainCommands = ['Experiment', 'Repository'];
 
-  const getSecondaryCommands = (command: string): string[] => {
-    switch (command) {
-      case 'Scored Organism Repository':
-        return ['List Scored Organisms', 'Display Top 5 Scored Organisms'];
-      default:
-        return [];
-    }
+  const getSecondaryCommands = (): string[] => {
+    // Repository no longer has secondary commands - navigation is handled
+    // through clickable lists in the main content area
+    return [];
   };
 
   // Determine which main command is currently active
@@ -29,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCommand, onCommandSelect }) =
     
     // Check if selected is a secondary command and return its parent
     for (const mainCommand of mainCommands) {
-      if (getSecondaryCommands(mainCommand).includes(selected)) {
+      if (getSecondaryCommands().includes(selected)) {
         return mainCommand;
       }
     }
@@ -51,9 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedCommand, onCommandSelect }) =
             >
               {command}
             </button>
-            {activeMainCommand === command && getSecondaryCommands(command).length > 0 && (
+            {activeMainCommand === command && getSecondaryCommands().length > 0 && (
               <ul className="secondary-commands">
-                {getSecondaryCommands(command).map((subCommand) => (
+                {getSecondaryCommands().map((subCommand) => (
                   <li key={subCommand} className="secondary-command">
                     <button
                       className="secondary-button"

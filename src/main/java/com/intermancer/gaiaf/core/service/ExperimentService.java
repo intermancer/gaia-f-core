@@ -1,5 +1,10 @@
 package com.intermancer.gaiaf.core.service;
 
+import com.intermancer.gaiaf.core.dto.ExperimentSummary;
+import com.intermancer.gaiaf.core.dto.PaginatedResponse;
+import com.intermancer.gaiaf.core.dto.ScoredOrganismSummary;
+import com.intermancer.gaiaf.core.evaluate.ScoredOrganism;
+import com.intermancer.gaiaf.core.evaluate.ScoredOrganismRepository;
 import com.intermancer.gaiaf.core.experiment.Experiment;
 import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
 import com.intermancer.gaiaf.core.experiment.ExperimentState;
@@ -13,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Service class for managing experiment operations.
@@ -28,18 +35,21 @@ public class ExperimentService {
     private final ExperimentStatusRepository experimentStatusRepository;
     private final ExperimentConfiguration experimentConfiguration;
     private final ObjectProvider<ExperimentService> serviceProvider;
+    private final ScoredOrganismRepository scoredOrganismRepository;
 
     @Autowired
     public ExperimentService(ApplicationContext applicationContext,
                              ExperimentRepository experimentRepository,
                              ExperimentStatusRepository experimentStatusRepository,
                              ExperimentConfiguration experimentConfiguration,
-                             ObjectProvider<ExperimentService> serviceProvider) {
+                             ObjectProvider<ExperimentService> serviceProvider,
+                             ScoredOrganismRepository scoredOrganismRepository) {
         this.applicationContext = applicationContext;
         this.experimentRepository = experimentRepository;
         this.experimentStatusRepository = experimentStatusRepository;
         this.experimentConfiguration = experimentConfiguration;
         this.serviceProvider = serviceProvider;
+        this.scoredOrganismRepository = scoredOrganismRepository;
     }
 
     /**
@@ -174,5 +184,60 @@ public class ExperimentService {
         
         logger.info("Resuming experiment with ID: {}", experimentId);
         experiment.resume();
+    }
+
+    /**
+     * Returns a list of all experiments with their summary information.
+     * The list is sorted by creation date with the most recent experiments first.
+     *
+     * @return List of ExperimentSummary objects
+     */
+    public List<ExperimentSummary> getAllExperiments() {
+        return experimentRepository.findAll().stream()
+            .map(exp -> {
+                ExperimentState state = ExperimentState.STOPPED;
+                try {
+                    ExperimentStatus status = getStatus(exp.getId());
+                    state = status.getStatus();
+                } catch (IllegalArgumentException e) {
+                    // No status found, use default STOPPED
+                }
+                return new ExperimentSummary(exp.getId(), exp.getCreatedAt(), state);
+            })
+            .sorted((a, b) -> b.createdAt().compareTo(a.createdAt()))
+            .toList();
+    }
+
+    /**
+     * Returns a paginated list of scored organisms for the specified experiment.
+     *
+     * @param experimentId The experiment ID
+     * @param offset Starting index
+     * @param limit Maximum results
+     * @return PaginatedResponse containing ScoredOrganismSummary items
+     */
+    public PaginatedResponse<ScoredOrganismSummary> getScoredOrganismsForExperiment(
+            String experimentId, int offset, int limit) {
+        List<ScoredOrganism> organisms = scoredOrganismRepository
+            .getScoredOrganismsByExperiment(experimentId, offset, limit);
+        
+        List<ScoredOrganismSummary> summaries = organisms.stream()
+            .map(so -> new ScoredOrganismSummary(so.id(), so.score()))
+            .toList();
+        
+        int totalCount = scoredOrganismRepository.size(experimentId);
+        
+        return new PaginatedResponse<>(summaries, totalCount, offset, limit);
+    }
+
+    /**
+     * Returns the full detail of a scored organism including the organism object.
+     *
+     * @param id The scored organism ID
+     * @return ScoredOrganism with full organism data
+     * @throws IllegalArgumentException if no scored organism with the given ID exists
+     */
+    public ScoredOrganism getScoredOrganismById(String id) {
+        return scoredOrganismRepository.getById(id);
     }
 }

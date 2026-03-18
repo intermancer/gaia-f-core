@@ -26,17 +26,16 @@ public class DivisionGeneTest {
     }
 
     @Test
-    public void testDivisionByZero() {
-        // Create a DivisionGene
+    public void testDivisionByZeroOutputsZero() {
         DivisionGene gene = new DivisionGene();
         gene.getOperationConstantList().clear();
-        gene.getOperationConstantList().add(0.0); // Set the divisor to zero
+        gene.getOperationConstantList().add(0.0);
 
-        // Create a DataQuantum and add a value
         DataQuantum dataQuantum = new DataQuantum();
         dataQuantum.addValue(10.0);
 
-        // Verify that consuming the DataQuantum throws an ArithmeticException
-        assertThrows(ArithmeticException.class, () -> gene.consume(dataQuantum), "Division by zero should throw an ArithmeticException.");
+        gene.consume(dataQuantum);
+
+        assertEquals(0.0, dataQuantum.getValue(1), 0.0001, "Division by zero should output 0.0.");
     }
 }

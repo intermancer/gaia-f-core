@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.intermancer.gaiaf.core.experiment.MutationCommand;
 import com.intermancer.gaiaf.core.experiment.Mutational;
@@ -81,6 +82,18 @@ public abstract class Gene implements DataQuantumConsumer, Mutational {
         }
     }
     
+    /**
+     * Returns the number of DataQuanta this Gene must consume before its output
+     * is considered meaningful. The default implementation returns 0, meaning the
+     * Gene produces valid output immediately. Subclasses that require a warm-up
+     * period (such as WindowGene) override this method to return the appropriate count.
+     *
+     * @return The number of warming cycles required by this Gene.
+     */
+    public int getWarmingCycles() {
+        return 0;
+    }
+
     /**
      * Abstract method to define the operation performed on the input values.
      *
@@ -159,9 +172,11 @@ public abstract class Gene implements DataQuantumConsumer, Mutational {
  /**
      * Implements the Mutational interface. Returns a list of possible mutations 
      * that can be applied to this Gene.
+     * This method is annotated with @JsonIgnore to exclude it from JSON serialization.
      * 
      * @return List of MutationCommand objects
      */
+    @JsonIgnore
     @Override
     public List<MutationCommand> getMutationCommandList() {
         List<MutationCommand> mutations = new ArrayList<>();

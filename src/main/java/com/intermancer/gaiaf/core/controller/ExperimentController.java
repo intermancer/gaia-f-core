@@ -1,5 +1,9 @@
 package com.intermancer.gaiaf.core.controller;
 
+import com.intermancer.gaiaf.core.dto.ExperimentSummary;
+import com.intermancer.gaiaf.core.dto.PaginatedResponse;
+import com.intermancer.gaiaf.core.dto.ScoredOrganismSummary;
+import com.intermancer.gaiaf.core.evaluate.ScoredOrganism;
 import com.intermancer.gaiaf.core.experiment.ExperimentConfiguration;
 import com.intermancer.gaiaf.core.experiment.ExperimentStatus;
 import com.intermancer.gaiaf.core.service.ExperimentService;
@@ -8,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for experiment endpoints.
@@ -114,6 +120,49 @@ public class ExperimentController {
         } catch (IllegalArgumentException e) {
             logger.error("Cannot resume experiment {}: {}", experimentId, e.getMessage());
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Returns a list of all experiments with summary information.
+     *
+     * @return List of ExperimentSummary objects
+     */
+    @GetMapping("/list")
+    public ResponseEntity<List<ExperimentSummary>> getAllExperiments() {
+        return ResponseEntity.ok(experimentService.getAllExperiments());
+    }
+
+    /**
+     * Returns a paginated list of scored organisms for an experiment.
+     *
+     * @param experimentId The experiment ID
+     * @param offset Starting index (default 0)
+     * @param limit Maximum results (default 50)
+     * @return PaginatedResponse containing scored organism summaries
+     */
+    @GetMapping("/{experimentId}/scored-organisms")
+    public ResponseEntity<PaginatedResponse<ScoredOrganismSummary>> getScoredOrganisms(
+            @PathVariable String experimentId,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "50") int limit) {
+        return ResponseEntity.ok(
+            experimentService.getScoredOrganismsForExperiment(experimentId, offset, limit));
+    }
+
+    /**
+     * Returns the full detail of a scored organism.
+     *
+     * @param id The scored organism ID
+     * @return ScoredOrganism with full organism JSON
+     */
+    @GetMapping("/scored-organism/{id}")
+    public ResponseEntity<ScoredOrganism> getScoredOrganismDetail(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(experimentService.getScoredOrganismById(id));
+        } catch (IllegalArgumentException e) {
+            logger.error("Scored organism not found: {}", id);
+            return ResponseEntity.notFound().build();
         }
     }
 }

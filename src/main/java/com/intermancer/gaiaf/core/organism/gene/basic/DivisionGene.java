@@ -15,15 +15,10 @@ public class DivisionGene extends Gene {
     
     @Override
     protected double[] operation(double[] values) {
-        // Get the operation constant
         double constant = getOperationConstantList().get(0);
-        
-        // Check for division by zero
         if (constant == 0) {
-            throw new ArithmeticException("Division by zero");
+            return new double[] { 0.0 };
         }
-        
-        // Divide the input value by the constant
         return new double[] { values[0] / constant };
     }
 

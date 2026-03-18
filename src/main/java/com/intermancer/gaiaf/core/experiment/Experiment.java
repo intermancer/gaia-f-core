@@ -1,5 +1,7 @@
 package com.intermancer.gaiaf.core.experiment;
 
+import java.time.Instant;
+
 /**
  * An Experiment is responsible for orchestrating the complete experimentation process.
  * It manages seeding the ScoredOrganismRepository with initial evaluated organisms
@@ -21,6 +23,13 @@ public interface Experiment {
      * @return The experiment ID
      */
     String getId();
+    
+    /**
+     * Returns the timestamp when this experiment was created.
+     * 
+     * @return The creation timestamp
+     */
+    Instant getCreatedAt();
     
     /**
      * Pauses the experiment execution. The experiment will stop processing cycles

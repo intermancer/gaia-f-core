@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.intermancer.gaiaf.core.experiment.GeneGenerator;
 import com.intermancer.gaiaf.core.experiment.MutationCommand;
 import com.intermancer.gaiaf.core.experiment.Mutational;
@@ -71,6 +72,20 @@ public class Chromosome implements DataQuantumConsumer, Mutational {
         return clone;
     }
 
+    /**
+     * Returns the total number of warming cycles required by this Chromosome,
+     * computed by summing getWarmingCycles() across all Genes.
+     *
+     * @return The total warming cycles for this Chromosome.
+     */
+    public int getWarmingCycles() {
+        int total = 0;
+        for (Gene gene : genes) {
+            total += gene.getWarmingCycles();
+        }
+        return total;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -100,9 +115,11 @@ public class Chromosome implements DataQuantumConsumer, Mutational {
      * Implements the Mutational interface. Returns a list of possible mutations 
      * that can be applied to this Chromosome. This includes mutations for the 
      * chromosome itself, as well as the MutationCommands for each of its Genes.
+     * This method is annotated with @JsonIgnore to exclude it from JSON serialization.
      * 
      * @return List of MutationCommand objects
      */
+    @JsonIgnore
     @Override
     public List<MutationCommand> getMutationCommandList() {
         List<MutationCommand> mutations = new ArrayList<>();

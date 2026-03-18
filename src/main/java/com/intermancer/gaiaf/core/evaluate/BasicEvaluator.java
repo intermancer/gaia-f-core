@@ -70,12 +70,17 @@ public class BasicEvaluator implements Evaluator {
         private final Queue<Double> leadData = new LinkedList<>();
         private boolean leadCountMet = false;
         private int leadCount = 0;
+        private final int effectiveLeadCount;
+
+        EvaluationState(int effectiveLeadCount) {
+            this.effectiveLeadCount = effectiveLeadCount;
+        }
 
         boolean offerPrediction(double prediction) {
             leadData.offer(prediction);
             if (!leadCountMet) {
                 leadCount++;
-                if (leadCount >= getLeadConsumptionCount()) {
+                if (leadCount >= effectiveLeadCount) {
                     leadCountMet = true;
                 }
             }
@@ -86,31 +91,47 @@ public class BasicEvaluator implements Evaluator {
             return leadData.poll();
         }
     }
-    
+
     /**
      * Evaluates an organism by feeding it historical data and measuring prediction accuracy.
-     * 
+     *
+     * <p>The effective lead count is the greater of the configured {@code leadConsumptionCount}
+     * and the organism's own {@code getWarmingCycles()} value. This ensures that Window Genes
+     * are fully warmed up before any predictions are scored.
+     *
+     * <p>The accumulated error is normalized by dividing by the number of data points that
+     * actually contributed to the score (i.e. {@code historicalData.size() - effectiveLeadCount}).
+     * This yields a mean absolute error per scored point, making scores directly comparable
+     * across organisms with different warming requirements.
+     *
      * @param organism The organism to evaluate
-     * @return The cumulative prediction error score (lower is better, 0 is perfect)
+     * @return The mean absolute error per scored data point (lower is better, 0 is perfect)
      */
     @Override
     public double evaluate(Organism organism) {
         if (historicalData == null) {
-            // Load historical data only once
             historicalData = loadHistoricalData();
         }
 
-        EvaluationState state = new EvaluationState();
+        int effectiveLeadCount = Math.max(leadConsumptionCount, organism.getWarmingCycles());
+        int scoringLength = historicalData.size() - effectiveLeadCount;
 
-        // Prediction phase: feed data and compare predictions against actual values
-        return historicalData.stream()
+        // If the organism requires more warm-up cycles than the dataset has rows,
+        // no scoring is possible; return the worst possible score.
+        if (scoringLength <= 0) {
+            return Double.MAX_VALUE;
+        }
+
+        EvaluationState state = new EvaluationState(effectiveLeadCount);
+
+        double totalError = historicalData.stream()
             .mapToDouble(dataQuantum -> {
                 // Create a copy to prevent mutation of cached data
                 DataQuantum dataQuantumCopy = dataQuantum.copyOf();
-                
+
                 // Feed the organism the copied data
                 organism.consume(dataQuantumCopy);
-                
+
                 // Get the organism's prediction (final DataPoint value)
                 double futurePrediction = dataQuantumCopy.getValue(dataQuantumCopy.getDataPoints().size() - 1);
                 double currentPrediction = 0.0;
@@ -118,14 +139,18 @@ public class BasicEvaluator implements Evaluator {
                 if (state.offerPrediction(futurePrediction)) {
                     currentPrediction = state.getPrediction();
                 }
-                
+
                 // Get the actual target value
                 double actualValue = dataQuantum.getValue(targetIndex);
-                
+
                 // Calculate prediction error
                 return Math.abs(currentPrediction - actualValue);
             })
             .sum();
+
+        // Normalize by the number of scored data points to yield mean absolute error.
+        // This makes scores comparable across organisms with different warming requirements.
+        return totalError / scoringLength;
     }
 
     /**

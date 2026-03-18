@@ -19,6 +19,13 @@ build/
 # Ignore IDE specific files
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+heap-dumps/
 
 # Ignore compiled Python files
 *.pyc
