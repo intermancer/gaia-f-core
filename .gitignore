@@ -46,3 +46,6 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+
+# Backend static output (frontend assets are served by Nginx, not Spring Boot)
+src/main/resources/static/
