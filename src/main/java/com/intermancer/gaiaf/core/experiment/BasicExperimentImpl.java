@@ -33,6 +33,9 @@ public class BasicExperimentImpl implements Experiment {
     private final ExperimentStatusRepository experimentStatusRepository;
     private ExperimentStatus experimentStatus;
     private volatile boolean paused = false;
+    // Snapshotted from ExperimentConfiguration at the start of runExperiment()
+    private int cycleCount;
+    private int repoCapacity;
     private boolean pausable;
     private int pauseCycles;
     
@@ -67,7 +70,10 @@ public class BasicExperimentImpl implements Experiment {
      */
     @Override
     public void runExperiment() {
-        // Copy pausable and pauseCycles from configuration
+        // Snapshot all configuration values at experiment start so that subsequent
+        // changes to the singleton ExperimentConfiguration do not affect this run.
+        this.cycleCount = experimentConfiguration.getCycleCount();
+        this.repoCapacity = experimentConfiguration.getRepoCapacity();
         this.pausable = experimentConfiguration.isPausable();
         this.pauseCycles = experimentConfiguration.getPauseCycles();
         
@@ -79,15 +85,14 @@ public class BasicExperimentImpl implements Experiment {
         // Save the status to the repository so it can be retrieved
         experimentStatusRepository.save(experimentStatus);
         
-        logger.info("Experiment {} running {} cycles (pausable: {}, pauseCycles: {})", 
-            experimentId, experimentConfiguration.getCycleCount(), pausable, pauseCycles);
+        logger.info("Experiment {} running {} cycles (pausable: {}, pauseCycles: {})",
+            experimentId, cycleCount, pausable, pauseCycles);
         
         try {
             // Seed the repository with the experiment ID
             seeder.seed(experimentId);
             
-             // Run experiment cycles
-             int cycleCount = experimentConfiguration.getCycleCount();
+             // Run experiment cycles using the snapshotted cycleCount
              for (int i = 0; i < cycleCount; i++) {
                  // Check if paused and wait if necessary
                  synchronized (this) {

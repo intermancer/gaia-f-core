@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import type { ScoredOrganismSummary, PaginatedResponse } from '../types/repository';
+import { API_BASE } from '../utils/api';
+import type { ScoredOrganismSummary, PaginatedResponse, ExperimentStatusData } from '../types/repository';
 import { truncateUuid } from '../utils/formatters';
 import './ScoredOrganismsListScreen.css';
 
@@ -21,11 +22,12 @@ const ScoredOrganismsListScreen: React.FC<ScoredOrganismsListScreenProps> = ({
   const [offset, setOffset] = useState(0);
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
+  const [experimentStatus, setExperimentStatus] = useState<ExperimentStatusData | null>(null);
 
   const fetchScoredOrganisms = useCallback(async () => {
     try {
       setLoading(true);
-      const url = `http://localhost:8080/gaia-f/experiment/${experimentId}/scored-organisms?offset=${offset}&limit=${pageSize}`;
+      const url = `${API_BASE}/experiment/${experimentId}/scored-organisms?offset=${offset}&limit=${pageSize}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -46,6 +48,21 @@ const ScoredOrganismsListScreen: React.FC<ScoredOrganismsListScreenProps> = ({
   useEffect(() => {
     fetchScoredOrganisms();
   }, [fetchScoredOrganisms]);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/experiment/${experimentId}/status`);
+        if (response.ok) {
+          const data: ExperimentStatusData = await response.json();
+          setExperimentStatus(data);
+        }
+      } catch (err) {
+        console.error('Error fetching experiment status:', err);
+      }
+    };
+    fetchStatus();
+  }, [experimentId]);
 
   const handlePrevious = () => {
     setOffset(Math.max(0, offset - pageSize));
@@ -83,7 +100,30 @@ const ScoredOrganismsListScreen: React.FC<ScoredOrganismsListScreenProps> = ({
         </button>
       </div>
 
-      <p className="experiment-info">Experiment: {truncateUuid(experimentId)}</p>
+      <div className="experiment-summary">
+        <span className="experiment-summary-item">
+          <span className="experiment-summary-label">Experiment:</span>
+          <span title={experimentId}>{truncateUuid(experimentId)}</span>
+        </span>
+        {experimentStatus && (
+          <>
+            <span className="experiment-summary-item">
+              <span className="experiment-summary-label">Status:</span>
+              <span className={`status-${experimentStatus.status.toLowerCase()}`}>
+                {experimentStatus.status}
+              </span>
+            </span>
+            <span className="experiment-summary-item">
+              <span className="experiment-summary-label">Cycles:</span>
+              <span>{experimentStatus.cyclesCompleted.toLocaleString()}</span>
+            </span>
+            <span className="experiment-summary-item">
+              <span className="experiment-summary-label">Organisms Replaced:</span>
+              <span>{experimentStatus.organismsReplaced.toLocaleString()}</span>
+            </span>
+          </>
+        )}
+      </div>
 
       {organisms.length === 0 && !loading ? (
         <p className="no-data-message">No data available</p>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { API_BASE } from '../utils/api';
 import type { ScoredOrganism } from '../types/repository';
 import './ScoredOrganismDetailScreen.css';
 
@@ -19,7 +20,7 @@ const ScoredOrganismDetailScreen: React.FC<ScoredOrganismDetailScreenProps> = ({
   const fetchDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const url = `http://localhost:8080/gaia-f/experiment/scored-organism/${scoredOrganismId}`;
+      const url = `${API_BASE}/experiment/scored-organism/${scoredOrganismId}`;
       const response = await fetch(url);
 
       if (!response.ok) {

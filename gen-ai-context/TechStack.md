@@ -4,12 +4,12 @@ The technologies and frameworks described in this document are used to build the
 
 ## Languages
 
-Java 21 is the primary language for this system.
+Java 25 is the primary language for this system.
 
 ## Frameworks
 
-Spring Boot 3.4.3 is used for general structure and configuration.
-Jackson 2.19.0 is used for serialization and deserialization.
+Spring Boot 4.0.1 is used for general structure and configuration.
+Jackson 3 is used for serialization and deserialization. Jackson 3 is the default JSON library for Spring Boot 4. Note that `com.fasterxml.jackson.annotation.*` annotations (`@JsonIgnore`, `@JsonCreator`, `@JsonProperty`, `@JsonTypeInfo`, etc.) are intentionally unchanged from Jackson 2 and remain valid in Jackson 3.
 
 ## Project root package
 
@@ -43,7 +43,7 @@ Docker is used to package and deploy the application. Docker Compose orchestrate
 
 The system uses two containers:
 
-- **`backend`**: A JRE 21 container running the Spring Boot JAR. Serves the API only.
+- **`backend`**: A JRE 25 container running the Spring Boot JAR. Serves the API only.
 - **`frontend`**: An Nginx container serving the compiled React static assets. Proxies `/api` requests to the `backend` container via Docker Compose internal networking (resolved by service name).
 
 ### Build Strategy

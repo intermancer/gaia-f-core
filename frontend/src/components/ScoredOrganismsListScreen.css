@@ -25,9 +25,28 @@
   background-color: #e0e0e0;
 }
 
-.experiment-info {
-  color: #666;
+.experiment-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
   margin-bottom: 20px;
+  padding: 12px 16px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.experiment-summary-item {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.experiment-summary-label {
+  font-weight: 600;
+  color: #666;
 }
 
 .organisms-table {

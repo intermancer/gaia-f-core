@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../utils/api';
 import type { ExperimentSummary } from '../types/repository';
 import { formatDateTime, truncateUuid } from '../utils/formatters';
 import './ExperimentsListScreen.css';
@@ -23,7 +24,7 @@ const ExperimentsListScreen: React.FC<ExperimentsListScreenProps> = ({
   const fetchExperiments = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/list');
+      const response = await fetch(`${API_BASE}/experiment/list`);
       if (!response.ok) {
         throw new Error(`Failed to fetch experiments: ${response.statusText}`);
       }
@@ -68,6 +69,7 @@ const ExperimentsListScreen: React.FC<ExperimentsListScreenProps> = ({
               <th>UUID</th>
               <th>Date/Time</th>
               <th>Status</th>
+              <th>Cycles</th>
             </tr>
           </thead>
           <tbody>
@@ -82,6 +84,7 @@ const ExperimentsListScreen: React.FC<ExperimentsListScreenProps> = ({
                 <td className={`status-${experiment.status.toLowerCase()}`}>
                   {experiment.status}
                 </td>
+                <td>{experiment.cyclesCompleted.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

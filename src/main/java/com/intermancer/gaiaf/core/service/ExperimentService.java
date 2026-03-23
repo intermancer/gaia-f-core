@@ -196,13 +196,15 @@ public class ExperimentService {
         return experimentRepository.findAll().stream()
             .map(exp -> {
                 ExperimentState state = ExperimentState.STOPPED;
+                int cyclesCompleted = 0;
                 try {
                     ExperimentStatus status = getStatus(exp.getId());
                     state = status.getStatus();
+                    cyclesCompleted = status.getCyclesCompleted();
                 } catch (IllegalArgumentException e) {
-                    // No status found, use default STOPPED
+                    // No status found, use defaults
                 }
-                return new ExperimentSummary(exp.getId(), exp.getCreatedAt(), state);
+                return new ExperimentSummary(exp.getId(), exp.getCreatedAt(), state, cyclesCompleted);
             })
             .sorted((a, b) -> b.createdAt().compareTo(a.createdAt()))
             .toList();

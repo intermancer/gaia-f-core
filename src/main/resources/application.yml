@@ -6,6 +6,12 @@ server:
 spring:
   application:
     name: gaia-f-core
+  security:
+    user:
+      # Suppress the auto-generated password warning; all endpoints are publicly
+      # accessible via SecurityConfig. Replace with real credentials if auth is added.
+      name: unused
+      password: unused
     
 experiment:
   cycleCount: 1500

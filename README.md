@@ -2,71 +2,55 @@
 
 GAIA-F is a Genetic Artificial Intelligence Algorithm Framework.
 
+## Prerequisites
 
+- **Java 25** — required to build and run the backend
+- **Docker and Docker Compose** — required to run the application
 
-## Planned Features
+> Gradle and Node.js/npm are managed automatically by the build system and do not need to be installed manually.
 
-- Experiment Server
-- Genetic Repository
-- Visualization tool
+## Building
 
+A single command builds both the backend JAR and the frontend static assets:
 
-## Getting Started
-
-### Prerequisites
-
-- Java 21 or higher
-- Gradle 6.0 or higher
-- Spring Boot 3.4.3
-
-### Installation
-
-1. Clone the repository:
-
-   ```
-   git clone https://github.com/intermancer/gaia-f-core.git
-   ```
-
-2. Navigate to the project directory:
-
-   ```
-   cd gaia-f-core
-   ```
-
-3. Build the project using Gradle:
-
-   ```
-   ./gradlew build
-   ```
-
-### Running the Application
-
-To run the application, use the following command:
-
-```
-./gradlew bootRun
+```bash
+./gradlew build
 ```
 
-The application will start on `http://localhost:8080`.
+This produces:
+- `build/libs/gaia-f-core-0.0.1-SNAPSHOT.jar` — the Spring Boot application
+- `frontend/dist/` — the compiled React frontend
 
-Access the UI at `http://localhost:5173`  
-API available at `http://localhost:8080/api`
+## Running with Docker
 
-#### Production Mode
+Docker Compose is the standard way to run the application in all environments.
 
-To run the tests, use the following command:
+```bash
+# Copy the example environment file (adjust ports if needed)
+cp .env.example .env
 
+# Build images and start containers
+docker compose up --build
 ```
+
+Once running:
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:3000/gaia-f/
+
+### Port Configuration
+
+Host ports are configurable via the `.env` file. See `.env.example` for available options:
+
+| Variable             | Default | Description              |
+|----------------------|---------|--------------------------|
+| `FRONTEND_HOST_PORT` | `3000`  | Port for the Nginx frontend container |
+| `BACKEND_HOST_PORT`  | `8080`  | Port for the Spring Boot backend container |
+
+## Running Tests
+
+```bash
 ./gradlew test
 ```
-
-## Roadmap
-
-The next few things we are going to work on:
-1. Create some seed organisms for use in visual representation and early experimentation.
-2. Make sure all of the input and output for the endpoints is in JSON.
-3. Get a rudimentary experiment running.
-4. Start building a pretty UI.
 
 ## Contributing
 

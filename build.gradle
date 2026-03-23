@@ -1,9 +1,9 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'org.springframework.boot' version '3.4.3'
+    id 'org.springframework.boot' version '4.0.1'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'com.github.node-gradle.node' version '7.0.2'
+    id 'com.github.node-gradle.node' version '7.1.0'
 }
 
 group = 'com.intermancer.gaiaf.core'
@@ -11,7 +11,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -20,10 +20,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test-classic'
 }
 
 node {
@@ -79,7 +80,8 @@ tasks.register('buildFrontend', com.github.gradle.node.npm.task.NpmTask) {
     }
 }
 
-processResources.dependsOn buildFrontend
+// Build the frontend dist/ alongside the JAR so both artifacts are ready for Docker.
+build.dependsOn buildFrontend
 
 sourceSets {
     main {

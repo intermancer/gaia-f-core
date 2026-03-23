@@ -4,10 +4,17 @@
 
 export type ExperimentState = 'STOPPED' | 'RUNNING' | 'PAUSED' | 'EXCEPTION';
 
+export interface ExperimentStatusData {
+  cyclesCompleted: number;
+  organismsReplaced: number;
+  status: ExperimentState;
+}
+
 export interface ExperimentSummary {
   id: string;
   createdAt: string; // ISO 8601 format from Java Instant
   status: ExperimentState;
+  cyclesCompleted: number;
 }
 
 export interface ScoredOrganismSummary {

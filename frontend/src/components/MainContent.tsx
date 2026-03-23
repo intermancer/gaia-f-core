@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import './MainContent.css';
 import WelcomeScreen from './WelcomeScreen';
 import ExperimentStatusView from './ExperimentStatusView';
@@ -38,9 +39,8 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
   const handleStartExperiment = async () => {
     try {
       setExperimentStatus('Starting experiment...');
-      setIsRunning(true);
 
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/start', {
+      const response = await fetch(`${API_BASE}/experiment/start`, {
         method: 'POST',
       });
 
@@ -50,7 +50,10 @@ const MainContent: React.FC<MainContentProps> = ({ selectedCommand }) => {
       }
 
       const expId = await response.text();
+      // Set experimentId before isRunning so the polling interval starts
+      // with the correct experiment ID already in scope.
       setExperimentId(expId);
+      setIsRunning(true);
       setExperimentStatus('Experiment running');
     } catch (error) {
       setExperimentStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);

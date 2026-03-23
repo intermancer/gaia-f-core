@@ -1,16 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { API_BASE } from '../utils/api';
+import type { ExperimentStatusData } from '../types/repository';
 
 interface ExperimentConfiguration {
   cycleCount: number;
   repoCapacity: number;
   pausable: boolean;
   pauseCycles: number;
-}
-
-interface ExperimentStatusData {
-  cyclesCompleted: number;
-  organismsReplaced: number;
-  status: 'STOPPED' | 'RUNNING' | 'PAUSED' | 'EXCEPTION';
 }
 
 interface ExperimentStatusViewProps {
@@ -32,26 +28,62 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [editedConfig, setEditedConfig] = useState<ExperimentConfiguration | null>(null);
+  // Raw string values for numeric inputs so the field can be cleared while typing
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [statusData, setStatusData] = useState<ExperimentStatusData | null>(null);
   const [hasExperimentRun, setHasExperimentRun] = useState<boolean>(false);
   const pollingIntervalRef = useRef<number | null>(null);
+  // Ref so fetchStatus always reads the current experimentId regardless of when
+  // its closure was created (avoids stale closure inside setInterval).
+  const experimentIdRef = useRef<string | null>(experimentId);
+  useEffect(() => { experimentIdRef.current = experimentId; }, [experimentId]);
+
+   const fetchStatus = useCallback(async () => {
+     // Read from ref so this function is never stale inside setInterval
+     const currentExperimentId = experimentIdRef.current;
+     if (!currentExperimentId) {
+       return;
+     }
+
+     try {
+       const response = await fetch(`${API_BASE}/experiment/${currentExperimentId}/status`);
+
+       if (!response.ok) {
+         // noinspection ExceptionCaughtLocallyJS
+         throw new Error(`Failed to fetch status: ${response.statusText}`);
+       }
+
+       const data: ExperimentStatusData = await response.json();
+       setStatusData(data);
+
+       // Notify parent component of status changes
+       if (onStatusChange) {
+         const newIsRunning = data.status === 'RUNNING';
+         const newStatusText = getStatusDisplayText(data);
+         onStatusChange(newIsRunning, newStatusText);
+       }
+     } catch (err) {
+       console.error('Error fetching status:', err);
+     }
+   }, [onStatusChange]);
 
   useEffect(() => {
     // Always fetch configuration (component's configuration is available without an experiment ID)
     fetchConfiguration();
-    
+
     // Only fetch status if we have an experiment ID
     if (experimentId) {
       fetchStatus();
     }
-  }, [experimentId]);
+  }, [experimentId, fetchStatus]);
 
    useEffect(() => {
      if (isRunning && experimentId) {
-       // Start polling when experiment is running and we have an experiment ID
+       // Start polling when experiment is running and we have an experiment ID.
+       // fetchStatus reads experimentId from a ref so the interval never goes stale.
        pollingIntervalRef.current = window.setInterval(() => {
          fetchStatus();
-         fetchConfiguration();
+         fetchConfiguration(true);
        }, 1000);
      } else {
        // Stop polling when experiment is not running or no experiment ID
@@ -66,37 +98,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
          clearInterval(pollingIntervalRef.current);
        }
      };
-   }, [isRunning, experimentId]);
-
-   const fetchStatus = async () => {
-     // Only fetch status if we have an experiment ID
-     if (!experimentId) {
-       return;
-     }
-
-     console.log('Pinging status...');
-
-     try {
-       const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/status`);
-      
-      if (!response.ok) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error(`Failed to fetch status: ${response.statusText}`);
-      }
-      
-      const data: ExperimentStatusData = await response.json();
-      setStatusData(data);
-      
-      // Notify parent component of status changes
-      if (onStatusChange) {
-        const newIsRunning = data.status === 'RUNNING';
-        const newStatusText = getStatusDisplayText(data);
-        onStatusChange(newIsRunning, newStatusText);
-      }
-    } catch (err) {
-      console.error('Error fetching status:', err);
-    }
-  };
+   }, [isRunning, experimentId, fetchStatus]);
 
   const getStatusDisplayText = (data: ExperimentStatusData): string => {
     if (data.status === 'RUNNING') {
@@ -110,16 +112,16 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     }
   };
 
-  const fetchConfiguration = async () => {
+  const fetchConfiguration = async (preserveEdits: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
       
       // If we have an experiment ID, fetch the configuration for that specific experiment
       // Otherwise, fetch the component's current configuration
-      const url = experimentId 
-        ? `http://localhost:8080/gaia-f/experiment/${experimentId}/configuration`
-        : 'http://localhost:8080/gaia-f/experiment/configuration';
+      const url = experimentId
+        ? `${API_BASE}/experiment/${experimentId}/configuration`
+        : `${API_BASE}/experiment/configuration`;
       
       const response = await fetch(url);
       
@@ -129,8 +131,18 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       }
       
       const data: ExperimentConfiguration = await response.json();
+      // Always update the read-only display config
       setConfig(data);
-      setEditedConfig(data);
+      // Only overwrite the editable form state when the experiment is not running,
+      // to avoid clobbering in-progress user edits during polling.
+      if (!preserveEdits) {
+        setEditedConfig(data);
+        setInputValues({
+          cycleCount: String(data.cycleCount),
+          repoCapacity: String(data.repoCapacity),
+          pauseCycles: String(data.pauseCycles),
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
@@ -138,12 +150,13 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     }
   };
 
-  const handleConfigChange = (field: keyof ExperimentConfiguration, value: number) => {
-    if (editedConfig) {
-      setEditedConfig({
-        ...editedConfig,
-        [field]: value
-      });
+  const handleNumericInputChange = (field: 'cycleCount' | 'repoCapacity' | 'pauseCycles', raw: string) => {
+    // Always update the display string so the field can be freely edited (including cleared)
+    setInputValues(prev => ({ ...prev, [field]: raw }));
+    // Only commit to editedConfig when the value is a valid integer
+    const parsed = parseInt(raw, 10);
+    if (!isNaN(parsed) && editedConfig) {
+      setEditedConfig({ ...editedConfig, [field]: parsed });
     }
   };
 
@@ -155,7 +168,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       setError(null);
 
       // Always update the component configuration (not experiment-specific)
-      const response = await fetch('http://localhost:8080/gaia-f/experiment/configuration', {
+      const response = await fetch(`${API_BASE}/experiment/configuration`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -171,6 +184,11 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
       const updatedConfig: ExperimentConfiguration = await response.json();
       setConfig(updatedConfig);
       setEditedConfig(updatedConfig);
+      setInputValues({
+        cycleCount: String(updatedConfig.cycleCount),
+        repoCapacity: String(updatedConfig.repoCapacity),
+        pauseCycles: String(updatedConfig.pauseCycles),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
@@ -181,9 +199,9 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
   const handleStartExperiment = () => {
     setHasExperimentRun(true);
     onStartExperiment();
-    // Refresh configuration and status after starting
+    // Refresh status after starting; preserve edits since the experiment is now running
     setTimeout(() => {
-      fetchConfiguration();
+      fetchConfiguration(true);
       fetchStatus();
     }, 1000);
   };
@@ -192,7 +210,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     if (!experimentId) return;
     
     try {
-      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/pause`, {
+      const response = await fetch(`${API_BASE}/experiment/${experimentId}/pause`, {
         method: 'POST',
       });
       
@@ -211,7 +229,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     if (!experimentId) return;
     
     try {
-      const response = await fetch(`http://localhost:8080/gaia-f/experiment/${experimentId}/resume`, {
+      const response = await fetch(`${API_BASE}/experiment/${experimentId}/resume`, {
         method: 'POST',
       });
       
@@ -226,9 +244,15 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
     }
   };
 
+  const hasInvalidInputs = () => {
+    return isNaN(parseInt(inputValues.cycleCount, 10))
+      || isNaN(parseInt(inputValues.repoCapacity, 10))
+      || (editedConfig?.pausable && isNaN(parseInt(inputValues.pauseCycles, 10)));
+  };
+
   const hasChanges = () => {
     if (!config || !editedConfig) return false;
-    return config.cycleCount !== editedConfig.cycleCount || 
+    return config.cycleCount !== editedConfig.cycleCount ||
            config.repoCapacity !== editedConfig.repoCapacity ||
            config.pausable !== editedConfig.pausable ||
            config.pauseCycles !== editedConfig.pauseCycles;
@@ -249,7 +273,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
         <h1>Experiment</h1>
         <div className="error-message">
           <p>Error: {error}</p>
-          <button onClick={fetchConfiguration}>Retry</button>
+          <button onClick={() => fetchConfiguration()}>Retry</button>
         </div>
       </div>
     );
@@ -268,8 +292,8 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
               <input
                 id="cycleCount"
                 type="number"
-                value={editedConfig.cycleCount}
-                onChange={(e) => handleConfigChange('cycleCount', parseInt(e.target.value))}
+                value={inputValues.cycleCount ?? editedConfig.cycleCount}
+                onChange={(e) => handleNumericInputChange('cycleCount', e.target.value)}
                 disabled={isRunning || statusData?.status === 'PAUSED'}
                 min="1"
               />
@@ -280,8 +304,8 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
               <input
                 id="repoCapacity"
                 type="number"
-                value={editedConfig.repoCapacity}
-                onChange={(e) => handleConfigChange('repoCapacity', parseInt(e.target.value))}
+                value={inputValues.repoCapacity ?? editedConfig.repoCapacity}
+                onChange={(e) => handleNumericInputChange('repoCapacity', e.target.value)}
                 disabled={isRunning || statusData?.status === 'PAUSED'}
                 min="1"
               />
@@ -306,8 +330,8 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
                 <input
                   id="pauseCycles"
                   type="number"
-                  value={editedConfig.pauseCycles}
-                  onChange={(e) => handleConfigChange('pauseCycles', parseInt(e.target.value))}
+                  value={inputValues.pauseCycles ?? editedConfig.pauseCycles}
+                  onChange={(e) => handleNumericInputChange('pauseCycles', e.target.value)}
                   disabled={isRunning || statusData?.status === 'PAUSED'}
                   min="0"
                 />
@@ -316,7 +340,7 @@ const ExperimentStatusView: React.FC<ExperimentStatusViewProps> = ({
 
             {hasChanges() && !isRunning && (
               <div className="config-actions">
-                <button onClick={handleSaveConfiguration} disabled={loading}>
+                <button onClick={handleSaveConfiguration} disabled={loading || hasInvalidInputs()}>
                   {loading ? 'Saving...' : 'Save Configuration'}
                 </button>
                 <button onClick={() => setEditedConfig(config)}>
